@@ -1,0 +1,24 @@
+# Chemie coordination repo — tracks coordination + briefing + markers,
+# NOT project code (those are submodules) or data.
+
+# environments / caches
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+
+# large data — never in the coordination repo
+datasets/
+datasets.tar.gz
+*.tar.gz
+
+# tmp / scratch
+*.tmp
+.tmp.*
+
+# unenrolled / transparent siblings (kept out of the coordination repo)
+RetroDemo/
+
+# NOTE: enrolled project repos (retro-pfn, MolGPT) are git SUBMODULES,
+# added explicitly in the migration — not ignored, not embedded.
