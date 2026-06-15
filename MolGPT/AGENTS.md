@@ -23,9 +23,9 @@ Parent orchestrator: `~/AIC/Chemie`. Protocol: `~/agents/protocol.md`.
 ## Primary framing (this node owns it)
 A general-purpose generative model of molecules, **starting from a GPT
 architecture and aiming toward a PFN** (prior-data fitted, in-context). This is
-the long-run research line; it overlaps with `Synthesis/` on PFN (the
+the long-run research line; it overlaps with `retro-pfn/` on PFN (the
 cross-cutting picture lives at the Chemie root, `coordination/synthesis.md`),
-and Synthesis may become a downstream use later — not yet.
+and retro-pfn may become a downstream use later — not yet.
 
 ## External & boundary (managed, not owned)
 - `MolPFN/` — **external** student repo (`rektomar`): "A PFN-like model for

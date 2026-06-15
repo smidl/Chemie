@@ -4,31 +4,60 @@ coord:
   role: orchestrator
   owners: [vsmidl]
   modules: [adr, synthesis, messages]
+  boundaries:
+    - path: ./proposal
+      remote: https://git.overleaf.com/69d8ec44bf191779c9ce381a
+      kind: paper
+      flow: both
+      link: repo
+    - path: ./briefing
+      remote: git@github.com:aicenter/retrosyntesis-knowledgebase.git
+      kind: report
+      flow: out
+      link: submodule
+  external:
+    - path: ./retrosyntesis
+      remote: git@github.com:aicenter/retrosyntesis.git
+      kind: student
 ---
 
 # Chemie — chemistry research (coord orchestrator, pilot)
 
-Top orchestrator for the machine's chemistry research. Protocol spec and
-behaviour: `~/agents/protocol.md` and `~/agents/AGENTS.md` (tier-0). This file
-is canonical; `CLAUDE.md` is a thin delta.
+Top orchestrator for the lab's chemistry research. **Pilot, flat** — the Synthesis
+orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
+`~/agents/protocol.md`. This file is canonical; `CLAUDE.md` is a thin delta.
 
-## Enrolled children
-- `Synthesis/` — leaf (orchestrator-to-come). K-P-V retrosynthesis + PFN
-  reaction-feasibility research.
-- `MolGPT/` — leaf. General-purpose molecule model (GPT → PFN).
+## Enrolled children (peer leaves)
+- `retro-pfn/` — reaction-feasibility & energetics modeling toward ξ_f (the
+  retrosynthesis-feasibility project). **Submodule** (`aicenter/retro-pfn`).
+- `MolGPT/` — general-purpose molecule model, GPT→PFN; reaction-generator direction.
 
-Not enrolled: `RetroDemo/` (transparent), `datasets/` (shared data artifact).
+## External & boundary (declared here — Chemie is the single inventory owner)
+- `retrosyntesis/` — **external** student route-generation/validation repo (inventory only).
+- `proposal/` — **boundary**, Overleaf paper (`flow: both`).
+- `briefing/` — **boundary**, the colleague knowledge base
+  (`aicenter/retrosyntesis-knowledgebase`, `flow: out`, submodule): the outward
+  "what we know / what we tried" digest for expert colleagues.
 
-## What this orchestrator owns (cross-cutting only)
-Synthesis and MolGPT are independent today but **overlap on PFN** and will grow
-a **shared literature** base. This node hosts only the derived, cross-cutting
-picture — never a child's primary framing:
-- `coordination/synthesis.md` — the running PFN-overlap picture across children.
-- `coordination/adr/` — cross-cutting decisions that bind both children.
+(MolGPT declares its own external `MolPFN` + boundary `phd-proposal` in its marker;
+they roll up under this tree.)
 
-Literature pools to `~/agents/library/` (shared, machine-wide) via `/lib add`;
-each leaf keeps its own `paper/refs.md` interpretation.
+## What this orchestrator owns (cross-cutting only — never a child's primary framing)
+- The **active-acquisition program** (organizing thesis): a calibrated surrogate that
+  queries the expensive simulator (DFT/MLIP) only where uncertain + where it matters,
+  growing the validated domain from a Suzuki/AIMNet anchor. Spans retro-pfn + MolGPT;
+  MLIP-retrain / family-engine questions sit here / with the PFN family.
+- The **K-P-V retrosynthesis program** framing — cross-cutting over the feasibility
+  leaf (`retro-pfn`) and the external student (`retrosyntesis`); absorbed from the
+  dissolved Synthesis layer.
+- The **retro-pfn ⋈ MolGPT** convergence (PFN / ICL / generate-and-validate).
+All in `coordination/synthesis.md` + `coordination/adr/`.
 
-## On session start here
-Run `/coord status` — pull children's `coordination/outbox.md`, open messages
-addressed here. Write only within this subtree or the `~/agents` board/pool.
+## On session start
+Run `/coord status` — pull children's `coordination/outbox.md` (retro-pfn, MolGPT),
+boundary inbound (`proposal`, `briefing`), open messages on the `~/agents` board.
+Publish the `briefing` (flow: out) as part of the cycle. Write only within this
+subtree or the `~/agents` board/pool.
+
+Literature pools to `~/agents/library` via `/lib add`/`/lib sota`; machine compute
+invariant in `~/agents/compute`.
