@@ -1,0 +1,6 @@
+[submodule "retro-pfn"]
+	path = retro-pfn
+	url = git@github.com:aicenter/retro-pfn.git
+[submodule "briefing"]
+	path = briefing
+	url = git@github.com:aicenter/retrosyntesis-knowledgebase.git

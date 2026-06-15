@@ -20,5 +20,14 @@ datasets.tar.gz
 # unenrolled / transparent siblings (kept out of the coordination repo)
 RetroDemo/
 
-# NOTE: enrolled project repos (retro-pfn, MolGPT) are git SUBMODULES,
-# added explicitly in the migration — not ignored, not embedded.
+# external / boundary repos — inventory-only (declared in markers, NOT tracked here)
+/retrosyntesis/
+/proposal/
+MolGPT/MolPFN/
+MolGPT/phd-proposal/
+
+# legacy Synthesis layer — content being re-homed (Concern C), then removed
+/Synthesis/
+
+# NOTE: retro-pfn/ and briefing/ are git SUBMODULES (added explicitly).
+# MolGPT/ is a tracked folder (no own git); its nested repos are ignored above.
