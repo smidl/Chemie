@@ -29,5 +29,8 @@ MolGPT/phd-proposal/
 # legacy Synthesis layer — content being re-homed (Concern C), then removed
 /Synthesis/
 
+# holding for PDFs awaiting /lib add (not tracked here; the pool is their home)
+/_lib-inbox/
+
 # NOTE: retro-pfn/ and briefing/ are git SUBMODULES (added explicitly).
 # MolGPT/ is a tracked folder (no own git); its nested repos are ignored above.

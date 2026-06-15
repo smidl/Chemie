@@ -3,6 +3,13 @@
 Running picture of what the children collectively know. Derived from children's
 outboxes; never restates a child's primary framing.
 
+> **Structure note (2026-06-15):** the Synthesis orchestrator layer was dissolved
+> (coord flatten to pilot-flat). Children are now **`retro-pfn`** (retrosynthesis
+> feasibility / ξ_f) and **`MolGPT`**, directly under Chemie. Mentions of
+> "Synthesis" below mean the retrosynthesis-feasibility project (`retro-pfn`); the
+> student (`retrosyntesis`) and paper (`proposal`) are now Chemie-declared
+> external/boundary.
+
 ## PFN overlap (Synthesis ⋈ MolGPT)  — opened 2026-06-06
 Both children use Prior-data Fitted Networks (PFN):
 - `Synthesis/` — PFN as the calibrated **reaction-feasibility validator** (ξ_f)
@@ -95,5 +102,30 @@ retro-pfn survey). So RXNFP is the most concrete shared touchpoint. (Citation sl
 to fix on the student side: retro-pfn `docs/prior_art_survey.md` attributes
 "Molecular Transformer" to Liu 2017 — that's Schwaller 2019; Liu 2017 is seq2seq
 retrosynthesis.)
+
+## Retrosynthesis: research↔student cross-track (migrated from the dissolved Synthesis layer, 2026-06-15)
+Cross-cutting coordination between the **PFN research track** (`retro-pfn`) and the
+**external student validation track** (`retrosyntesis`). Live detail/log:
+`retro-pfn/coordination/outbox.md`.
+
+**Work tracks & dependency**
+- Student: baseline validation (done) → route generation → feasibility-validator integration.
+- Research (`retro-pfn`): feasibility-model training (barriers + ξ_f) · validation · baseline methods.
+```
+route generation (student) ──baseline routes──▶ feasibility-model validation (retro-pfn)
+feasibility-model training ──ξ_f predictor──────▶ feasibility-model validation
+feasibility-model validation ───────────────────▶ feasibility-validator integration (student)
+```
+**Research→student handoff — four opportunities (origin 2026-06-05; now SUPERSEDED by the de-risk cycle).**
+From student baseline validation (Retro-Fallback on PaRoutes, 212 targets: 35% coverage,
+95% precision, Medium 43–58% vs Deep OOD 0%, budget-exhaustion bottleneck), research
+proposed four opportunities. The (A) similarity vs (B) path/context-correlation distinction
+was settled — the gas-phase-QM path-dependence audit is ill-posed → dropped (retro-pfn
+ADR 0001 + xif/PLAN §4). **Current status (retro-pfn log → 2026-06-14):** headline metric
+reframed (SSP confounded → calibration + correlation-specific test); decisive **hard-target
+backup-preservation (c) test handed to the student track**; a recalibrated mechanism-kernel
+ξ_f marginal is banked. The original 2026-06-19 handoff decision is folded into the active
+de-risk line.
+Refs: tripp2024_retrofallback, joung2025_electronflowmatching, Reaction-QM (Zenodo 10493799).
 
 _(Awaiting the first shared experimental result to record a derived finding.)_
