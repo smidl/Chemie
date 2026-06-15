@@ -39,7 +39,15 @@ and retro-pfn may become a downstream use later — not yet.
   part is out of scope and ignored. Transformer-part import: `phd-proposal-notes.md`.
 
 ## Coordination
-This is a `leaf` with no enrolled children and no separate `coordination/` yet.
-Outward-relevant findings (especially shared-PFN ones) can be recorded for the
-Chemie root to pull once a `coordination/outbox.md` is added; for now, raise
-cross-cutting PFN items directly to the root's `coordination/synthesis.md`.
+Leaf with no enrolled children. `coordination/` is live: outward-relevant findings →
+`coordination/outbox.md` (Chemie pulls on `status`); directives from Chemie arrive in
+`coordination/inbox.md`. Cross-cutting PFN/convergence items also surface in the root's
+`coordination/synthesis.md`.
+
+## Role in the active-acquisition program (Chemie ADR 0003)
+**Candidate proposer (T3):** a trained, in-context **reaction** generator for the
+generate-and-validate loop (propose ↔ retro-pfn's ξ_f validates). The current MolPFN
+(in-context *molecule* generation) is the infrastructure; the re-point to *reactions*
+(balanced, σ/frontier-conditioned) is the expansion-phase direction — see
+`coordination/inbox.md` (2026-06-15). The primary framing above predates ADR 0003 and
+is being re-pointed accordingly.

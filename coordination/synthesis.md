@@ -128,4 +128,27 @@ backup-preservation (c) test handed to the student track**; a recalibrated mecha
 de-risk line.
 Refs: tripp2024_retrofallback, joung2025_electronflowmatching, Reaction-QM (Zenodo 10493799).
 
+## Subproject alignment vs the active-acquisition program (onboarding audit, 2026-06-15)
+Audit after ADR 0003; verdicts + re-pointing delivered to each leaf's inbox (deliver-not-execute).
+- **retro-pfn / `xif` (T1 surrogate): PARTIAL** — builds the calibrated correlated ξ_f+σ
+  (recalibration banked) but PLAN.md is *passive*: σ not used to select queries, no
+  acquisition/VOI step, no Suzuki/AIMNet anchor, headline still "fusion." Re-point: σ as the
+  acquisition signal; add the Suzuki/AIMNet VOI (active-vs-passive) step; name the oracle.
+- **retro-pfn / `conditions` (T2 oracle): PARTIAL, mis-pointed + parked** — holds the
+  AIMNet-Suzuki + Robin DFT-NEB bridge but framed as a surrogate-side condition head and parked
+  on the SNAr negative (which closed only the condition-head sub-question); bridge scoped as bulk
+  pre-compute. Re-point (needs ratification): re-charter as on-demand `oracle(rxn,cond)→(barrier,σ)`;
+  un-park around the oracle role; adopt the Suzuki/AIMNet VOI probe; TS-automation = first task.
+- **MolGPT (T3 proposer): DIVERGENT (substance) / PARTIAL (infra)** — in-context *molecule*
+  generation now; role needs in-context *reaction* generation, balanced, σ-frontier-coupled. Infra
+  reusable; reaction I/O + balance + σ-conditioning absent; its 3 advisory docs assert the
+  superseded molecule-gen framing. Re-point: reaction tokenizer + dataset/balance (prereq) →
+  disconnection-exemplar context + σ-token → loop coupling; recast the redundancy ablation for
+  reactions. Expansion-phase, not blocking.
+- Parked charters (`flow-ts`, `path-correlation`): peripheral to the loop; leave parked.
+
+**Common thread:** the surrogate *substrate* is built; what's missing program-wide is the loop's
+**connective tissue** — the acquisition primitive (σ→query selection), the oracle-on-demand
+interface, and a reaction proposer — not the components themselves.
+
 _(Awaiting the first shared experimental result to record a derived finding.)_
