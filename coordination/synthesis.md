@@ -151,4 +151,33 @@ Audit after ADR 0003; verdicts + re-pointing delivered to each leaf's inbox (del
 **connective tissue** — the acquisition primitive (σ→query selection), the oracle-on-demand
 interface, and a reaction proposer — not the components themselves.
 
+## Search guidance vs feasibility — the two-knob split (new node `retro-planning`, 2026-06-18)
+The student 190-hard deliverable forced a reframe (Chemie status, 2026-06-18). The
+KPV result `final_kpv_results_190_hard_RetroFallback.csv`: planner returns ≥1 route on
+**190/190** targets, only **65/190 (34 %)** validate (in-dist 39 % / close 20 % / far 25 %),
+and **every** rejection is `ERROR_TYPE_5_INCOMPLETE` — budget-exhausted / dead-end,
+**1664/1664, zero feasibility-driven**. The binding constraint on hard/OOD targets is
+**search guidance, not feasibility**: retro-fallback's Retro\*/MCTS are steered by a static
+hand-crafted **SAScore** cost-to-go heuristic; the program improved the **edge costs** (ξ_f)
+but never touched the **heuristic `h`**.
+
+So the AND-OR planner has **two knobs**, now split across two leaves:
+- **`retro-pfn` owns ξ_f — edge costs** (which reactions are feasible).
+- **`retro-planning` owns `h` — cost-to-go** (which node to expand): learned, rank-trained,
+  uncertainty-aware. Seeded as a Chemie leaf (ADR there: `retro-planning/coordination/adr/0001`).
+
+They compose (`h × edge-costs`) on the same syntheseus harness, shared 190-hard benchmark,
+metric = **budget-to-solve per stratum** (not SSP). First obligation in the new node is a SOTA
+lit pass (`retro-planning/literature/LIT_BRIEF.md`) before any build.
+
+**Three convergences this surfaces (program-level):**
+1. **"Rank, not estimate" recurs on both sides.** retro-pfn's mechanism ξ_f is a strong
+   *ranker* (ρ 0.585) that needed σ-scaling to *calibrate*; Chrestien et al (NeurIPS 2023)
+   train `h` to *rank*, not regress cost-to-goal. Same principle, edge-cost and cost-to-go.
+2. **σ-as-exploration reframes the σ⊥error result.** retro-pfn's GP-σ ⊥ prediction-error
+   killed σ as a *feasibility-acquisition* signal; σ as a *search exploration bonus* (UCB,
+   à la Jin–Yang–Wang LSVI-UCB) needs σ to track unexploredness, not error — possibly live here.
+3. **PFN/DecisionBO fit:** an in-context tree-conditioned heuristic = the amortised PFN shape;
+   "train `h` for solve-rate, not cost-accuracy" = DecisionBO's "train for the decision."
+
 _(Awaiting the first shared experimental result to record a derived finding.)_

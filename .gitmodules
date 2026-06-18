@@ -4,3 +4,6 @@
 [submodule "briefing"]
 	path = briefing
 	url = git@github.com:aicenter/retrosyntesis-knowledgebase.git
+[submodule "retro-planning"]
+	path = retro-planning
+	url = git@github.com:aicenter/retro-planning.git

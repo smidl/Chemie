@@ -31,6 +31,12 @@ orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
 - `retro-pfn/` — reaction-feasibility & energetics modeling toward ξ_f (the
   retrosynthesis-feasibility project). **Submodule** (`aicenter/retro-pfn`).
 - `MolGPT/` — general-purpose molecule model, GPT→PFN; reaction-generator direction.
+- `retro-planning/` — **learned search heuristics** for retrosynthesis planning
+  (the search-`h` side). Seeded 2026-06-18 from the status finding that the
+  190-hard budget wall is search guidance, not feasibility (SAScore `h` vs a
+  learned rank-trained `h`). Sibling to retro-pfn: it owns `h` (which node to
+  expand); retro-pfn owns ξ_f (edge costs). They compose on the same syntheseus
+  harness. **Submodule** (`aicenter/retro-planning`).
 
 ## External & boundary (declared here — Chemie is the single inventory owner)
 - `retrosyntesis/` — **external** student route-generation/validation repo (inventory only).
