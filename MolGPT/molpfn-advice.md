@@ -78,3 +78,48 @@ context-vs-no-context ablation decide whether there's a contribution. Lead with 
 `xif/PLAN.md` model-class-3 ("PFN-as-correlated-ξ_f") is the **prediction-side** PFN
 — same in-context-vs-amortized-Bayesian object from two ends. Bidirectional transfer
 recorded in Chemie root `coordination/synthesis.md`.
+
+### 2026-06-28 — How to measure a reaction proposer (proxy metrics) + a first reproduction
+
+**The ultimate test is route-finding.** A proposer is only good if, when it feeds the
+search, more targets get **solved** (route reaches buyable stock) at a given budget. That is
+the metric that matters — but it needs full multi-step planning runs, which are expensive. So
+we need cheap proxies that *predict* it before launching the expensive stuff.
+
+**The proxy to avoid: single-step top-1 vs the recorded reaction.** Cheap, but a poor
+predictor — (i) it's the **reference-match bias** (a different-but-valid disconnection scores
+as wrong), and (ii) single-step accuracy doesn't track multi-step solve-rate (the search
+consumes the whole top-k shortlist; route-finding needs *recall + diversity + leading toward
+stock*, not rank-1 = the patent reaction). [Syntheseus / "Procrustean bed".]
+
+**Proxy ladder (cheap → expensive):**
+1. *No-search gate (cheapest).* On held-out steps, over the top-k proposals: **round-trip
+   validity** (a forward model recovers the product — reuse Joris's ReactionT5 round-trip),
+   **diversity** (distinct templates/scaffolds = independent backups), **mass-balance rate**.
+   Answers "are the proposals real, varied, well-formed." Fail here → don't bother searching.
+   Reference-light middle option: **top-k recall on PaRoutes route steps** (n5, multi-route →
+   blunts the reference bias) — better than USPTO-50k top-1.
+2. *Faithful cheap proxy.* **Shallow / low-budget search on a small target slice (~10–20),
+   solve-rate + nodes-to-solve vs baseline.** The cheapest *end-to-end* signal — it captures
+   "leads to a route," which single-step metrics can't — yet avoids the full hard set.
+3. *Ultimate (expensive).* Full-budget search on the hard set.
+
+**Baseline at every stage = the pipeline's actual proposer: AiZynthFinder's `uspto` expansion
+policy** (template one-step retro), not only the generative-model SOTA. A good proxy number
+against ReactionT5 / Molecular-Transformer still won't show MolPFN earns its place in the
+*loop* — that needs beating (or usefully complementing) the template policy, ideally *where
+ξ_f is uncertain* (the active-acquisition value).
+
+**Suggested entry reproduction (first concrete step):** a **template-free one-step
+retrosynthesis model on USPTO-50k** — **Molecular Transformer (Schwaller 2019)** as the
+canonical target, or **ReactionT5 (Sagawa 2023)** for lower friction (HuggingFace, and it
+reuses Joris's round-trip infra). Why this first:
+- builds the **reaction infrastructure** the re-point needs — reaction-SMILES tokenization
+  (`>>` / `.`), USPTO-50k handling, the retro task — which MolPFN currently lacks;
+- it *is* the **no-context arm** of the decisive context-redundancy ablation, so it's not
+  throwaway — it's the baseline the in-context model must beat;
+- it stands up the **proxy metrics** (top-k recall + round-trip) on a standard benchmark;
+- highly reproducible (standard data + public code).
+Then bolt the existing in-context support-set machinery onto this reaction baseline and run
+context-vs-no-context. (Verify the ReactionT5 / Molecular-Transformer citation details from a
+primary source before writing them up — global rule.)
