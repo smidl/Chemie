@@ -22,6 +22,9 @@ coord:
     - path: ./retro-generation
       remote: git@github.com:aicenter/retro-generation.git
       kind: student
+    - path: ./retro-physics-validation
+      remote: git@github.com:CVUT-students/retro-physics-validation.git
+      kind: student
 ---
 
 # Chemie — chemistry research (coord orchestrator, pilot)
@@ -47,6 +50,9 @@ orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
 - `retro-generation/` — **external** student **reaction-generation** repo (owner rektomar,
   `aicenter/retro-generation`); handoff of the generative-reaction line from MolGPT (2026-07-24).
   Inventory + coordination (inbox/outbox) only.
+- `retro-physics-validation/` — **external** student **physics-based validation-tool evaluation**
+  repo (owner jinrehacek, `CVUT-students/retro-physics-validation`; 2026-07-24). First task = blind
+  tool-suitability study on anonymized candidate routes. Inventory + coordination only.
 - `proposal/` — **boundary**, Overleaf paper (`flow: both`).
 - `briefing/` — **boundary**, the colleague knowledge base
   (`aicenter/retrosyntesis-knowledgebase`, `flow: out`, submodule): the outward
