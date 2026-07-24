@@ -1,3 +1,8 @@
+> **⚠️ MOVED (2026-07-24).** The reaction-generation line was handed off to the sibling leaf
+> **`retro-generation/`**; the unified survey now lives at `retro-generation/literature/sota.md`
+> (+ pooled `~/agents/library/sota/generative-reaction-prediction.md`). This file is retained for
+> history. MolGPT continues the *molecule*-generation track.
+
 # SOTA — in-context learning for a generative model of reactions (MolGPT)
 
 Consolidated 2026-06-18. MolGPT's primary framing: a **trained, in-context

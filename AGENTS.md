@@ -19,6 +19,9 @@ coord:
     - path: ./retrosyntesis
       remote: git@github.com:aicenter/retrosyntesis.git
       kind: student
+    - path: ./retro-generation
+      remote: git@github.com:aicenter/retro-generation.git
+      kind: student
 ---
 
 # Chemie — chemistry research (coord orchestrator, pilot)
@@ -30,7 +33,8 @@ orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
 ## Enrolled children (peer leaves)
 - `retro-pfn/` — reaction-feasibility & energetics modeling toward ξ_f (the
   retrosynthesis-feasibility project). **Submodule** (`aicenter/retro-pfn`).
-- `MolGPT/` — general-purpose molecule model, GPT→PFN; reaction-generator direction.
+- `MolGPT/` — general-purpose **molecule**-generation model (GPT→PFN). The reaction-generation
+  line was split out to `retro-generation/` on 2026-07-24; the two tracks run in parallel.
 - `retro-planning/` — **learned search heuristics** for retrosynthesis planning
   (the search-`h` side). Seeded 2026-06-18 from the status finding that the
   190-hard budget wall is search guidance, not feasibility (SAScore `h` vs a
@@ -40,6 +44,9 @@ orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
 
 ## External & boundary (declared here — Chemie is the single inventory owner)
 - `retrosyntesis/` — **external** student route-generation/validation repo (inventory only).
+- `retro-generation/` — **external** student **reaction-generation** repo (owner rektomar,
+  `aicenter/retro-generation`); handoff of the generative-reaction line from MolGPT (2026-07-24).
+  Inventory + coordination (inbox/outbox) only.
 - `proposal/` — **boundary**, Overleaf paper (`flow: both`).
 - `briefing/` — **boundary**, the colleague knowledge base
   (`aicenter/retrosyntesis-knowledgebase`, `flow: out`, submodule): the outward

@@ -44,10 +44,12 @@ Leaf with no enrolled children. `coordination/` is live: outward-relevant findin
 `coordination/inbox.md`. Cross-cutting PFN/convergence items also surface in the root's
 `coordination/synthesis.md`.
 
-## Role in the active-acquisition program (Chemie ADR 0003)
-**Candidate proposer (T3):** a trained, in-context **reaction** generator for the
-generate-and-validate loop (propose ↔ retro-pfn's ξ_f validates). The current MolPFN
-(in-context *molecule* generation) is the infrastructure; the re-point to *reactions*
-(balanced, σ/frontier-conditioned) is the expansion-phase direction — see
-`coordination/inbox.md` (2026-06-15). The primary framing above predates ADR 0003 and
-is being re-pointed accordingly.
+## Reaction-generation line — handed off to `retro-generation/` (2026-07-24)
+The **reaction**-generation direction (in-context reaction proposer for the
+generate-and-validate loop) has been **moved out** to the sibling student leaf
+**`retro-generation/`** (owner rektomar) — see `retro-generation/HANDOVER.md` and
+`retro-generation/coordination/adr/0001`. **MolGPT continues the *molecule*-generation
+track** (GPT → PFN); the two tracks run **in parallel**, with any retirement decided later
+based on which proves more promising. `MolPFN/` stays here as the molecule-generation
+infrastructure. (Earlier notes casting MolGPT as the reaction proposer / ADR-0003 T3 are
+superseded by this split.)

@@ -22,6 +22,7 @@ RetroDemo/
 
 # external / boundary repos — inventory-only (declared in markers, NOT tracked here)
 /retrosyntesis/
+/retro-generation/
 /proposal/
 MolGPT/MolPFN/
 MolGPT/phd-proposal/
