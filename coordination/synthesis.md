@@ -74,7 +74,12 @@ plus non-in-context reaction transformers (Molecular Transformer / Schwaller 201
 **not yet pooled**, Chemformer, T5Chem) as baselines.
 
 Still a *direction, not a task*: MolPFN is mid-debugging on molecule generation,
-retro-pfn is GP-stage on ξ_f. Reaction→molecule feedback already live: retro-pfn's
+retro-pfn is GP-stage on ξ_f.
+> **CORRECTED 2026-07-28.** (i) The reaction-generator direction **left this tree's MolGPT**
+> on 2026-07-24 — it is now `retro-generation`'s (rektomar) charter; MolGPT keeps the molecule
+> track. (ii) "MolPFN mid-debugging" is superseded: MolPFN completed a 6-run S0–S3 factorial on
+> 2026-07-24 with a quantitative result (location transfers, **scale does not**). See
+> §DEEP STATUS 2026-07-28 §1. Reaction→molecule feedback already live: retro-pfn's
 **mechanism-kernel** finding (structure rugged, mechanism smooth over feasibility)
 tells the generator which *similarity* its context selection should use.
 
@@ -139,7 +144,12 @@ Audit after ADR 0003; verdicts + re-pointing delivered to each leaf's inbox (del
   on the SNAr negative (which closed only the condition-head sub-question); bridge scoped as bulk
   pre-compute. Re-point (needs ratification): re-charter as on-demand `oracle(rxn,cond)→(barrier,σ)`;
   un-park around the oracle role; adopt the Suzuki/AIMNet VOI probe; TS-automation = first task.
-- **MolGPT (T3 proposer): DIVERGENT (substance) / PARTIAL (infra)** — in-context *molecule*
+- **MolGPT (T3 proposer): DIVERGENT (substance) / PARTIAL (infra)** — _**VOIDED 2026-07-28**: this
+  verdict and its re-point no longer apply to MolGPT. The reaction line was handed to
+  `retro-generation` on 2026-07-24; MolGPT owns the **molecule** track and, graded on that scope, is
+  aligned and evidence-producing. The T3 slot is held by `retro-generation`, whose first obligation
+  is prior art — so the slot is vacant-and-earlier-stage, not filled. Original text kept below for
+  provenance._ — in-context *molecule*
   generation now; role needs in-context *reaction* generation, balanced, σ-frontier-coupled. Infra
   reusable; reaction I/O + balance + σ-conditioning absent; its 3 advisory docs assert the
   superseded molecule-gen framing. Re-point: reaction tokenizer + dataset/balance (prereq) →
@@ -179,5 +189,242 @@ lit pass (`retro-planning/literature/LIT_BRIEF.md`) before any build.
    à la Jin–Yang–Wang LSVI-UCB) needs σ to track unexploredness, not error — possibly live here.
 3. **PFN/DecisionBO fit:** an in-context tree-conditioned heuristic = the amortised PFN shape;
    "train `h` for solve-rate, not cost-accuracy" = DecisionBO's "train for the decision."
+   > **UPDATED 2026-07-28.** The DecisionBO half is **corroborated** three ways and promoted to a
+   > program invariant (§DEEP STATUS §2). The *in-context/PFN-shape* half is **weakened**: MolPFN
+   > showed an in-context model does not learn calibrated scale from its context (§DEEP STATUS §1),
+   > so "amortised PFN shape" cannot be assumed to deliver a usable σ. Convergence 1
+   > ("rank, not estimate") also needs qualifying — MEEA's path-consistency term already ranks, so
+   > rank **competes rather than stacks** with the strong baseline (§DEEP STATUS §3).
 
-_(Awaiting the first shared experimental result to record a derived finding.)_
+_(Superseded by the deep-status synthesis below — the shared results have landed.)_
+
+## DEEP STATUS 2026-07-28 — the σ pillar is failing everywhere; the data/objective pillar is winning
+Full recursive pull (3 enrolled leaves + 3 external students + 2 boundaries + tier-0 board).
+This section **updates the program-level picture** recorded 2026-06-23 and above; where it
+conflicts with an earlier paragraph in this file, this one is current.
+
+### 1. Derived finding — THREE independent σ negatives, one mechanism
+The program's organizing thesis (06-14) is "calibrated surrogate queries the expensive oracle
+only where **uncertain** + where it **matters**." Every leaf that has now *tested* the
+uncertainty half has returned a negative, by a different route:
+- **retro-pfn** (06-17/18): GP/deep-ensemble σ ⊥ |error| (ρ 0.04–0.18, 2 models × 2 reps × 2
+  datasets); σ-acquisition ≈ random / worse. The one signal that beat random is the
+  **classifier's predictive/aleatoric entropy** (F1 0.83/0.82 vs random 0.77) — and
+  **epistemic specifically stayed ≈ random** (0.76).
+- **retro-planning** (06-21/22, re-confirmed): epistemic-MCTS (σ-into-leaf-value bonus) clean
+  NEGATIVE, parked. Externally, **KeeA\* (NeurIPS'25) now occupies epistemic *selection***, so
+  the novelty of "uncertainty-aware `h`" has eroded as well.
+- **MolGPT/MolPFN** (07-24, NEW — never surfaced by the leaf): an in-context generator learns
+  **location** from its support set but **not scale**. Generated std is flat (~0.31) while
+  context std spans 0.087→0.330; the gen/ctx ratio crosses 1.0, the signature of a **fixed
+  output floor** set by *conditioning difficulty* (0.066→0.31 across S0→S3), not by the context.
+  Holds even in the two configs built to require width tracking.
+
+**The convergence (new, program-level).** These are not three unrelated setbacks. Location/rank
+information transfers; **calibrated scale does not** — whether the vehicle is a GP posterior, an
+MCTS leaf bonus, or an in-context support set. MolPFN's floor is the *generative* face of the
+same object retro-pfn measured as σ⊥error. This directly threatens (a) the σ-token half of the
+reaction-proposer differentiator now held by `retro-generation`, and (b) this file's
+retro-planning "convergence 3" (in-context tree-conditioned `h` = amortised PFN shape).
+
+**Sharper worry nobody has confronted.** The *only* acquisition signal that works is largely
+**aleatoric** entropy — irreducible noise. "Query where the label is noisy" is not the thesis;
+the thesis needs *reducible* (epistemic) uncertainty. The empirically-supported version of our
+own program is therefore **narrower and differently motivated** than what we publish. See
+§Actions A1.
+
+**Prior-art squeeze on the same claim** (`retro-generation`, 07-27): Molecular Transformer's
+plain likelihood-derived confidence classifies its own correctness at **ROC-AUC 0.89** — a
+non-Bayesian, 2019, 4-layer baseline. Any "calibrated in-context σ" claim must beat that.
+
+### 2. Derived finding — what IS working: data regime + training objective, not cleverness
+The positive results across three nodes share a shape:
+- **retro-planning verdict flip (07-03/04)**: L\* went from losing to **winning** against the
+  Retro\* value net purely by **training-breadth/distribution match** — 149 easy trees →
+  8,628 PaRoutes-n1 trees (99.2 ± 0.3% vs 97.5 ± 0.7% on Chen-190, ~26% fewer expansions;
+  64.3 vs 61.8 pooled on 6 drug-like sets, winning all 6, with a pure-`h` control). The earlier
+  "L\* degrades OOD" was **coverage** (the rank loss only constrains pairs that co-occurred on
+  OPEN), not representation and not scale.
+- **MEEA\*-PC (07-05)**: pooled **72.7%** vs L\* 64.3 vs vanilla 61.8 (~2× efficiency) — credited
+  to **data scale × additive-set architecture × path-consistency**, not to search (search is
+  near-saturated: MEEA is *below* SeeA\* on easy in-dist USPTO, 95.5 vs 97.5).
+- **retro-pfn's 06-18 reversal** came from running Zhong's *actual* pipeline, not a better idea.
+- **retro-generation (07-27)**: two exact reproductions in 3 days (ReactionT5 92.60 vs 92.8;
+  Molecular Transformer 90.40 vs 90.4) — rigour, not novelty, produced the useful findings.
+
+**Program re-weight this justifies:** shift emphasis from *"find the right uncertainty signal"*
+toward *"the right training objective in the right data regime."* This is the empirical content
+of the 44-day-old tier-0 message from `PFN4BOrevisited` (decision-focused learning: likelihood
+quality ⟂ decision quality) — which is now **strongly corroborated from three directions** and
+should be closed as an *upgraded* invariant, not merely acknowledged.
+
+### 3. Derived finding — the differentiator has moved (retro-planning)
+"Rank/tree-trained `h`" beats the *weak/vanilla* baseline robustly, but is **not
+SOTA-competitive**: MEEA\*-PC beats it by 8–11 pt. Worse for the thesis, MEEA's
+path-consistency term **already ranks** — vertically (parent↔child along edges) where L\* ranks
+horizontally (on-path vs off-path siblings on the OPEN cut) — so rank **competes rather than
+stacks**. The live question is now "does rank/σ help a **strong** architecture" (leaf's H1/H2),
+untested. PC is dense/absolute/propagating where rank is sparse and relative: that is the
+leaf's own explanation of the coverage gap, and the most transferable methodological idea the
+tree has produced this month.
+
+### 4. Cross-cutting: the "route validation is a metric artifact" thread
+Three nodes independently hit the same wall — our *validation* signals are measurement
+artifacts before they are chemistry:
+- **Draslovka** (07-24, unenrolled partner track): T5 round-trip failures are **in-distribution**,
+  not OOD — MMA has NLL≈0.000 but round-trip FAIL (**metric artifact**); phenytoin is a
+  **granularity mismatch** (multi-step named reaction lumped into one arrow); mass balance flags
+  everything (retro steps drop byproducts). The LLM judge rescues these by reasoning at the
+  **named-reaction level** — "reasoning granularity, not more data."
+- **retrosyntesis** (06-25): replaced the hard pass/fail round-trip with continuous
+  probabilities + AUROC, and fixed a ranking bug (was ranking only a route's *last* reaction).
+- **retro-physics-validation**'s brief already names the same two traps (lumped multi-step
+  transformations have no single TS; most entries unbalanced/ionic).
+This is a real cross-cutting finding and belongs in the program's framing: **granularity and
+balance are prerequisites for any feasibility oracle**, ξ_f included.
+
+### 5. Oracle ladder — first honest numbers (retrosyntesis, 07-24, 225 Transition1x rxns)
+Relaxed NEB (PySCF wB97x/6-31G(d)), 8 img/50 cyc: **MAE 8.83 kcal/mol, Spearman 0.902**, 1294
+s/row. 4 img/25 cyc: MAE 9.89, ρ 0.853, 393 s/row (the practical rung). **Skala Ea via a
+gradient-free LST shortcut FAILS** — MAE 47.72 (17.81 bias-corrected), +102% bias — although
+Skala **ΔE** is excellent (MAE 4.02, r 0.996). Reading: thermodynamics is cheap and solved;
+**barriers are not shortcut-able**, which is exactly the T2-oracle cost that makes acquisition
+worth doing — the thesis's *premise* is confirmed even as its *signal* is in doubt. AIMNet2
+barriers are still absent, so the 3-rung apples-to-apples barrier table does not exist.
+
+### 6. Charter corrections (this file was wrong)
+- **MolGPT is no longer T3.** The 06-15 audit verdict "MolGPT (T3 proposer): DIVERGENT" and its
+  re-point (reaction tokenizer → σ-token → loop coupling) **left the node on 2026-07-24**: the
+  reaction line was handed to `retro-generation` (rektomar). MolGPT keeps the **molecule** track
+  (GPT→PFN) and, graded on that scope, is aligned and — for the first time — evidence-producing.
+  **Consequence the program must absorb: the T3 proposer slot is now VACANT-and-earlier-stage,**
+  held by a node whose first obligation is prior-art review. The "missing connective tissue"
+  gap is *further* from closing than the 06-15 audit implies, not closer.
+- **retro-planning's two-track split (07-05)** exported the abstract-algorithmic half — including
+  the **paper** — to a root-level sister node `~/AIC/Planning`, outside Chemie.
+  _**Corrected 2026-07-28:** `~/AIC/Planning` **is** in the tier-0 registry (added by the 07-05
+  `/coord index` rebuild) — the leaf's "not yet in the coord registry" line is stale, and my
+  first reading of it was wrong. What was genuinely missing is the **relationship declaration at
+  this orchestrator**, now written into `AGENTS.md` §Peer trees: Planning is a **peer**, not a
+  child; Chemie does not manage it or pull it as a child; methods flow down to `retro-planning`,
+  190-hard phenomenology flows up; cross-tree traffic via the `~/agents` board._
+- **The 06-23 "keep H1 and H2 both live" posture is not retro-pfn's stance.** The leaf's own docs
+  treat barrier-GP σ as *falsified for acquisition* and keep the GP only as a marginal/ranking
+  head. The live dichotomy inside the leaf is **aleatoric vs epistemic entropy**, not GP-σ vs
+  entropy. Our recorded posture is one revision behind the leaf's.
+
+### 7. Execution reality (the uncomfortable half)
+- **retro-pfn: dormant since 2026-06-18** (5.5 weeks; one doc-housekeeping commit). The decisive
+  route-metric T-VOI head-to-head **never ran** — the spec exists (`xif/harness/ROUTE_BUILD_SPEC.md`),
+  no code followed. The "where it **matters**" (route-relevance) half of the thesis — the leaf's
+  actual differentiator — has **never been probed once**. `conditions/` (T2 oracle) unstarted;
+  AGENTS.md still calls it ACTIVE.
+- **retro-planning: idle 23 days**, and the two-track split + MEEA decomposition + H1 correction
+  + the two-axes tutorial are **uncommitted**, i.e. invisible to a submodule pull. Its outbox is
+  3 weeks and two headline results behind its own findings.
+- **MolGPT: outbox silent since 06-18** — the split and the first real results were never
+  reported; the results live only in an **unregistered** sibling repo (`result_coordination`,
+  rektomar's results-delivery channel).
+- **retrosyntesis: drifted — but the drift is asymmetric between its two students** (see §11).
+  Self-directed into the oracle rung (good work, §5) while **three standing asks are unfulfilled
+  across two nudges**: the decisive hard-target (c) test (uncap `max_routes`, all 3 arms,
+  per-stratum diversity — last touched 07-16, censored single-arm), syntheseus pluggable
+  `value_fn` on 190-hard, and `.gitmodules`.
+  _Corrected 2026-07-28: `.gitmodules` and the FlowER evaluation **were** delivered — on
+  `feature/FlowER_Model_Implementation` (07-27), not on `main`. So the failure is **merge and
+  report discipline**, not the work. The FlowER result is a clean decisive negative that satisfies
+  the 07-16 evidence gate and justifies parking FlowER: **T5 top-1 27.96% (59/211) vs FlowER
+  exact-match 10.24% (504/4923)** — "FlowER does not outperform T5 on exact matches." It has never
+  been written to the outbox._
+- **retro-physics-validation: zero student commits in 4 days**; Phases 0–3 were scoped offline so
+  RCI-pending is not a legitimate blocker, and nothing is flagged. Blinding intact.
+- **retro-generation: the velocity outlier** — and it is the only node with a question waiting on
+  us (below).
+
+### 8. Metric discipline slipped (both planning arenas)
+Program metric is **budget-to-solve per stratum**, never pooled. Current retro-planning headlines
+are solve-rate at fixed budget, **pooled** over 6 datasets, with the Medium-in-dist / Deep-OOD
+strata dropped; decisive runs moved to third-party harnesses (SeeA\*/KeeA\*/MEEA\*) with no λ and a
+500-call budget, **off syntheseus**. The "compose `h` × ξ_f on syntheseus" deliverable therefore
+has no live vehicle, and the composition itself (ξ_f × L\*) is **NULL on payoff** (70% vs 69%
+depth-anchored vs 75% value-net) and data-blocked. Also: `hard50b` was a **ceiling artifact** of a
+file-ordered benchmark — a caution for any future val/test split here.
+
+### 9. Numbers to correct wherever we cite them
+- **Molecular Transformer USPTO_MIT top-1 is 90.4, not 88.8** (+1.6 pp). 88.8 is the paper's
+  *unaugmented Baseline* row whose weights were never released; the field, including ReactionT5's
+  comparison table, quotes it and understates the standard baseline.
+- **`sagawa2023_reactiont5` (preprint) ≠ `sagawa2025_reactiont5-jcheminf`**: 0.0 vs 92.8 top-1
+  un-fine-tuned. The released checkpoint matches the **journal** version. Our pool cites the preprint.
+- USPTO_MIT top-1 is **RDKit-version-dependent** (41/40,000 flip between RDKit 2024.03 and
+  2026.03 on identical predictions) — nobody in the field reports this; we should.
+- retro-planning internal inconsistency to reconcile before external use: 6-dataset L\* quoted as
+  both 65.7/63.2 and 64.3/61.8; MEEA as both 73.6 and 72.7.
+
+### 10. Actions this status generates (deliver-not-execute; not yet dispatched)
+- **A1 — retro-pfn (highest value).** The thesis needs the *route-relevance* ("where it matters")
+  probe far more than another uncertainty-signal comparison: it is the untested half and the only
+  un-scooped one. Run it on the classifier-entropy arm; drop the GP-σ vs entropy head-to-head as
+  the framing question and replace it with **aleatoric vs epistemic** — and answer explicitly
+  whether an aleatoric-driven loop is still the thesis we want to publish.
+- **A2 — retro-planning.** Commit the working tree (four artifacts are invisible to a pull);
+  write the verdict flip + MEEA\*-PC into the outbox; file an ADR for the `~/AIC/Planning` split
+  and decide registry enrollment; restore per-stratum budget-to-solve reporting.
+- **A3 — MolGPT.** Surface the variance-floor negative to this node with the σ read-across spelled
+  out; register `result_coordination`; append a superseding outbox entry. **Protocol breach to
+  repair:** we wrote `MolPFN/coordination/README.md` into an external student repo (marker says
+  "never write into it"), and it contains the now-**superseded** reaction roadmap — a student
+  reading MolPFN today gets the wrong direction.
+- **A4 — retrosyntesis.** Escalate `.gitmodules` from nudge to hard prerequisite; re-issue the (c)
+  test as the one deliverable, uncensored; ask for the 3-rung barrier table on *shared* TS
+  geometries (AIMNet2 rung missing).
+- **A5 — retro-generation.** Answer the open DECISION: **yes** to reproducing MT's
+  uncertainty ROC-AUC 0.89 before FusionRetro — cheap, artefacts downloaded, and it pressure-tests
+  the σ niche *before* any modelling commitment, which §1 makes urgent.
+- **A6 — retro-physics-validation.** Check-in; confirm or deny RCI. **Judgment call flagged, not
+  taken:** routing retrosyntesis' NEB-vs-Skala table (§5) to him would partly pre-answer the
+  tool-suitability question he is supposed to characterise independently — it does not break the
+  *route* blinding, but it does contaminate Phase 1. Owner should decide.
+- **A7 — tier-0.** Close the 44-day-old `PFN4BOrevisited` message, recording the §2 upgrade
+  (three-way corroboration), and record it in this node's `inbox.md` (it bypassed the inbox).
+- **A8 — briefing (flow: out) is 23 days stale and wrong in three places** — it still publishes the
+  down-weighted H1 σ-driven loop as current, still headlines L\* as "the win" (superseded by
+  MEEA\*-PC), and still attributes **reaction** generation to MolGPT. Needs a correcting pass
+  before the next publish, not a mechanical push.
+- **A9 — registry.** `Draslovka/` (active partner track, deliberately unenrolled), `_lib-inbox/`,
+  `datasets.tar.gz` are unlisted; add to the "not enrolled (transparent)" list and re-run
+  `/coord index` (marker count drifted 25→27).
+
+### 11. Student attribution inside `retrosyntesis` — the node has TWO owners on one seam
+`retrosyntesis` is co-owned (`owners: [moczyjor, mollerob]`), both ENSICAEN engineering students, and
+they never overlap on files. Attributing node-level status to "the student" has been hiding this. The
+reliable attribution key is the commit author on `coordination/outbox.md` — **entries are unsigned**,
+which is itself worth fixing.
+- **Joris Moczygeba** (`Smox656` / `JorisM16` / `moczyjor`, 76 commits) owns the **K-P-V benchmark /
+  planning / learned-validation** half: `src/benchmark/`, `retro_fallback_iclr24/`, `t5_performances/`,
+  the learned validators, `extraction_book_synthesis/`, `syntheseus`. He is the only student in the
+  tree with a **formal written phase ladder** (`doc/studentDocs/student_plan{,2}.md` + Phase 2
+  `retro-phase2-task.md`, French): Phase 0 "make the K-P-V loop run end-to-end" → Phase 1 "know
+  exactly where and why it fails" (stratified failure table, five decoupled metrics) → Phase 2
+  "implement and compare 5 validation approaches", pass bar FP 56%→≤42%, FN ≤15%, cost ≤5×.
+  He reported Phase 2 honestly as a **miss** (ensemble FP 61.4% vs the ≤42% bar, FN 7.0%).
+- **Robin Molle** (`molle` / `Robin Molle` / `mollerob`, 38 commits) owns the **physics-oracle** half:
+  `src/oracle_benchmark/` (16 files), `validation_dft_neb.py` / `validation_kinetics.py` /
+  `validation_skala.py`, `src/route_benchmark/` (leaf resolution + stratification), `rci_setup/`.
+  **He has no plan document of his own** — his only authored plan artifact is a French *translation*
+  of Joris's Phase-2 task. His charter exists solely as supervisor prose in the leaf's `inbox.md`
+  (06-24 "you own the oracle, your barriers are the labels"; 07-16 "make it a three-rung
+  oracle-*selection* benchmark — the objective is a decision, not a plot").
+- **Governance consequence:** Robin is now the de-facto owner of the program's **T2 oracle** — cited
+  as a named upstream dependency in `retro-pfn/conditions/README.md` ("Robin's DFT-NEB = the PRIMARY
+  general source") and in the active-acquisition thesis — while having no plan doc, no thesis
+  statement, and no written objective. That is an unmanaged critical path.
+- **The one instruction that requires them to cooperate is the one neither has done:** gate Robin's
+  expensive NEB behind Joris's cheap T5 round-trip filter (asked 06-13, 06-24, 07-16). Without it
+  the on-demand-oracle architecture that makes 190-target scale tractable does not exist — and that
+  gating *is* the "oracle-on-demand interface" this file has been calling missing connective tissue
+  since 06-15. It is a **student-integration** gap, not a research gap.
+- Neither student has ever used the `BLOCKED:` / `DECISION NEEDED:` prefix the outbox protocol
+  invites; both instead report soft blockers inside prose (Joris: 10 days lost waiting on a PR that
+  was never a prerequisite; Robin: the AIMNet2 Python-3.11 pin, open since 06-29 with three offered
+  workarounds untaken).

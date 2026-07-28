@@ -31,8 +31,8 @@ Analysis: `sota.md`. Cross-cutting ICL picture: Chemie `coordination/synthesis.m
 ### Strand 5 — generative reaction models, not in-context (baselines)
 | pool key | short | note |
 |---|---|---|
-| `schwaller2019_molecular-transformer`, `tetko2020_...`, `irwin2022_chemformer`, `liu2017_seq2seq-retrosynthesis`, `chilingaryan2022_bartsmiles` | reaction transformers | conditional, not in-context |
-| `sagawa2023_reactiont5` | limited-data reaction T5 | generative baseline |
+| `schwaller2019_molecular-transformer`, `tetko2020_...`, `irwin2022_chemformer`, `liu2017_seq2seq-retrosynthesis`, `chilingaryan2022_bartsmiles` | reaction transformers | conditional, not in-context. **Baseline correction (2026-07-28):** Molecular Transformer's USPTO_MIT top-1 is **90.4, not 88.8** — 88.8 is the paper's *unaugmented Baseline* row whose weights were never released; the released model + headline is 90.4 (reproduced exactly at 90.40 by `retro-generation` 2026-07-27). ReactionT5's comparison table and much of the field quote 88.8, understating the standard baseline by 1.6 pp. Also: USPTO_MIT top-1 is RDKit-version-dependent (41/40,000 flip between RDKit 2024.03 and 2026.03 on identical predictions) — always record the RDKit version. |
+| `sagawa2025_reactiont5-jcheminf` | limited-data reaction T5 (**J. Cheminform. 2025** — cite THIS, not the `sagawa2023_reactiont5` preprint) | generative baseline. Numbers differ materially between versions: un-fine-tuned USPTO_MIT top-1 is **0.0 in the preprint vs 92.8 in the journal version**, and the released checkpoint matches the journal. Reproduced by `retro-generation` 2026-07-27 at **92.60** (40k test rxns, beam 5). |
 | `qiang2023_rxn-pretrain-conditional-generation` | reaction pretrain → conditional gen | closest "rxn→generation" precedent |
 | `schwaller2021_rxnfp` | reaction fingerprint | **used as code** (featurizer) |
 

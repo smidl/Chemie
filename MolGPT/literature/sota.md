@@ -67,10 +67,22 @@ with a structured generative head.
 ### 5. Generative reaction models, NOT in-context (baselines to beat)
 ✓ `schwaller2019_molecular-transformer`, ✓ `tetko2020_augmented-transformer-retrosynthesis`,
 ✓ `irwin2022_chemformer`, ✓ `chilingaryan2022_bartsmiles`, ✓ `liu2017_seq2seq-retrosynthesis`,
-+ `sagawa2023_reactiont5` (limited-data reaction T5), `qiang2023_rxn-pretrain-conditional-generation`
++ `sagawa2025_reactiont5-jcheminf` (limited-data reaction T5 — **the journal version, not the
+`sagawa2023_reactiont5` preprint**), `qiang2023_rxn-pretrain-conditional-generation`
 (**reaction pretraining → conditional generation — closest "reaction-knowledge→generation"
 precedent**). All conditional/fine-tuned, none support-set-conditioned. RXNFP
 (`schwaller2021_rxnfp`) is *used as code* (reaction featurizer) — concrete shared touchpoint.
+
+> **Baselines corrected 2026-07-28** (this section is retained for history; the live version is
+> `retro-generation/literature/sota.md`). Verified by exact reproduction, 40k USPTO_MIT test
+> reactions, beam 5: **Molecular Transformer top-1 = 90.4, NOT 88.8** (88.8 is the unreleased
+> unaugmented-Baseline row that ReactionT5 and much of the field quote → the standard baseline is
+> understated by 1.6 pp); **ReactionT5 = 92.8** in the J. Cheminform. version matching the
+> released checkpoint (the preprint's un-fine-tuned number is 0.0 — a different claim). USPTO_MIT
+> top-1 is RDKit-version-dependent (41/40,000 flip between 2024.03 and 2026.03), so record the
+> RDKit version with any number. Bearing on §2's PFN claim: Molecular Transformer's plain
+> likelihood-derived confidence already classifies its own correctness at **ROC-AUC 0.89** — the
+> bar any "calibrated in-context σ" claim must clear, set by a non-Bayesian 2019 model.
 
 ## Surviving novelty delta (what MolGPT would claim)
 A **trained in-context reaction proposer**: support set = disconnection exemplars
