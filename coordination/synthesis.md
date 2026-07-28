@@ -283,6 +283,41 @@ artifacts before they are chemistry:
 This is a real cross-cutting finding and belongs in the program's framing: **granularity and
 balance are prerequisites for any feasibility oracle**, ξ_f included.
 
+**QUANTIFIED 2026-07-28 — and promoted from observation to candidate program bottleneck.** Audited all
+11 Draslovka steps in `/mnt/data/resynthesis/draslovka/out/dE_lstar.json` by hand (RDKit atom+charge
+counts, verified). As emitted, **10/11 are unbalanced → `dE_kcal: null`**, i.e. xTB refused them and
+NEB would refuse identically. But the unbalancedness is **bookkeeping, not chemistry**:
+- **8/11 are balanced or one byproduct/counter-ion away**: cyanohydrin needs HCN instead of the
+  emitted **cyanide anion** (then balanced *exactly*, no byproduct); MMA/methyl-ester need `+H2O`;
+  amide↔ester need `+MeOH`/`+NH3`; hydantoin needs `+EtOH+H2O`; chlormequat needs `+[Br-]`.
+- **3/11 are not**: phenytoin/Biltz (a whole condensation cascade in one arrow, with **ethanol — a
+  solvent — listed as a reactant**); EDTA-via-4×-acetate (charge −4→0, and *chemically wrong* anyway,
+  so refusal is a **correct** verdict); and `CC(=O)O >> CC(=O)[O-]`, which is a protonation-state
+  change rather than a reaction and should be filtered upstream.
+
+**The deeper point — the mismatch is ONTOLOGICAL, not domain or cost.** Balance is the easy gate; the
+hard one is whether an arrow is a **single elementary step with one transition state**. Several of the
+8 balanced steps still are not: only **chlormequat (Menshutkin, textbook concerted SN2)** and
+**acetone+HCN** (rate-determining C–C formation) have clean single TSs; the hydration and Fischer
+esterification are computable as *uncatalysed* concerted TSs and informative precisely because the
+barrier should be high; the acyl substitutions and the hydantoin cyclocondensation are genuinely
+multi-step. **Honest yield: ~2–4 meaningful barriers out of 11.** We are asking a transition-state
+method to score **retro-template arrows**, which are overall-transformation bookkeeping objects, while
+barriers are defined on **elementary steps**. ξ_f inherits the same mismatch — it is trained on
+barrier data (Reaction-QM / Transition1x, elementary-ish) and deployed on template arrows.
+
+**Program consequence.** Byproduct-dropping is a property of template retrosynthesis *in general*, not
+of cyanide chemistry, so this admissibility rate is roughly what any physics rung sees on **any**
+planner output, pharma included. So the binding constraint on the validation programme may be neither
+oracle **accuracy** nor oracle **cost** — both of which Robin has now characterised well (§5) — but
+**how much planner output is admissible input at all**. Nobody has that number. It also reframes the
+learned-gate noise: T5 happily scores unbalanced, lumped arrows because it does not care about
+well-formedness, which is *why* it is noisy — so **the learned gate's false negatives and the physics
+gate's refusals share one root cause: representation, not chemical knowledge.** A
+normalisation/balancing layer between planner and oracle (SynRBL-class) is therefore an
+**engineering** prerequisite sitting in front of a research programme — cheap relative to what it
+unblocks, and currently owned by nobody.
+
 ### 5. Oracle ladder — first honest numbers (retrosyntesis, 07-24, 225 Transition1x rxns)
 Relaxed NEB (PySCF wB97x/6-31G(d)), 8 img/50 cyc: **MAE 8.83 kcal/mol, Spearman 0.902**, 1294
 s/row. 4 img/25 cyc: MAE 9.89, ρ 0.853, 393 s/row (the practical rung). **Skala Ea via a
