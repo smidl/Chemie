@@ -482,6 +482,15 @@ branches", leaving the **structural/latent GP as the most balanced method at sca
    > *despite* producing longer routes than independent — but the magnitudes are not interpretable
    > as they stand.
 
+6. **NEW, and it threatens every per-stratum claim in the tree: the OOD strata are not ordered by
+   difficulty.** Across **all three arms** `far` (deep-OOD) solves *better* than `close`
+   (0.704/0.778/0.778 vs 0.480/0.520/0.480). The same inversion appeared in the June KPV run
+   (in-dist 39% / close 20% / far 25%), so it **reproduces across runs and harnesses**. If
+   `calculate_ood_190.py` is not ordering by difficulty, then per-stratum reporting — ours,
+   retro-planning's in-dist/medium/deep-OOD splits, and any OOD-generalization claim built on this
+   benchmark — inherits the defect. Independent audit of the stratification is now a prerequisite,
+   not a nicety.
+
 **What this does to the program picture.** The mechanism kernel's *barrier-ranking* result (ρ 0.585 vs
 0.417 structural) is untouched — it remains a good ranker. What is **not** supported is the leap from
 "better barrier ranker" to "better route-level backup preservation", which is how this file and the
