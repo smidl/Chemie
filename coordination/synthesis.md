@@ -330,6 +330,26 @@ barriers are still absent, so the 3-rung apples-to-apples barrier table does not
   across two nudges**: the decisive hard-target (c) test (uncap `max_routes`, all 3 arms,
   per-stratum diversity — last touched 07-16, censored single-arm), syntheseus pluggable
   `value_fn` on 190-hard, and `.gitmodules`.
+  _**Corrected again 2026-07-28, from RCI (`sacct -u moczyjor`) — the "(c) test is stalled since
+  07-16" reading is WRONG and must not be repeated.** Joris has been running it near-continuously;
+  it is invisible only because everything lives in `/home/moczyjor` (mode **700**) and is never
+  reported. **A task is running right now** (array `11262590_92`, `rfb-missing`, n05, submitted
+  2026-07-28 10:41). What actually blocked him is an **engineering wall, not inattention**:
+  the uncapped run accumulates memory **without bound** — five successive `rfb-benchmark-full`
+  deaths, all `OUT_OF_MEMORY`, at 32G (2d05h) → 128G (12h) → 256G (1d01h) → 128G (6h) → 128G
+  (7h36), with **MaxRSS ≈ ReqMem every time** (33.4/32G, 133.9/128G, 267.9/256G). Removing
+  `max_routes=30` removed the thing that was bounding memory; more RAM will never fix it.
+  He then **re-architected correctly** to per-target SLURM arrays at 32G/task
+  (`rfb-benchmark-array` ×51, `rfb-dynamic-array` ×10) and is now gap-filling residual targets
+  **per arm** — `rfb-missing-independent` ×50, `rfb-missing` ×30, `rfb-missing-mech` ×15, i.e.
+  **the three-arm structure the (c) test requires exists**. Waves are shrinking and most tasks
+  finish in 1–30 min, so this is an endgame, not a stall. Two real risks remain: one target
+  OOM'd even at 32G per-task (`11253595_59`), and between two consecutive waves today the missing-index
+  set shifted by exactly −1 across all nine entries (31→30, 59→58, 70→69, 76→75, 88→87, 93→92,
+  114→113, 119→118, 121→120) — either a legitimate 1-based→0-based fix or a shifted target list
+  that will never converge; **ask, don't assume**. Nothing from this campaign is on the shared
+  store: `/mnt/data/resynthesis/retro-fallback-harness` still holds only the June-13 three-arm
+  smoke run (`stepc_{indep,mech,struct}`)._
   _Corrected 2026-07-28: `.gitmodules` and the FlowER evaluation **were** delivered — on
   `feature/FlowER_Model_Implementation` (07-27), not on `main`. So the failure is **merge and
   report discipline**, not the work. The FlowER result is a clean decisive negative that satisfies
