@@ -415,6 +415,67 @@ file-ordered benchmark — a caution for any future val/test split here.
   `datasets.tar.gz` are unlisted; add to the "not enrolled (transparent)" list and re-run
   `/coord index` (marker count drifted 25→27).
 
+### 10b. THE (c) TEST LANDED, 2026-07-28 15:32 — and the MECHANISM KERNEL LOSES at route level
+**This contradicts the program's banked headline and this file's own §Feasibility record. Flagging
+rather than absorbing.** Joris completed the uncapped 3-arm hard-target run (`max_routes` 30 →
+**10000**, `limit_rxn_model_calls` 500, **189/190** targets shared across all three arms — one lost
+to an OOM that corrupted its JSON). Artifacts on the shared store at
+`/mnt/data/resynthesis/data/data_student/retrofallback-feasibility_models/{independent,gp,mechanism-gp}_strate_spec_500_10000__/`,
+report `report_fm_comparison.txt`, reported in the leaf outbox (`513adb7`).
+
+At feasibility threshold ≥0.1 (n: close 25 / far 27 / in-dist 137):
+
+| stratum | arm | is_solved | top_feas | avg_n_rxn | n_viable | mech_diversity |
+|---|---|---|---|---|---|---|
+| close | independent | 0.480 | 0.157 | 2.55 | 115.7 | 26.9 |
+| close | **structural GP** | **0.520** | **0.210** | 3.68 | 1466.0 | **58.8** |
+| close | mechanism-GP | 0.480 | 0.183 | 3.75 | 1424.7 | 36.8 |
+| far | independent | 0.704 | 0.229 | 3.92 | 210.0 | 41.5 |
+| far | **structural GP** | **0.778** | **0.315** | 5.45 | 2355.6 | **88.0** |
+| far | mechanism-GP | **0.778** | 0.298 | 5.51 | 1859.6 | 59.6 |
+| in-dist | independent | 0.737 | 0.235 | 3.99 | 180.0 | 32.9 |
+| in-dist | structural GP | 0.745 | 0.292 | 5.56 | 3514.1 | **69.9** |
+| in-dist | **mechanism-GP** | **0.781** | 0.281 | 6.00 | 2947.2 | 57.7 |
+
+**The student's conclusion** (his words): mechanism-GP does **not** preserve higher backup diversity
+than structural; on `far` it is worse (59.6 vs 88.0 templates), finds fewer viable routes and forces
+longer routes; "the mechanistic covariance appears too rigid, heavily penalizing otherwise valid
+branches", leaving the **structural/latent GP as the most balanced method at scale**.
+
+**Orchestrator reading — the direction is real, the stated strength is not yet supported:**
+1. **On solve rate the mechanism kernel is NOT worse** — it is *best* in-dist (0.781 vs 0.745/0.737),
+   tied on far, and one target behind on close (12 vs 13 of 25, i.e. noise). The negative is
+   specifically about **diversity / n_viable**.
+2. **Those two metrics are threshold-confounded, in the same family as the SSP confound we already
+   caught.** The comparison uses a **fixed absolute** cut of 0.1 while the arms' score distributions
+   differ systematically (struct `top_feas` is higher than mech in *every* stratum: 0.210/0.315/0.292
+   vs 0.183/0.298/0.281). A fixed cut therefore admits more of struct's routes by construction. At
+   threshold 0.3 the counts collapse (n_viable struct 4.4–6.8) and the ordering scrambles
+   (mech in-dist 81.0 vs struct 6.8), which is what a calibration artifact looks like. **A
+   calibration-matched or per-arm-quantile comparison is required before this is a verdict.**
+3. **The 07-03 10-target positive did not survive scale-up — and the cap was the reason.** Capped at
+   30 routes the n_viable ordering was indep 21.0 > mech 15.0 > struct 12.1 with mech best on
+   diversity (12.9 vs 7.7); uncapped it **inverts** to struct 1466–3514 >> mech 1425–2947 >> indep
+   116–210. The censoring Joris himself identified was suppressing exactly the arms that generate the
+   most routes. Clean methodological finding: **that earlier "positive" was a small-n + censored
+   artifact, and we recorded it as a result.**
+4. **The program's declared metric is still not delivered:** `solution_time` is `inf` for **every arm
+   in every stratum**, so budget-to-solve per stratum cannot be read from this run at all.
+5. **Separate and possibly bigger finding, unremarked by the student: ξ_f is drastically
+   under-confident.** Sweeping the threshold, solve rates go 48–78% (≥0.1) → 28–70% (≥0.3) → 0–12%
+   (≥0.5) → **0.000 everywhere at ≥0.7 and ≥0.9**. **No route produced by any arm reaches feasibility
+   0.7.** Either the calibration is badly off at the top of the range or nothing being proposed is
+   actually feasible; both readings matter more to the program than the arm ranking does.
+
+**What this does to the program picture.** The mechanism kernel's *barrier-ranking* result (ρ 0.585 vs
+0.417 structural) is untouched — it remains a good ranker. What is **not** supported is the leap from
+"better barrier ranker" to "better route-level backup preservation", which is how this file and the
+published briefing have been presenting it. That makes this the **fourth** instance of today's
+program-level pattern (§1–2): a component-level improvement that fails to survive the
+decision-level metric. It is the reaction/route-side confirmation of the decision-focused-learning
+invariant, arriving from an independent direction. Consequence for the briefing: the ✓ on the
+mechanism kernel must be qualified as a *ranking* result, not a route-level one.
+
 ### 11. Student attribution inside `retrosyntesis` — the node has TWO owners on one seam
 `retrosyntesis` is co-owned (`owners: [moczyjor, mollerob]`), both ENSICAEN engineering students, and
 they never overlap on files. Attributing node-level status to "the student" has been hiding this. The
