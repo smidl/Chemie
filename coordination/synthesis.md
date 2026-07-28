@@ -461,11 +461,26 @@ branches", leaving the **structural/latent GP as the most balanced method at sca
    artifact, and we recorded it as a result.**
 4. **The program's declared metric is still not delivered:** `solution_time` is `inf` for **every arm
    in every stratum**, so budget-to-solve per stratum cannot be read from this run at all.
-5. **Separate and possibly bigger finding, unremarked by the student: ξ_f is drastically
-   under-confident.** Sweeping the threshold, solve rates go 48–78% (≥0.1) → 28–70% (≥0.3) → 0–12%
-   (≥0.5) → **0.000 everywhere at ≥0.7 and ≥0.9**. **No route produced by any arm reaches feasibility
-   0.7.** Either the calibration is badly off at the top of the range or nothing being proposed is
-   actually feasible; both readings matter more to the program than the arm ranking does.
+5. **Threshold sweep: no route from any arm reaches feasibility ≥0.7.** Solve rates go 48–78% (≥0.1)
+   → 28–70% (≥0.3) → 0–12% (≥0.5) → **0.000 everywhere at ≥0.7 and ≥0.9**.
+   > **⚠ Self-correction, same day.** I first recorded this as "ξ_f is drastically under-confident,"
+   > arguably bigger than the arm ranking. **That reading is probably wrong and must be excluded
+   > before it is repeated.** Route feasibility in retro-fallback **compounds over steps** (a product
+   > of per-reaction feasibilities in the independent case), and mean route length here is
+   > **3.7–6.0 steps**. Reaching a *route* score of 0.7 over 6 steps needs ≈0.94 per step; over 4
+   > steps ≈0.91. So a 0.7 route-level ceiling may be **arithmetically expected from compounding, not
+   > a calibration defect at all** — consistent with retro-pfn's banked *marginal* calibration
+   > (σ-scaling κ=1.71, coverage 0.949). The sweep supports compounding: as the threshold rises the
+   > surviving routes get sharply shorter (in-dist mech `avg_n_rxn` 6.00 → 2.30 → 0.14 at
+   > ≥0.1/0.3/0.5). Cheap decisive check: regress route score on route length.
+   >
+   > **This introduces a SECOND confound into the arm table above.** If route score compounds, a
+   > fixed absolute threshold **systematically penalizes whichever arm finds longer routes** — and
+   > the arms differ markedly in length (independent 2.5–4.0 vs structural 3.7–5.6 vs mechanism
+   > 3.7–6.0). So the fixed-0.1 comparison is confounded by **both** per-arm score distribution
+   > **and** route length. Note this cuts *for* the structural arm's win, since it leads on diversity
+   > *despite* producing longer routes than independent — but the magnitudes are not interpretable
+   > as they stand.
 
 **What this does to the program picture.** The mechanism kernel's *barrier-ranking* result (ρ 0.585 vs
 0.417 structural) is untouched — it remains a good ranker. What is **not** supported is the leap from
