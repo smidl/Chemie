@@ -306,6 +306,25 @@ method to score **retro-template arrows**, which are overall-transformation book
 barriers are defined on **elementary steps**. ξ_f inherits the same mismatch — it is trained on
 barrier data (Reaction-QM / Transition1x, elementary-ish) and deployed on template arrows.
 
+**MEASURED 2026-07-29 — the answer is ZERO, and my estimate above was wrong.** The physics student ran
+the set (`/mnt/data/resynthesis/outputs/specialty_11/results.json`, 4 865 s of DFT). Of 11 steps:
+**0 barriers obtained.** 7 correctly excluded on input; 1 (`chlormequat`, Menshutkin) correctly
+**skipped** because the pipeline has no implicit-solvation path and he declined to publish an
+untrustworthy gas-phase number; and the 3 I predicted would be "computable as uncatalysed concerted
+TSs" — cyanohydrin, MAA hydration, MMA esterification — all returned
+**`failed_no_ts_found` / `NON_MONOTONIC_PATH`** after 25–30 min each. A non-monotonic NEB path means
+there is **no single maximum**, i.e. these arrows are *not* elementary steps either, even once
+balanced. So my "~2–4 meaningful barriers out of 11" was optimistic by 2–4.
+
+**Revised, and this is the harder claim:** balance repair is *necessary but nowhere near sufficient*.
+The binding gate is **elementary-step granularity**, and on real planner output it currently rejects
+**everything**. Retro templates emit *overall transformations*; a transition state exists only for an
+*elementary* step; nothing in our stack bridges the two. Note the failures are **diagnoses, not
+crashes** — the NEB ran to completion and reported "this is not one step", which is the physics side
+independently confirming the granularity finding on three further cases. Also note the honest cost:
+**81 minutes of DFT to learn that the inputs were ill-posed** — precisely the waste a cheap
+admissibility check in front of the oracle would prevent.
+
 **Program consequence.** Byproduct-dropping is a property of template retrosynthesis *in general*, not
 of cyanide chemistry, so this admissibility rate is roughly what any physics rung sees on **any**
 planner output, pharma included. So the binding constraint on the validation programme may be neither
