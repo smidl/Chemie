@@ -686,6 +686,40 @@ statement about the input, and it should be reported as `INDETERMINATE`, not as 
 endpoint/level *mismatch* — but the magnitudes are not his); n=4; MMFF-relaxing a Transition1x
 geometry stands in for "an RDKit embedding" rather than being literally his conversion path.
 
+### CONFIRMED AT DFT 2026-07-30 — root cause is a COLLAPSED MULTI-FRAGMENT EMBEDDING
+Repeated the D/E arms at ab-initio level on **`spec01_cyanohydrin`** — the specialty set's own
+designated positive control — with hand-written, fully H-explicit **atom-mapped** SMILES (13 atoms,
+formula check C4H7NO, all 13 map numbers bijective). Arm D reproduced **`NON_MONOTONIC_PATH`**, and
+the recorded endpoint energies gave it away:
+
+- `e_react` = **−209.75 Ha**, `e_prod` = **−284.66 Ha** — a **75 Hartree** (≈47 000 kcal/mol) gap
+  between two structures with *identical atoms*. Impossible as chemistry.
+- Inspecting the geometry the pipeline was handed: **min interatomic distance 0.142 Å**, between the
+  acetone carbonyl carbon and the HCN carbon (a C–C bond is 1.54 Å). Whole-molecule extent only
+  4.18 Å for a two-molecule system. **The two fragments were embedded on top of each other.**
+
+**Why:** RDKit's ETKDG has **no intermolecular term for disconnected fragments**, so embedding a
+multi-fragment reactant SMILES collapses the fragments into one another. The pipeline then takes
+`e_react` as a **single point at that geometry, never optimised**, so the endpoint energy is tens of
+Hartree too high. The NEB relaxes the interior images to sane structures, which therefore sit far
+*below* the corrupt endpoint, and `hei < max(e_react,e_prod) − 1e-4` fires. There *is* an interior
+maximum; it is simply below a garbage endpoint. This explains all of it at once: 3/3 bimolecular
+failures, 450/450 on Transition1x (sane, DFT-optimised, supplied geometries), and the misleading
+"non-monotonic" wording.
+
+**The fix is therefore bigger than "optimise the endpoints"** — you cannot reliably optimise out of a
+0.14 Å C–C clash; the optimiser is as likely to simply let the fragments react. Required:
+1. embed **each fragment separately**;
+2. place them as a **pre-reaction complex** (reacting atoms ≈2.5–3.5 Å apart), not by a whole-system
+   embedder;
+3. **then** optimise the complex at the NEB's own level of theory;
+4. and add the **cheap pre-flight guard that would have caught this in milliseconds instead of
+   25 minutes of DFT**: reject any endpoint whose minimum interatomic distance is below ~0.8 Å, and
+   check the endpoint energy against the sum of separately-optimised fragment energies.
+
+Step 4 is the highest value-per-line change in this whole thread: a two-line sanity check in front of
+the oracle, versus 81 minutes of DFT spent on inputs that were never physically valid.
+
 **Consequences.** (i) The 0/11 admissibility result is **withdrawn** — it measured our endpoint
 handling. (ii) The granularity claim keeps only its independent Draslovka/Biltz support. (iii) The
 **normalisation layer** must therefore include *endpoint optimisation at the target level*, not just
