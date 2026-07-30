@@ -641,6 +641,56 @@ untrustworthy solvated number. The defect is in my task specification: **I asked
 instrument a SMILES-shaped question, and the layer that would bridge them is the very normalisation
 layer we have identified as missing.** The experiment presupposed the component under investigation.
 
+### MECHANISM FOUND AND FIXED 2026-07-30 — unrelaxed endpoint geometries. Reproduced on RCI.
+Run under this session (not delegated): `/mnt/data/resynthesis/admissibility/` — scripts, logs and
+JSON results. GFN2-xTB stands in for DFT (seconds, not half an hour); the algorithm mirrors
+`validation_dft_neb.py` exactly (idpp interpolate → relax band, 6 moving images / 50 LBFGS cycles →
+`hei < max(e_react,e_prod) − 1e-4`). Ground truth = Transition1x's own wB97x barriers.
+
+**Two wrong hypotheses eliminated first** (both mine): with mapping/placement varied and endpoints
+left as supplied, **neither** reproduced the failure. Pushing bimolecular fragments 8 Å apart merely
+**inflates** the barrier (96.6→138.7, 149→204 kcal/mol unrelaxed); an **element-sorted, silently
+wrong mapping** inflates it 3–10× (289 / 612 / 577 vs 96 / 149 / 162) or **crashes the calculator**.
+Consequential, but they do not produce `NON_MONOTONIC_PATH`.
+
+**The variable that does it: are the endpoints at a minimum of the NEB's own level of theory?**
+`e_react`/`e_prod` are **single points at the supplied geometries — never optimised**. Transition1x
+supplies wB97x-optimised endpoints, so a relaxing band cannot fall below them. A SMILES-derived
+geometry is a **force-field embedding**, so its single-point energy sits far too high, the interior
+images relax *below* it, and the path is rejected as "non-monotonic" while the chemistry is fine.
+Holding mapping and placement fixed and varying **only** this (n=4: 2 bimolecular, 2 unimolecular):
+
+| reaction | frags | ref. barrier | A: supplied (DFT min) | D: MMFF endpoints | E: **fix** — endpoints re-optimised at the NEB's level |
+|---|---|---|---|---|---|
+| C3H3N3O/rxn7723 | 2 | 77.5 | **OK**, HEI +26.1 | **NON_MONOTONIC**, HEI **−106.9** | **OK**, +15.5 |
+| C3H3N3O/rxn7724 | 2 | 88.8 | **OK**, +31.1 | **NON_MONOTONIC**, **−38.0** | **OK**, +60.9 |
+| C2H2N2O/rxn2091 | 1 | 88.7 | OK, +12.6 (barrier 82.8) | OK, +7.7 (87.7) | OK, +16.9 (82.0) |
+| C2H2N2O/rxn2092 | 1 | 127.4 | **NON_MONOTONIC**, −12.4 | (FF setup failed) | — |
+
+**Confirmed:** the flip is caused by endpoint relaxation state, the effect is enormous (up to
+**107 kcal/mol** below the endpoint maximum — not a marginal artefact), and it bites **bimolecular
+cases (2/2) but not unimolecular (0/1)** — matching Robin's 3-of-3 bimolecular failures exactly.
+For a two-fragment system a force field has no useful information about the intermolecular
+arrangement, so the endpoint lands very far off the electronic-structure surface.
+
+**THE FIX (one step): optimise both endpoints at the NEB's own level of theory before interpolating.**
+Arm E demonstrates it recovers a valid barrier on both cases that failed.
+
+**Second, independent finding — the criterion itself is unsafe.** On `rxn2092` the **control arm
+failed** with perfect supplied geometries: 1 false positive in 4. `NON_MONOTONIC_PATH` therefore
+conflates *bad input* with *unconverged band* (my bands sat at max|force| ≈ 0.06 vs a 0.0025
+threshold after 50 cycles). It needs a **convergence check attached** before it is read as a
+statement about the input, and it should be reported as `INDETERMINATE`, not as a rejection.
+
+**Honest caveats of this probe:** xTB not DFT (the mechanism is level-agnostic — it is about
+endpoint/level *mismatch* — but the magnitudes are not his); n=4; MMFF-relaxing a Transition1x
+geometry stands in for "an RDKit embedding" rather than being literally his conversion path.
+
+**Consequences.** (i) The 0/11 admissibility result is **withdrawn** — it measured our endpoint
+handling. (ii) The granularity claim keeps only its independent Draslovka/Biltz support. (iii) The
+**normalisation layer** must therefore include *endpoint optimisation at the target level*, not just
+balancing and mapping — a design requirement we did not know we had. (iv) Ready to transfer to Robin.
+
 **To settle it definitively (cheap, ~minutes):** take a Transition1x reaction the pipeline already
 solved *with supplied geometries*, discard them, regenerate from SMILES through the same ad-hoc path,
 rerun. Failure ⇒ contract/conversion confirmed. Secondary: ask for endpoint energies and the logged
