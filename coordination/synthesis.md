@@ -606,6 +606,48 @@ which is itself worth fixing.
   was never a prerequisite; Robin: the AIMNet2 Python-3.11 pin, open since 06-29 with three offered
   workarounds untaken).
 
+### PROBE 2026-07-30 — the 0/11 result IS THE TOOL. Verdict: my task spec violated the input contract.
+Evidence, all from the code on `origin/main` plus job metadata (the run itself is uninspectable —
+workdir `/home/mollerob/retrosyntesis`, home mode **700**, and **the specialty runner was never
+committed**; the repo contains only my inbox note and the data file):
+1. **The contract is geometry-in, not SMILES-in.** `run_dft_neb_barrier(reactant_xyz, product_xyz, …)`
+   is documented as running "a real NEB between two **already atom-mapped/aligned** xyz geometries",
+   and `estimate_barrier_neb` advertises a "**geometry (no SMILES)** … geometry-in contract".
+   **I supplied SMILES.**
+2. **Nothing in the repo bridges that gap.** No SMILES→3D→aligned-atom-mapped-xyz path exists in
+   `src/`; the only `MolFromSmiles` uses are fingerprint/similarity code. So an ad-hoc conversion had
+   to be improvised for this run, outside the validated path and outside version control.
+3. **The atom guard is weaker than it looks.** `validation_dft_neb.py:198` compares **element
+   sequences** (`react_geom.atoms != prod_geom.atoms`), not a genuine atom correspondence. A wrong
+   mapping that happens to be element-consistent **passes silently**, and IDPP then interpolates
+   between mismatched atoms. `ATOM_MISMATCH` did *not* fire, so the sequences matched — which tells us
+   nothing about whether the correspondence was right.
+4. **The failure mode is exactly what a bimolecular reactant frame produces.** For acetone+\ce{HCN},
+   MAA+\ce{H2O}, MAA+MeOH the reactant side is **two separate molecules** that must sit in one frame as
+   a sensible pre-reaction complex. IDPP from "two molecules placed apart" to "one bonded product"
+   gives a profile dominated by **association, which is downhill** — so the highest image lands at or
+   near an endpoint, which is *precisely* the `NON_MONOTONIC_PATH` trigger (HEI not above both
+   endpoints, margin 1e-4 Ha).
+5. **Same code, opposite outcome, discriminated by input provenance.** 450/450 success and MAE
+   8.83 kcal/mol on **Transition1x, where the dataset supplies consistent atom-mapped
+   reactant/TS/product geometries**; 0/3 on SMILES-derived geometries. **3 of 3 attempted cases were
+   bimolecular and all 3 failed identically.**
+
+**Conclusion: the run measured our conversion step, not the chemistry.** It says nothing about
+elementary-step granularity, and the granularity claim reverts to *unsupported by this evidence*
+(it still has independent support from the Draslovka/Biltz lumping case, which is a different
+argument). **Robin executed correctly** — schema, controlled vocabulary, and he declined the
+untrustworthy solvated number. The defect is in my task specification: **I asked a geometry-in
+instrument a SMILES-shaped question, and the layer that would bridge them is the very normalisation
+layer we have identified as missing.** The experiment presupposed the component under investigation.
+
+**To settle it definitively (cheap, ~minutes):** take a Transition1x reaction the pipeline already
+solved *with supplied geometries*, discard them, regenerate from SMILES through the same ad-hoc path,
+rerun. Failure ⇒ contract/conversion confirmed. Secondary: ask for endpoint energies and the logged
+`perp_rms` for the three failures — if the maximum sits at an endpoint and `perp_rms` is large, the
+band never converged either. Also ask for the reactant `.xyz` files: whether both fragments are
+present, and at what separation.
+
 ## EVIDENCE AUDIT 2026-07-30 — how many of our negatives are TRUE negatives?
 Prompted by the owner's question. Verdict: **of ~9 standing negatives, 2–3 are robust and 6–7 are
 single-setup, thin-n or confounded.** The "four independent fronts" framing I used on 07-28 is better
