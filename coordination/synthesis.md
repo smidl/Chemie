@@ -316,6 +316,24 @@ TSs" — cyanohydrin, MAA hydration, MMA esterification — all returned
 there is **no single maximum**, i.e. these arrows are *not* elementary steps either, even once
 balanced. So my "~2–4 meaningful barriers out of 11" was optimistic by 2–4.
 
+> **⚠ RETRACTED IN PART, same day — the positive control failed, so this run cannot support the
+> attribution I gave it.** `spec01_cyanohydrin` was designated the **positive control** in the task
+> spec (audit-confirmed sound, the real industrial route). It failed too. **A run whose positive
+> control fails cannot distinguish "the inputs are ill-posed" from "the pipeline cannot handle this
+> class of input"** — and I recorded it as the former. Reading the criterion
+> (`validation_dft_neb.py:302`): `NON_MONOTONIC_PATH` fires when the highest-energy image is **not
+> above both endpoints** (margin 1e-4 Ha). That is "no interior maximum found", which is *consistent
+> with* multi-step but equally consistent with a collapsed or unconverged band, or with bad endpoint
+> geometries. Note all three failures are **bimolecular** (acetone+\ce{HCN}, MAA+\ce{H2O},
+> MAA+MeOH) and their geometries were generated from SMILES, whereas the pipeline was validated on
+> **Transition1x, which supplies consistent reactant/TS/product geometries in one frame**. For a
+> bimolecular reaction built from two separate SMILES, the interpolation typically has to pass
+> through association first, and the band slides into the pre-reaction complex well — a classic
+> setup failure, not a chemical verdict. **Most likely explanation is therefore geometry/protocol for
+> bimolecular reactions, not granularity.** To separate them: rerun one known-elementary bimolecular
+> reaction *from Transition1x* through the same SMILES→geometry path. If that fails too, the finding
+> is about the pipeline; only if it passes does the granularity reading stand.
+
 **Revised, and this is the harder claim:** balance repair is *necessary but nowhere near sufficient*.
 The binding gate is **elementary-step granularity**, and on real planner output it currently rejects
 **everything**. Retro templates emit *overall transformations*; a transition state exists only for an
@@ -587,3 +605,63 @@ which is itself worth fixing.
   invites; both instead report soft blockers inside prose (Joris: 10 days lost waiting on a PR that
   was never a prerequisite; Robin: the AIMNet2 Python-3.11 pin, open since 06-29 with three offered
   workarounds untaken).
+
+## EVIDENCE AUDIT 2026-07-30 — how many of our negatives are TRUE negatives?
+Prompted by the owner's question. Verdict: **of ~9 standing negatives, 2–3 are robust and 6–7 are
+single-setup, thin-n or confounded.** The "four independent fronts" framing I used on 07-28 is better
+stated as **four fragile signals pointing the same way** — suggestive *because* independent, but not
+one of them would survive a referee alone.
+
+### Robust (would survive review)
+- **Gradient-free barrier shortcut fails** (Skala over an LST scan): 225 reactions × 2 directions
+  against Transition1x reference barriers, MAE 47.72 (17.81 bias-corrected), +102 % bias, ρ 0.673.
+  Adequate n, real reference, huge effect. True negative *for that shortcut*.
+- **Baseline / citation corrections**: MT USPTO_MIT top-1 = 90.4 not 88.8; ReactionT5 journal ≠
+  preprint; RDKit-version dependence (41/40 000 flip). Verified by exact reproduction, byte-for-byte
+  against upstream's own predictions. These are *facts*, not inferences.
+- (Positive, and the best-controlled experiment in the tree) **breadth-matched L\* beats the Retro\*
+  value net**: 4 seeds, tight sd, pure-`h` control, leak-checked, off-ceiling datasets carry it.
+
+### Fragile — must NOT be quoted as settled
+| Negative | Why it is not yet a true negative |
+|---|---|
+| σ ⊥ \|error\| (retro-pfn) | **Already flipped once on setup choice** (regression-σ/Morgan-GP/AUC → classifier-entropy/DRFP/F1). Setup-sensitive, and measured on **yield**-HTE, not on the route task we actually claim. |
+| epistemic ≈ random | **2 seeds**; MC-dropout only, a weak epistemic estimator; the source paper's claim rests on a BNN we never ran. |
+| epistemic-MCTS negative | One **crude implementation** (σ bonus into leaf value), not the hypothesis (σ in *selection*, UCB). The leaf itself re-elevated it as H2 — so the negative is scope-limited and we have been reading it as general. |
+| MolPFN variance floor | Checkpoint selected on **train** loss; temperature fixed at 1.0; **`ctx_len`=8** (8 points is a poor basis for estimating a spread — a floor is the *expected* outcome); **no conditioning-token arm** (all configs `qry_props: none`); label ablation missing for exactly the two configs where conditioning works. |
+| Mechanism kernel loses at route level | Two confounds already identified (fixed absolute threshold vs differing per-arm score distributions; route-length compounding). Already sent back for a calibration-matched rerun. |
+| 0/11 admissibility | **Positive control failed** → cannot attribute to the inputs. Criterion is "no interior maximum", and all three cases are bimolecular-from-SMILES against a pipeline validated on geometry-supplied Transition1x. See retraction above. |
+| FlowER worse than T5 | `59/211` vs `504/4923` — **different denominators**, and plausibly different tasks/output granularity. The comparison is not obviously sound as stated. |
+
+### What the ground truth actually is now, per claim (the honest inventory)
+After **reference-match / top-1 was ruled UNSOUND** (2026-06-10) and **SSP ruled CONFOUNDED**
+(2026-06-12), and after round-trip was shown to be **artifact-prone on in-distribution chemistry**
+(Draslovka: MMA NLL≈0.000 yet round-trip FAIL), there is **no single oracle**. Three different ones
+are in use for three different sub-claims:
+
+| Sub-claim | Oracle in use | Domain of validity |
+|---|---|---|
+| does a reaction work | **HTE yield datasets** (Buchwald–Hartwig, Suzuki) — real wet-lab | 2 curated families, HTE conditions, in-distribution *by construction* |
+| barrier accuracy | **Transition1x** reference barriers | computational ground truth on **curated elementary** reactions — the regime our planner never emits |
+| route/search quality | **PaRoutes / USPTO-190** "solved = reached buyable stock in budget" | a **search** criterion, not chemical correctness |
+| step plausibility | forward round-trip (T5), continuous, AUROC 0.91 / ECE 0.16 | artifact-prone; rejects textbook chemistry |
+| granularity / named reactions | LLM judge | **unscripted, never validated against anything** |
+| chemist labels | **none** | RetroTrim has them; we do not |
+
+**The gap, stated plainly: we have no validated ground truth for the quantity we actually claim to
+predict — whether a proposed route step would work in a reactor.** We have real yields on two curated
+families, computed barriers on curated elementary steps, and a search-success criterion. Each is a
+proxy for something *adjacent*. Worse, the **declared programme metric — budget-to-solve per stratum —
+has never once been computed** (`solution_time` = `inf` in every arm of the (c) test), and the strata
+may not even be difficulty-ordered (far solves better than close, reproducibly).
+
+### Protocol this tree does not have and needs
+1. **Per claim, name the oracle and its domain of validity** before running, not after.
+2. **Positive control mandatory, and a negative counts only if the control passed in the same run.**
+   (Robin's spec had one — it failed, and we nearly banked the result anyway.)
+3. **Minimum 3–5 seeds** with spread reported. Several standing results are n=2.
+4. **Pre-register the metric**; fix `solution_time` so budget-to-solve actually exists.
+5. **Audit the stratification** before any further per-stratum claim.
+6. **Separate "tool failed" from "hypothesis false" in the status vocabulary** — Robin's controlled
+   vocabulary already does this well; generalise it to every leaf.
+7. **A negative is scoped to its implementation** unless a second, differently-built arm agrees.
