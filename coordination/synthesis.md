@@ -791,3 +791,52 @@ may not even be difficulty-ordered (far solves better than close, reproducibly).
 6. **Separate "tool failed" from "hypothesis false" in the status vocabulary** — Robin's controlled
    vocabulary already does this well; generalise it to every leaf.
 7. **A negative is scoped to its implementation** unless a second, differently-built arm agrees.
+
+## ARBITRARY-SUBSET CONDITIONING over complete reactions (owner reframing, 2026-07-31)
+**Supersedes the "role identification" framing I proposed.** Owner's objection is decisive: *a role
+is user intent, not a property of the reaction.* HCl from an acylation is a byproduct if you want the
+amide and the product if you want HCl; water from an esterification is waste unless you are studying
+dehydration. So any fixed reactant/reagent/byproduct schema bakes in one consumer's intent, and
+ORDerly-style role labels inherit that.
+
+**The reframing: train on COMPLETE reactions, generate under PARTIAL conditioning.** Keep every
+species on both sides at training time; at inference, condition on whatever subset you know and let
+the model complete the rest. One joint model over (reactants, reagents, conditions, products,
+byproducts) replaces the field's separate fixed tasks:
+- condition on {reactants} → forward prediction (products *and* byproducts)
+- condition on {product} → retrosynthesis
+- condition on {product, one reactant} → co-reactant / reagent proposal
+- condition on {reactants, product} → **condition prediction**
+- condition on {reactants, product, conditions} → scoring / feasibility
+
+**Why this is better than role labels, concretely.**
+1. **Intent-free.** Nothing is designated waste at training time, so no consumer's convention is
+   privileged.
+2. **It dissolves the forward/retro asymmetry structurally.** The round trip stops being a hoped-for
+   property of two separately-trained models and becomes conditioning the *same* joint model two
+   ways. This is the clean answer to the byproduct/round-trip question measured on 2026-07-31
+   (products carry a byproduct in 6.8% of records; the forward model emits one in 0/250).
+3. **It is the tree's own line.** Arbitrary-subset conditioning *is* the in-context / amortised-
+   Bayesian shape `MolGPT`/`MolPFN` and the PFN thread care about, applied to reactions — and it is a
+   sharper niche than "in-context reaction generation" because the differentiator is the
+   **conditioning set is a free variable**, not the modality.
+
+**The binding constraint moves to data COMPLETENESS, and that is measured: 2.4%.** Only 6/250 real
+USPTO records are atom-balanced, so a corpus of complete reactions does not currently exist at
+scale. Training this needs completion first — and completion is partly rule-derivable
+(esterification → water, acylation → HCl, quaternisation → halide; SynRBL-class), with the model
+generalising beyond the rules afterwards. Not circular, but ordered.
+
+**CONVERGENCE WORTH NAMING: one component now serves both students.** The
+balancing/completion layer is (a) exactly what `retrosyntesis`' physics track needs, because a
+transition state only exists for a balanced elementary step, and (b) exactly what
+`retro-generation` needs to train a joint model on complete reactions. The
+"highest-leverage unowned piece" identified on 2026-07-30 now has **two customers and one spec**,
+which is the strongest argument yet for resourcing it deliberately rather than letting each student
+improvise it.
+
+**Prior-art obligation before any build** (rektomar's standing protocol, and this is exactly the kind
+of idea that has precedent): any-order / masked-infilling reaction models, multi-task reaction
+transformers (Chemformer's task heads), text-infilling formulations of reaction prediction, and
+any-subset conditional generative models generally. The niche is only defensible if
+*arbitrary-subset conditioning over complete reactions* is genuinely unoccupied.
