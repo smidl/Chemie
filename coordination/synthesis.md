@@ -840,3 +840,57 @@ of idea that has precedent): any-order / masked-infilling reaction models, multi
 transformers (Chemformer's task heads), text-infilling formulations of reaction prediction, and
 any-subset conditional generative models generally. The niche is only defensible if
 *arbitrary-subset conditioning over complete reactions* is genuinely unoccupied.
+
+## NODE ALLOCATION BY CONCERN (owner observation, 2026-07-31) — numerics is in the wrong place
+**Owner's framing: `retrosyntesis` is an INTEGRATION project; numerical development belongs in the
+physics node.** Checking it against reality shows the misallocation is real and worse than it looks.
+
+**What is actually where.** `retrosyntesis` (co-owned moczyjor/mollerob) holds *both* concerns: Joris
+owns integration (K-P-V benchmark, planner harnesses, learned validators, syntheseus) and Robin owns
+numerics (`src/oracle_benchmark/`, DFT-NEB, Skala, `validation_kinetics.py`, the three-rung ladder).
+Meanwhile **`retro-physics-validation`'s declared charter is almost exactly Robin's job** — "evaluate
+physics-based tools for validating reactions … determine which tool is suitable for which kind" — and
+it has **zero student commits in 7 days** (only the two enrolment commits). So the node chartered for
+the numerics question is empty while the numerics is being done inside the integration repo.
+
+**But the two were separated on purpose, and that constraint is still live.** `retro-physics-validation`
+is not a numerics-development node as chartered; it is an **independent blind assessment** — the study
+protocol has the student characterise tools on anonymised routes *before* opening
+`data/ground_truth.md`. Robin's calibrated ladder is the un-blinded version of the same question.
+Re-chartering that node as the numerics home therefore **destroys the blinding**, which was the point
+of having it.
+
+**So the decision is not "move the code" but "what is the blind study worth".** Three options:
+1. **Blind study is worth keeping** → numerics needs its *own* home (new node, or Robin's own repo);
+   `retro-physics-validation` stays an independent check.
+2. **Blind study is dead** (7 days, nothing, and its offline phases were explicitly unblocked) →
+   re-charter that node as the numerics home with **Robin** as owner. Cheapest in node count.
+3. **Do nothing structural**, but declare the interface: `retrosyntesis` consumes a settled
+   `oracle(reaction) → (barrier, status)` API and numerics development is explicitly scoped as
+   Robin's sub-project inside it.
+Recommendation: **decide (1) vs (2) by asking jinrehacek for a status first** — the numerics should
+follow Robin regardless, because moving code away from the person who wrote it to an inactive student
+is strictly worse than leaving it.
+
+**Correction to my own handover:** `reaction_complex.py` went into
+`retrosyntesis/coordination/handover/`. Under allocation-by-concern that is the wrong node — it is
+neither integration nor numerics but the **shared symbolic layer** (RDKit, atom mapping, balance
+arithmetic, geometry construction). It is self-contained with 11 passing tests, so relocating it is
+cheap, and it should move wherever the completion layer ends up owned.
+
+### Is retro-generation a consumer of numerics, or does it need something special?
+**Consumer, weakly, and at small n — and the component it actually shares is not numerics at all.**
+1. **Not a training signal.** At ~22 min/reaction a physics oracle cannot label at the scale a
+   generative model trains on. Physics is an *evaluator* of a sample, not a source of supervision.
+2. **What it genuinely shares is the completion/balancing layer**, and that is **symbolic
+   cheminformatics** — rules, atom mapping, balance arithmetic — not numerics. Cheap, fast, upstream
+   of everything. My miniproject §9 called it a dependency of "the physics-oracle track", which
+   understates it: it is upstream of *both* consumers and belongs to neither.
+3. **The one genuinely numerics-specific thing it could want: HARD NEGATIVES.** The corpus contains
+   only reactions that worked, so a joint model trained on it has no representation of infeasibility.
+   Physics can label a small set of *plausible-but-high-barrier* reactions — negatives no corpus can
+   supply. A few thousand hard negatives are worth more for calibrating a likelihood than millions of
+   random ones. That is a **data request, not a service dependency**.
+**Consequence: do not wire retro-generation to the oracle in phase 1.** Its dependency is weak,
+asynchronous, and satisfiable by a delivered dataset. The real coupling between the two students is
+the completion layer, and that is the thing to resource and assign an owner.
