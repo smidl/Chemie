@@ -76,3 +76,17 @@ So placement was the load-bearing piece, exactly as the geometry evidence predic
   **(3) Underspecification hypothesis — NOT SUPPORTED, but my test could not answer it.** Forward top-1 was **balanced 3/6 = 50.0%** vs **unbalanced 149/244 = 61.1%** (−11.1 pp, i.e. unbalanced *higher*). But **only 2.4% (6/250) of records are atom-balanced**, so the balanced stratum is n=6 and the comparison is meaningless. My design error: I stratified on a variable with a 2.4% base rate.
   **(4) THE FINDING THAT MATTERS, and it does support retraining — for a different reason.** The atoms "missing" from the product side are a **mixture of two opposite things**: genuine dropped byproducts (`Cl+1,H+1` HCl ×15, `H+2,O+1` water ×11, `Br+1,H+1` HBr ×5) and **spectator reagents that were never meant to appear** (`C+10,H+25,I+1,Li+1,N+1` = n-BuLi ×3, `C+2,H+5,Na+1,O+1` = NaOEt ×3, `H+6,Na+2,O+6,P+2` = phosphate ×2). Repairing a record therefore requires **ADDING** byproducts and **REMOVING** spectators — opposite operations — and the raw record does not say which is which. **That is precisely what ORDerly's role assignment provides**, and it is the real argument for it: not "more data on their chemistry" but *role-separated records so the two can be told apart*, plus a corpus where the balanced regime is actually populated. As it stands, if the programme needs forward prediction on **balanced elementary steps** — which physics validation does — USPTO supplies ~2.4% of them and cannot even serve as an evaluation set for that regime.
   Consequence for the normalisation layer (Robin's dependency): it must distinguish byproduct-completion from spectator-pruning. Two different transformations, currently conflated.
+
+2026-07-31 — **ARM F COMPLETE, 2/2: the full fix produces usable barriers, and it hands the Draslovka deck the number it was missing.** Both specialty cases, PBE/3-21g, 8 images, 30 cycles, climb=True:
+  · `spec01_cyanohydrin` → `OK_BUT_UNCONVERGED`, **barrier 27.57** kcal/mol, ΔE −1.11 (2 917 s)
+  · `spec02_maa_hydration` → `OK_BUT_UNCONVERGED`, **barrier 111.03** kcal/mol, **ΔE −31.33** (8 481 s)
+  Progression per reaction — rejected → confidently wrong → usable:
+
+  | | spec01 | spec02 |
+  |---|---|---|
+  | arm D (as the specialty run had it) | NON_MONOTONIC_PATH | NON_MONOTONIC_PATH |
+  | arm E (endpoint optimisation only) | 146 / **142.7** at production | **434.2** |
+  | arm F (complete fix) | **27.57** | **111.03** |
+
+  **The `spec02` result is the Draslovka demonstration we did not have.** ΔE **−31.3** kcal/mol (favourable, and consistent with the earlier xTB −23.4) together with a barrier of **111** kcal/mol says: thermodynamically downhill, kinetically inaccessible **uncatalysed** — which is exactly why the industrial route needs strong acid, and exactly the "favourable ΔE ≠ practical feasibility" point the deck asserts without evidence. It is also the correct *qualitative* verdict on a step the learned gate rejected. Caveats to carry with it: band unconverged at 30 cycles, PBE/3-21g rather than wb97x/6-31g(d), so indicative not definitive; and both runs are correctly reported as `OK_BUT_UNCONVERGED`, not `OK`.
+  Fix components, in the order they earned their place: fragment-wise embedding → pre-reaction-complex placement (min interatomic distance 0.142 Å naive → **1.065 / 0.969 Å**) → endpoint optimisation at the target level → worst-image distance check → barrier plausibility band → convergence-aware status. Placement was load-bearing; endpoint optimisation alone was actively harmful.
