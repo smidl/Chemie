@@ -894,3 +894,48 @@ cheap, and it should move wherever the completion layer ends up owned.
 **Consequence: do not wire retro-generation to the oracle in phase 1.** Its dependency is weak,
 asynchronous, and satisfiable by a delivered dataset. The real coupling between the two students is
 the completion layer, and that is the thing to resource and assign an owner.
+
+### CORRECTION 2026-07-31 — the succession plan, and what I got wrong about it
+**Owner's intent: Robin owns numerics now; `retro-physics-validation` is deliberately slow because
+jinrehacek is TRAINING; when ready he takes over Robin's responsibility.** Three corrections to the
+analysis above:
+
+1. **I misread jinrehacek's seven silent days as drift. It is a planned ramp.** Withdraw that
+   framing; it should not be repeated in a status.
+2. **The blind study is primarily a TRAINING VEHICLE, not an independent check.** Its `GUIDE.md` walks
+   Phase 0→6 — frame validation, characterise reactions before touching a tool, *map the tool ladder*,
+   build a suitability rubric, small hands-on probe, suitability matrix. That is a curriculum for
+   acquiring exactly the competence needed to inherit the oracle, and the blinding exists so he forms
+   his own judgement first. **So option 2 from the node-allocation note — re-charter that node now and
+   install Robin — would have destroyed the mechanism that makes the succession possible.** Do not.
+3. **The structure was therefore already right; only the timing was unclear.** Numerics sits with
+   Robin now → migrates to `retro-physics-validation` at handover → `retrosyntesis` becomes pure
+   integration consuming a settled oracle. No node surgery required.
+
+**What this changes in practice — Robin's most valuable remaining deliverable is TRANSFERABILITY, not
+more numbers.** A succession only works if the incumbent's work can be picked up, and right now it
+largely cannot: the specialty-set runner was never committed, results sat in a mode-700 home
+directory, and the oracle-benchmark branch only merged on 2026-07-30. Concretely he should be asked
+for: everything on `main`, results on the shared store, calling conventions documented, and the
+endpoint fix integrated *with its test* — because the test is what survives a change of owner.
+
+**Correction to my own correction:** I called `reaction_complex.py` misplaced in `retrosyntesis`.
+Under the succession it is **correctly placed** — it is numerics plumbing (geometry construction and
+NEB failure classification), it belongs with whoever owns numerics, and it should simply **travel with
+the numerics** at handover. No relocation now.
+
+**Gap that the succession makes load-bearing:** `retro-physics-validation/data/ground_truth.md` is 26
+lines and contains **none** of Robin's measured ladder (no 8.83 kcal/mol NEB MAE, no ρ 0.902, no
+Skala ΔE 4.02 / r 0.996, no failed-shortcut 47.72). The answer key predates the empirical result. It
+should be updated before Phase 5, or jinrehacek's suitability matrix gets graded against something
+weaker than what we already know.
+
+**The binding constraint is Robin's end date, not jinrehacek's readiness.** Both are ENSICAEN
+internship students, so there is presumably a fixed departure. If Robin leaves before the handover the
+numerics is orphaned — and that date, which this node does not record, sets the deadline for the
+transferability work above. Worth capturing.
+
+**One thing the succession does NOT resolve: the completion layer.** It must *not* travel with
+numerics, because `retro-generation` needs it too. It belongs with integration or as a Chemie-owned
+component — still the only unowned piece, now with three consumers (Robin's barriers, Joris's gates,
+Martin's M2).
