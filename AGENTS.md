@@ -89,6 +89,37 @@ in its marker; they roll up under this tree.)
 - `RetroDemo/` — Manim demo-animation stack (mock data, presentation asset).
 - `datasets/`, `datasets.tar.gz` — local data; `_lib-inbox/` — `/lib` staging.
 
+## Personnel & succession (2026-08-01) — read before planning any student work
+Two of the four students are **leaving**; two **stay**. This shapes everything below.
+
+| who | node | role | horizon |
+|---|---|---|---|
+| Joris Moczygeba (`moczyjor`) | `retrosyntesis` | **integration** — K-P-V benchmark, planner harnesses, learned validators | **leaving** |
+| Robin Molle (`mollerob`) | `retrosyntesis` | **numerics** — DFT-NEB, Skala, the oracle ladder | **leaving** |
+| Jindřich Řeháček (`jinrehacek`) | `retro-physics-validation` | **training now**, then **inherits numerics from Robin** | stays |
+| Martin Rektoris (`rektomar`) | `retro-generation` | generative reaction modelling | stays |
+
+- **`retrosyntesis` is intended to become the shared place**, owner-maintained after Joris and Robin
+  leave. It is an **integration** project: when numerics is settled it is consumed from there, not
+  developed there.
+- **`retro-physics-validation`'s slow start is deliberate** — the Phase 0→6 blind study is a
+  *training curriculum* for inheriting the oracle, not an idle node. Do **not** re-charter it or
+  install anyone else in it; that would destroy the mechanism the succession depends on.
+- **Numerics travels with its owner**: Robin now → jinrehacek at handover. Artefacts that are numerics
+  plumbing (e.g. `retrosyntesis/coordination/handover/reaction_complex.py`) move with it rather than
+  being relocated in advance.
+- **Robin's and Joris's most valuable remaining output is transferability**, not more results.
+  Robin's is being handled by the owner in person.
+
+### NEAR-TERM OBJECTIVE — numerics ready for Martin when he needs it
+A working, documented, inheritable oracle able to label a **few thousand** reactions, so that
+`retro-generation` can be handed **hard negatives** — plausible-but-high-barrier reactions, which no
+corpus of successful reactions contains. Note the interface is a **delivered dataset, not a service**:
+at ~22 min/reaction physics cannot supply training-scale labels, so `retro-generation` must not be
+wired to the oracle and must not be blocked on it. Prerequisites, in order: the endpoint fix
+integrated with its test → results and calling conventions on the shared store → the
+completion/mapping layer (**still unowned**, see below) → a labelling run.
+
 ## What this orchestrator owns (cross-cutting only — never a child's primary framing)
 - The **active-acquisition program** (organizing thesis): a calibrated surrogate that
   queries the expensive simulator (DFT/MLIP) only where uncertain + where it matters,
