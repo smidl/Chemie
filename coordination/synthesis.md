@@ -939,3 +939,42 @@ transferability work above. Worth capturing.
 numerics, because `retro-generation` needs it too. It belongs with integration or as a Chemie-owned
 component — still the only unowned piece, now with three consumers (Robin's barriers, Joris's gates,
 Martin's M2).
+
+## STRATEGY 2026-08-02 — two academic bets, everything else backbone; ξ_f OPEN but DEPRIORITISED
+Owner's framing, adopted. It resolves several ambiguities that have been open for weeks.
+
+**Academic priorities** (where we intend to contribute):
+1. **Uncertainty-aware planning** — "a better KeeA*".
+2. **`retro-generation`'s any-subset conditional generation** (`MINIPROJECT-conditioning.md`).
+
+**Everything else is backbone**: use the best existing tools as well as we can, and do not rebuild
+what the field already provides. Feasibility gating = continuous round-trip (AUROC 0.91, and the
+measured 18.5 pp advantage over exact-match) + physics barriers where admissible + LLM/ensemble
+judging, where MOSAIC and RetroTrim already own the ground.
+
+**`xif` / ξ_f: OPEN, DEPRIORITISED — not closed.** Its organising thesis lost its mechanism (σ ⊥
+error; the mechanism kernel does not beat a plain structural GP at route level) and it has been
+dormant since 2026-06-18. It is *not* being wound up: the route-relevance VOI question — "spend the
+expensive oracle where it changes a decision" — remains the one un-scooped part and is exactly what
+the sister project `~/zcu/PFN4BOrevisited/DecisionBO` is pursuing in the BO setting. Deprioritised
+means: no new resourcing, no headline claims, keep the line alive, and **let DecisionBO lead** —
+re-prioritise if their objective-side result transfers.
+
+**Status against the priorities, honestly:**
+- Priority 2 is healthy: active, staying, right expertise, well-posed with kill criteria at M0/M1.
+- **Priority 1 has no one on it.** `retro-planning` has had no commit since 2026-07-05 (4 weeks) and
+  six artefacts remain uncommitted; the theory half sits in the peer tree `~/AIC/Planning`. Of the two
+  students who stay, one is priority 2 and the other is backbone numerics. This is a resourcing
+  decision, not a research one.
+- Backbone is in decent shape except the **completion/mapping layer**, still unowned, now blocking
+  three consumers.
+
+**Recommended refinement of priority 1 — define uncertainty as OBJECTIVE COVERAGE, not posterior
+variance.** All four of our uncertainty negatives were model-posterior quantities (GP σ, ensemble
+spread, MC-dropout, in-context scale). None asked *"did my training objective constrain me here?"* —
+and that is precisely what retro-planning's best result points at: L*'s OOD weakness was **coverage**,
+because a pairwise rank loss only constrains pairs that co-occurred on OPEN. A coverage-based
+epistemic signal is different in kind from the four that failed, is motivated by our only positive OOD
+finding, and differentiates from KeeA*'s epistemic *selection*. It also folds in the tree's genuine
+un-scooped asset: path-consistency is **dense, absolute, propagating** where rank is **sparse,
+relative**.
