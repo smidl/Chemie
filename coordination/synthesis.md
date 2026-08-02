@@ -1060,3 +1060,52 @@ rank result is a low-capacity phenomenon and the planning story needs rebasing o
 - **Guardrail principle (ADR-0005):** every refuted hypothesis is kept as a baseline, and no "the
   learned thing is needed" claim is admissible until it beats the strong simple alternatives on the
   same problem. Our analogue: no learned-`h` claim until it beats SAScore *and* MEEA\*-PC.
+
+### ACTION MAPPING 2026-08-02 — where the DecisionBO transfer lands
+Note first: **most of it lands on academic priority 1, which is the one with no capacity.** The
+transfer sharpens exactly the thing we currently cannot act on. That is the operational headline.
+
+**GATES — run before investing further in priority 1. Both currently unowned.**
+- **G1. Capacity sweep, rank vs value.** 3–4 rungs of model size / training length, plot the gap
+  against a quality proxy. Decides whether "rank, not estimate" is a real effect or our version of
+  their +0.097 → −0.007. Cheap (existing harness, existing data). **If it decays monotonically the
+  planning headline must be rebased on objective *structure* — path-consistency — not on rank.**
+- **G2. Seeding audit of retro-planning.** Their init-design pseudo-replication collapsed **four**
+  headline results at p ≲ 0.003, one reversing sign; the trap is a run seed shared across problem
+  instances, which silently reduces replication n to the number of seed values. Our L\* verdict-flip
+  (4 seeds, tight sd) and the 6-dataset comparison are exposed. Check the seeding; if shared, re-run
+  with `run seed = base + s + 9973·i` before the result is quoted again. **The L\* flip is already
+  published in the briefing**, so this is a correctness issue, not housekeeping.
+
+**ROUTE — one concrete method to a named consumer.**
+- **R1. Decoupled PFNs (Bergna 2026) → `retro-generation` §Q3/scoring, and MolPFN.** A published fix
+  for calibrated scale via privileged `f`/`σ²` labels from a **controllable prior** — which MolPFN
+  has. It is better *likelihood* training, not decision training, so it sits inside the backbone
+  framing rather than competing with a priority.
+
+**ADOPT — the evaluation protocol, borrowed rather than invented.**
+- **P1. Mechanism-first evaluation (their ADR-0002).** Lead with a low-variance mechanism metric
+  measured **in the decision-relevant region vs off it**; treat the downstream outcome as noisy
+  confirmation; always pair an **off-region parity guard** so a gain is not bought by wrecking global
+  fit. This is the design our mechanism-kernel null needed and did not have.
+- **P2. Guardrail principle.** No "the learned thing is needed" claim until it beats the strong simple
+  alternatives on the same problem. Our analogue, binding: **no learned-`h` claim until it beats
+  SAScore *and* MEEA\*-PC.**
+- **P3. Random is the bar**, not a formality. **P4. Carry the classical baseline.** **P5. Reproduction
+  gate** before any head-to-head; "could not reproduce" is a recorded outcome. **P6. Pre-register the
+  cells where the lever must NOT pay**; a gain there is a red flag.
+
+**CORRECT THE RECORD — two claims I have been over-stating.**
+- **C1. "Four independent σ negatives" needs scoping.** Ours were: GP/ensemble σ ⊥ error on HTE,
+  epistemic ≈ random **under MC-dropout** (a weak estimator; the source paper's claim rests on a
+  BNN we never ran), a crude MCTS leaf-value bonus, and in-context scale. That is a strong negative
+  for *those estimators*, not for uncertainty in general. DecisionBO's own nulls are
+  **deterministic-regime only** and therefore do not corroborate ours the way I implied.
+- **C2. Route-relevance VOI is the LOCALIZED form, and localization is exactly what rescued their
+  result** (global KG 32.6 vs the same KG in a trust region 9.27, p=0.0009). Recorded as a standing
+  prediction: if ξ_f is re-prioritised, the route-localized VOI is the arm most likely to work, and
+  the global σ-acquisition negative should not be read as having pre-refuted it. Their caveat travels
+  with it: local KG carries a catastrophic tail and needs a fallback.
+
+**UNCHANGED, but now better justified:** ξ_f open-and-deprioritised (C2 strengthens it); the
+completion/mapping layer still unowned and still blocking three consumers.
