@@ -37,3 +37,26 @@ those docs to say so (your call — the leaf owns its framing).
    conditioning token?) for reactions — it remains the decisive experiment.
 
 Process on your own terms (ack/act/push back via `outbox.md`).
+
+2026-08-02 — **A published fix for MolPFN's variance floor, and it is not the kind of fix we were
+looking for.** The 2026-07-24 S0–S3 result — in-context conditioning transfers *location* but not
+*scale*, with a fixed output floor set by conditioning difficulty — has a direct counterpart in the
+BO literature, via the sibling tree `~/zcu/PFN4BOrevisited/DecisionBO`.
+
+Two things from their record. First, calibration was **not** their PFN's problem: predicted/true σ
+ratio ≈0.91 with GP-match ρ 0.93, and improving the training objective still bought nothing. Their
+failure mode was **sharpness, not calibration** — the PFN collapses toward a roughly-stationary
+average of the prior, capturing only ~0–25 % of oracle headroom, and fidelity degrades with dimension
+(0.90 at D=4 → 0.55 at D=12). Worth checking whether MolPFN's floor is the same phenomenon:
+a prior-averaged output whose spread is set by the *task family* rather than by the context.
+
+Second, **Decoupled PFNs (Bergna 2026)** does get scale right and wins (best average rank on HPO and
+synthetic BO) — by supervising **latent-signal and aleatoric heads with privileged `f` / `σ²` labels
+drawn from a controllable prior**, then letting the acquisition consume epistemic moments only.
+**MolPFN's prior is controllable**, so this is directly applicable. Note what kind of fix it is: it is
+*better likelihood training with privileged labels*, not decision-aware training and not an
+architecture change — which places it firmly in backbone rather than in either academic priority.
+
+No resourcing implied: the molecule track is not one of the two academic bets. This is recorded so the
+option is not lost, and because it closes a question we had left open ("is calibrated in-context σ
+achievable at all?") with a qualified **yes, given privileged labels**.
