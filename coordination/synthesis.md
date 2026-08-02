@@ -978,3 +978,85 @@ epistemic signal is different in kind from the four that failed, is motivated by
 finding, and differentiates from KeeA*'s epistemic *selection*. It also folds in the tree's genuine
 un-scooped asset: path-consistency is **dense, absolute, propagating** where rank is **sparse,
 relative**.
+
+## CROSS-TREE TRANSFER 2026-08-02 — DecisionBO tested our thesis and REFUTED it
+Read of `~/zcu/PFN4BOrevisited/DecisionBO` (THEORY, HYPOTHESES, RESULTS_p0, EXPERIMENTS, ADRs 0001–0009,
+outbox to 07-12). **Note the parent's `synthesis.md` is stale — last updated 2026-06-14, and still
+presents the founding thesis as the open slot. The leaf spent June refuting it.**
+
+**The number that matters most to us.** Their M2 = a region-localized pairwise **ranking loss** on the
+predicted mean, i.e. structurally our "rank, not estimate". Its advantage over plain likelihood
+training, swept across model capacity (1 seed/rung):
+
+| model / steps | surrogate quality ρ_off | rank-loss gain Δρ_in |
+|---|---|---|
+| d16/L1/15k | 0.19 | **+0.097** |
+| d32/L2/30k | 0.56 | +0.028 |
+| d64/L3/60k | 0.62 | −0.006 |
+| d128/L4/150k | 0.65 | **−0.007** |
+
+Monotone decay, crossing zero at **ρ_off ≈ 0.6**; a 14× swing. Their verdict: *"the pilot gain is GONE
+at scale. It was an undertraining artifact."* Confirmed on regret too — paired, 16 seeds, ties
+everywhere (p=0.93, 0.74, 0.87). Their founding hypothesis H1 went 0.6 → **0.02 refuted**.
+
+**The theory they built from it — "regret-relevant sufficiency"** (`paper/03regret-sufficiency.tex`):
+a surrogate influences the decision only **up to a quality threshold**; above it the outcome is set by
+the acquisition, the search and the budget. Source-validated: every published success of
+value-aware/loss-calibrated learning they could find was demonstrated *below* a threshold — VaGraM
+under reduced capacity, Maus 2024 under a constrained SVGP budget, Lacoste-Julien under a constrained
+variational family, Bergna under noise.
+
+**This unifies our own findings into one sentence: the training objective matters exactly while you
+are below sufficiency.** And our tree already shows the shape — L\*-rank beats the *vanilla* value net
+but loses by 8–11 pt to MEEA\*-PC, which has more data and a better architecture. **So "rank, not
+estimate" may have a shelf life, and we have not tested where ours sits.**
+
+**ACTION (cheap, decisive, and it should gate priority 1):** rerun the rank-vs-value comparison at
+3–4 rungs of capacity/training length and plot the gap against a quality proxy. Monotone decay ⇒ our
+rank result is a low-capacity phenomenon and the planning story needs rebasing on the objective
+*structure* (path-consistency) rather than on rank per se.
+
+### Where their evidence CONTRADICTS ours — the most useful part
+1. **σ may not be dead in our setting.** Their nulls are all on **deterministic** benchmarks, and
+   ADR-0004 states decoupling gains arise only under **heteroscedastic** noise, ≈0 homoscedastic,
+   exactly 0 deterministic; they later declared their home turf to be ≳1–3 % relative noise. **Our
+   feasibility signals are experimental and noisy**, so their nulls may simply not transfer, and σ
+   could be worth more to us than to them.
+2. **Global vs local acquisition — they caught themselves twice.** Global KG scored 32.6 where the
+   *same* one-step KG confined to a trust region scored 9.27 on the same problem the same day
+   (p=0.0009, replicated p=0.0008). H16 was corrected to: *"VOI is universal; what is regime-limited
+   is the myopic one-step VOI approximation."* **Our un-run route-relevance VOI is precisely the
+   localized form** — so the evidence argues it may work where our global σ-acquisition failed. That
+   is a concrete reason the deprioritised ξ_f line should stay open. (Caveat from their record: local
+   KG carries a catastrophic tail — mean 1300 vs 941 — and needs a fallback.)
+3. **A published fix for MolPFN's variance floor.** Their calibration was *fine* (pred/true-std ≈0.91)
+   and still bought nothing; their failure mode was **sharpness, not calibration**, with fidelity
+   collapsing in dimension (0.90@D4 → 0.55@D12). And **Decoupled PFNs (Bergna 2026)** gets scale right
+   and wins, by supervising latent-signal and aleatoric heads with **privileged `f`/`σ²` labels from a
+   controllable prior**. That is a live, published fix for exactly our in-context-scale negative — and
+   note it is *better likelihood training with privileged labels*, not decision training. Actionable
+   for MolPFN, whose prior is controllable.
+4. **They named our route-level null: "acquisition insensitivity".** Surrogates that rank candidates
+   alike pick the same points, produce identical trajectories and yield null downstream deltas —
+   exactly the mechanism-kernel result. Their ADR-0002 response is the evaluation design we should
+   adopt: **lead with a low-variance mechanism metric measured in-region vs off-region, treat the
+   downstream outcome as noisy confirmation, and always pair an off-region parity guard** so a gain
+   is not bought by destroying global fit.
+
+### Methodology to adopt wholesale (this is the criteria list, already built)
+- **Undertraining masquerades as a method win** — never accept a training-objective result at pilot scale.
+- **Init-design pseudo-replication** (flagged tree-wide 2026-07-05): a run seed shared across problem
+  instances silently reduces design-replication n to the number of seed values. **Four of their
+  headline results at p ≲ 0.003 collapsed**, one reversing sign. Fix: `run seed = base + s + 9973·i`.
+  *"n≥32 paired + Wilcoxon is not sufficient if the design is shared."* Directly relevant to
+  retro-planning's multi-seed comparisons.
+- **Random is the bar, not a formality** — MALIBO scored *below* Random on the only discriminating task.
+- **Carry the dumb classical baseline** — Py-BOBYQA beat the entire GP stack by ~16× geo-mean on
+  deterministic problems.
+- **Reproduction gate (ADR-0003):** no competitor enters a head-to-head until our run reproduces *that
+  paper's* headline on *that paper's* benchmark; "could not reproduce" is a recorded outcome, never a
+  silent strawman. It caught an AABO inversion that was their adaptation's artifact, not the method's.
+- **Pre-register where the lever must NOT pay** (their γ̂=∞ honesty cells); a gain there is a red flag.
+- **Guardrail principle (ADR-0005):** every refuted hypothesis is kept as a baseline, and no "the
+  learned thing is needed" claim is admissible until it beats the strong simple alternatives on the
+  same problem. Our analogue: no learned-`h` claim until it beats SAScore *and* MEEA\*-PC.
