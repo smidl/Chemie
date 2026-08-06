@@ -1114,6 +1114,10 @@ completion/mapping layer still unowned and still blocking three consumers.
 The `far`/`close`/`in-distribution` stratification of the 190 hard targets is **invalid**, and the
 mechanism is now identified rather than suspected. Scripts/logs:
 `/mnt/data/resynthesis/admissibility/` (`B0_leak.py`, `B1_basek.py`).
+**Full writeup: [`docs/ood-strata-invalid.md`](../docs/ood-strata-invalid.md)** — measurement,
+demoted alternatives, void/survives lists, three ranked fixes, reproduction, limits. Published to
+the knowledgebase 2026-08-06 (`briefing/what-we-tried.md`, `reports/retro-planning.md`, and the
+generalised lesson in `tutorial/data-landscape.md`).
 
 **What the label is.** `calculate_ood_190.py`: max **Morgan-2 (2048-bit) Tanimoto of the TARGET
 MOLECULE** to "base K", thresholded ≥0.8 → in-distribution, 0.5–0.8 → close, <0.5 → far. base K =
