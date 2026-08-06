@@ -1109,3 +1109,65 @@ transfer sharpens exactly the thing we currently cannot act on. That is the oper
 
 **UNCHANGED, but now better justified:** ξ_f open-and-deprioritised (C2 strengthens it); the
 completion/mapping layer still unowned and still blocking three consumers.
+
+## THE OOD LABEL IS MEASURING THE WRONG CORPUS — resolved 2026-08-06
+The `far`/`close`/`in-distribution` stratification of the 190 hard targets is **invalid**, and the
+mechanism is now identified rather than suspected. Scripts/logs:
+`/mnt/data/resynthesis/admissibility/` (`B0_leak.py`, `B1_basek.py`).
+
+**What the label is.** `calculate_ood_190.py`: max **Morgan-2 (2048-bit) Tanimoto of the TARGET
+MOLECULE** to "base K", thresholded ≥0.8 → in-distribution, 0.5–0.8 → close, <0.5 → far. base K =
+`ord_global_index.json` + RxnScribe-extracted ACS patents. Verified: base K is **1 048 347 product
+molecules**, and the label is **computed correctly** — `far` targets really do sit at max Tanimoto
+0.32–0.49, and 94.2 % of in-distribution targets are *literal members* of base K while 0/25 `close`
+and 0/28 `far` are.
+
+**The killer measurement.** Scanning all **1 939 253** rows of `uspto.csv` for the targets as products:
+
+| stratum | target appears as a USPTO product | n |
+|---|---|---|
+| in-distribution | **78.1 %** | 137 |
+| close | **96.0 %** | 25 |
+| **far (deep-OOD)** | **100.0 %** | 28 |
+| all | 83.7 % | 190 |
+
+**Every single "deep-OOD" target is a verbatim USPTO product, and the gradient is INVERTED** — the
+stratum labelled most novel is the most memorised, the stratum labelled least novel is the least.
+
+**Why.** The label measures novelty against **ORD's product index (1.05 M molecules)** while the
+planner's knowledge comes from **USPTO (1.94 M reactions)** — the templates are USPTO-derived, every
+policy (T5, MT, Chemformer, LocalRetro, AZF) is USPTO-trained, PaRoutes is USPTO-derived, and the
+Chen-2020 target list is USPTO-derived. The two corpora overlap only partially, so a target can be
+genuinely far from ORD while being a memorised USPTO product. **The label is not wrong arithmetic; it
+is the wrong reference corpus** — and empirically it is *anti-correlated* with novelty relative to
+what the planner actually learned.
+
+**This fully explains the inversion seen three times** (June KPV, the July (c) test, Joris's August
+MEEA benchmark). Two secondary contributors, both now demoted: `far` targets are also mildly
+*easier* chemically — significantly fewer stereocentres (1.29 vs 2.12 close, p=0.036; 35.7 % vs
+20.0 % wholly achiral), lower Fsp3 (p=0.014 vs in-dist), more aromatic (p=0.028) — and Joris's
+MEEA inversion is **not statistically supported at all** (far 28/28 CI [87.9,100] overlaps close
+22/25 CI [70.0,95.8]). The (c) test inversion *is* significant (far 77.8 % vs close 48.0 %,
+permutation p=0.041), and note there the outlier is **`close`**, with `far` ≈ in-distribution.
+
+**VOID as a result of this.** Every claim of the form "method X generalises / degrades out of
+distribution" that rests on these strata: retro-planning's "L\* degrades OOD" and "OOD
+generalization is the open gap"; the (c) test's per-stratum diversity comparison; Joris's "ReactionT5
+is robust when facing chemical novelty" (its 100 % on `far` is 100 % memorisation). **The briefing
+carries per-stratum L\* numbers (in-dist 69 % vs 52 %, deep-OOD 79 vs 82) and must be corrected.**
+
+**SURVIVES.** Anything pooled or stratum-free: the reseeded L\* result (64.43 % vs 61.86 %, 6/6
+datasets), the budget-exhaustion finding that seeded `retro-planning` (independent of this label),
+the oracle ladder, and the barrier work.
+
+**The fix — three options, in increasing order of trustworthiness.**
+1. **Re-reference the label** to the corpus the planner actually learned from (USPTO templates), not
+   to ORD. Cheap, and it makes the existing axis meaningful.
+2. **Define novelty over reactions, not products** — template rarity or required-transformation
+   similarity. This is the quantity that should have been measured; product-structure novelty was
+   never the right proxy for synthetic difficulty.
+3. **Use a genuinely external corpus.** ORDerly's **non-USPTO test sets** (rektomar's find) are the
+   only construction here that cannot be contaminated by USPTO. This is the one that would let us
+   make an OOD claim at all.
+Until one of these lands, **no OOD claim from this tree is admissible** — and per ADR 0004 the
+existing ones are not grandfathered.
