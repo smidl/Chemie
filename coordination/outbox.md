@@ -105,3 +105,27 @@ So placement was the load-bearing piece, exactly as the geometry evidence predic
 2026-08-06 — Robin: endpoint fix **is integrated** — `specialty_11/results.json` rewritten, failure moved from `failed_no_ts_found` to **`failed_geometry_optimization`**, i.e. earlier in the pipeline, so DFT endpoint optimisation is not converging at production settings on 13–15-atom bimolecular systems. Still 0 barriers. His 2 h 51 m `verif_reaction_complex` verification of the handover module ran in `/home/mollerob` (mode 700) and is **unreadable** — the one artefact that would say whether the fix works at production settings. Ask for it specifically; it is the cheapest thing he can move and it leaves with his account. RCI otherwise quiet since 08-05 13:37; disk improved to 88 % (79 T free).
 
 2026-08-06 — **THE OOD PROBLEM IS RESOLVED, AND IT IS WORSE THAN A LABELLING QUIBBLE: 100 % of "deep-OOD" targets are verbatim USPTO products, and the gradient is INVERTED.** Scanned all 1 939 253 rows of `uspto.csv` for the 190 targets as products: in-distribution **78.1 %** leaked, close **96.0 %**, **far 100.0 %** (n=137/25/28). The stratum labelled most novel is the most memorised. MECHANISM: the label (`calculate_ood_190.py`) is *correctly computed* — max Morgan-2 Tanimoto of the **target molecule** to "base K" = ORD's product index, verified at **1 048 347 molecules**, with `far` genuinely at 0.32–0.49 and 94.2 % of in-distribution targets literal base-K members — but it references **the wrong corpus**: novelty is measured against **ORD products** while the planner's knowledge is **USPTO reactions** (USPTO-derived templates, USPTO-trained policies, USPTO-derived PaRoutes and target list). So a target can be genuinely far from ORD and still be a memorised USPTO product. Secondary, demoted: `far` is also mildly easier chemically (stereocentres 1.29 vs 2.12, p=0.036; 35.7 % vs 20.0 % achiral; lower Fsp3 p=0.014; more aromatic p=0.028), and Joris's MEEA inversion is **not statistically supported** (CIs overlap: far [87.9,100] vs close [70.0,95.8]) though the (c) test's is (p=0.041, with **`close`** as the true outlier and `far` ≈ in-distribution). **VOID:** every "generalises/degrades OOD" claim resting on these strata — retro-planning's OOD-gap framing, the (c) test's per-stratum diversity, Joris's "robust to chemical novelty". **The briefing's per-stratum L\* numbers (69 vs 52 in-dist, 79 vs 82 deep-OOD) must be corrected.** **SURVIVES:** everything pooled — the reseeded L\* result (64.43 vs 61.86, 6/6), the budget-exhaustion finding that seeded retro-planning, the oracle ladder. **FIX, ranked:** re-reference the label to USPTO; or define novelty over *reactions* not products; or use ORDerly's **non-USPTO test sets** — the only construction here that USPTO cannot contaminate. Until then **no OOD claim from this tree is admissible**, and per ADR 0004 the existing ones are not grandfathered.
+
+## 2026-08-06 — dispatched the invalid-OOD-axis correction to four leaves and the board
+`docs/ood-strata-invalid.md` is the single explanation; every note points at it rather than
+restating it. Sent because the axis is load-bearing in more than one node and one student
+conclusion depends on it.
+
+- **retro-planning** — the heaviest. `AGENTS.md:29` frames the mandate as "hard / OOD"; the *hard*
+  half stands, the *OOD* half must come out. `AGENTS.md:62` fixes the metric as stratified
+  budget-to-solve — that protocol now manufactures artifacts. `REPORT-lstar-vs-sascore.md` and
+  `deepood.sbatch` are void per-stratum; the pooled 64.43 vs 61.86 is untouched.
+- **retro-pfn** — `handoff-hardtarget-c.md:28` says "per stratum, never pooled (R1)". Inverted.
+  The (c) test's inversion is statistically real (p=0.041) but is a binning signature, not novelty.
+- **retrosyntesis** — owns `calculate_ood_190.py` and the report tables. Joris's 2026-08-05
+  "ReactionT5 is robust when facing chemical novelty" is void (28/28 far = 28/28 leaked), and his
+  far-vs-close inversion never had support (overlapping Wilson intervals). Said plainly that the
+  benchmark is ours and the missing check was ours; asked him to annotate rather than delete.
+- **retro-generation** — preventive only. Martin will need a generalisation split for arbitrary
+  conditioning and would naturally inherit this one.
+- **board → pfn4bo/DecisionBO** — `2026-08-06_from-chemie_to-pfn4bo_leaked-ood-benchmark.md`.
+  Proposes a companion to their ADR-0004: a shift axis is admissible only if the reference set is
+  the training corpus and leakage has been checked in the direction it claims to measure. Asks
+  whether they have an ex-ante check, and whether it survives their move to real HTE data.
+
+Not sent to retro-physics-validation (barriers, unaffected) or MolGPT (no strata dependency).
