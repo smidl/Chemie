@@ -74,10 +74,23 @@ reaction profile without a high-level method, and that is a defensible position 
 would produce numbers the protocol's own designers consider inadmissible, which defeats the entire
 point of adopting an established protocol.
 
-**So the ask is concrete: ORCA on RCI.** It is free for academic use, it is autodE's best-supported
-backend, and it would additionally give the cost ladder a second DFT engine independent of PySCF —
-every DFT number in this tree currently comes from one code. Until then autodE is installed and
-importable but cannot run a profile.
+**Resolved 2026-08-08 — two high-level backends are now installed.**
+
+| code | version | location | notes |
+|---|---|---|---|
+| **ORCA** | 6.1.1 | `/mnt/data/resynthesis/orca_6_1_1/` | owner-supplied (registration + EULA are a human step). Shared build against OpenMPI 4.1.8; RCI's `OpenMPI/4.1.6-GCC-13.2.0` satisfies it — `ldd` reports nothing missing and H₂/HF/STO-3G returns −1.116759 Ha. autodE's best-supported backend. |
+| **NWChem** | 7.3.1 | `/mnt/data/resynthesis/nwchem_env/` | conda-forge via a micromamba bootstrap; open source, no licence step. Installed first, as the only high-level code obtainable without a human in the loop. |
+
+Keeping both is worth the disk. **Every DFT number in this tree currently comes from PySCF alone**,
+so two independent codes is a real check rather than redundancy — and ORCA additionally gives us
+DLPNO-CCSD(T), the method BH9's own references are built on.
+
+### One trap for anyone else running autodE here
+
+autodE launches MPI codes as `mpirun -np N`. A `--cpus-per-task=N` SLURM allocation gives PRRTE
+**one** slot, not N, and NWChem dies with "Either request fewer procs … or make more slots
+available". The shape has to be `--ntasks=N --cpus-per-task=1`, plus
+`PRTE_MCA_rmaps_default_mapping_policy=:oversubscribe`. Costs two failed jobs to discover.
 
 ## The proposal, which also improves the walkthrough
 
