@@ -5,9 +5,12 @@ rate, but only on the WHOLE-MOLECULE path where a dot-SMILES is embedded as one 
 situation build_endpoints avoids by embedding each fragment separately. Nobody measured them on the
 job we actually do, which is single-fragment embedding.
 
-BH9 makes that measurable. Its reactant blocks are the isolated fragments optimised at
-DLPNO-CCSD(T)-quality geometry, so we can ask directly: starting from the SMILES alone, which
-generator lands closer to the true structure?
+BH9 makes that partly measurable. Its reactant blocks are isolated fragments optimised at
+CAM-B3LYP-D3(BJ)/6-311++G** -- a good DFT reference, NOT a coupled-cluster one: DLPNO-CCSD(T) is a
+single point at those geometries. And each is the LOWEST-ENERGY CONFORMER from an extensive search
+(MacroModel constrained search, 100-step MCMM, PM6-DH2 screen, top-10 reoptimised). A single ETKDG
+or make3D shot does no search at all, so for a flexible fragment this metric scores conformer luck,
+not geometry quality. It is a clean bond-length/angle test only for rigid fragments.
 
 Per fragment, three numbers:
   * heavy-atom best-fit RMSD to the BH9 reference geometry (symmetry-aware)  <- the real metric

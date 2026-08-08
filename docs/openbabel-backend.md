@@ -4,6 +4,30 @@
 (Open Babel **3.1.0**; mmff94, uff, gaff, ghemical all present) · **Measurement:** `I0_embed.py`,
 `out/embed_compare.json`, `logs/embed-11321389.log` · **Code:** `reaction_complex.py`, 18/18 tests
 
+## What the reference actually is — read this before the table
+
+Checked after the fact, and it downgrades part of what is below.
+
+- **The geometries are DFT, not coupled-cluster.** BH9's structures were finally optimised at
+  **CAM-B3LYP-D3(BJ)/6-311++G\*\***, gas phase. DLPNO-CCSD(T)/CBS is a *single point at* those
+  geometries, and supplies the barrier references only. An earlier note of mine called these
+  "DLPNO-CCSD(T)-quality geometry" — wrong, and corrected in the source.
+- **Each reference is the lowest-energy conformer of an extensive search** — MacroModel constrained
+  search, a 100-step Monte-Carlo multiple-minimum run, a PM6-DH2 screen, the ten best reoptimised,
+  then the final DFT optimisation. A single ETKDG or `make3D` shot performs **no search at all**.
+  So for a *flexible* fragment the RMSD below measures whether one shot happened to land on the
+  global minimum, not geometry quality. It is a clean bond-length/angle test only for rigid ones.
+- **n = 8, and four of them are ties** within 0.003 Å.
+
+So: the per-molecule numbers on rigid fragments are validated against a real external reference.
+**The aggregate ranking is not robust** — it rests on three or four informative comparisons, one of
+which (the thiazolium enol, the only flexible fragment) is really a conformer-search result where
+both tools lose by construction.
+
+Incidentally, BH9 verified every TS by frequency analysis *and* visual inspection of the
+imaginary-mode eigenvector along the reaction coordinate. That is exactly the verification we do
+not do — independent corroboration of gap B1 in `open-questions-for-review.md`.
+
 ## Why measure rather than argue
 
 The earlier case for RDKit was an argument: Open Babel's 37.3 % vs 98.3 % clash advantage was
@@ -23,14 +47,14 @@ Heavy-atom best-fit RMSD to the BH9 reference, 8 fragments from the four mapped 
 | CO₂ | 0.203 | **0.034** | ETKDG bends a linear molecule |
 | 1-methylcyclopropene | **0.050** | 0.223 | OB is poor on the strained ring |
 | methyl azide | **0.099** | *failed* | charge-separated N₃ defeats OB |
-| thiazolium enol | 0.452 | **0.389** | both mediocre on the flexible one |
+| thiazolium enol | 0.452 | **0.389** | the only flexible fragment — this row is a conformer-search comparison, not a geometry test |
 | thiophene S-oxide | 0.142 | **0.138** | tie |
 | 2,3-dihydrofuran | 0.031 | **0.029** | tie |
 | thiophene-1,1-dioxide | 0.036 | 0.036 | identical |
 | ethylene | 0.006 | 0.006 | identical |
 
-**Median 0.036 Å (OB) vs 0.074 Å (RDKit); OB closer on 6 of 7 comparable fragments.** But the
-aggregate hides the shape: on rigid aromatics the two agree to 0.000–0.003 Å and the choice is
+Median 0.036 Å (OB) vs 0.074 Å (RDKit), OB closer on 6 of 7 — **but see the caveats above; that
+aggregate is indicative at best.** What the aggregate hides matters more: on rigid aromatics the two agree to 0.000–0.003 Å and the choice is
 irrelevant; the differences that matter are three specific molecules, and they point in *different*
 directions. Open Babel gets CO₂ right where ETKDG bends it; RDKit gets the strained ring right where
 OB is 4× worse; and **Open Babel fails outright on methyl azide**, a charge-separated hypervalent
