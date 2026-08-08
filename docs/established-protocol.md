@@ -56,10 +56,28 @@ autodE drives ORCA, Gaussian, NWChem, QChem, MOPAC and xtb. **It cannot drive Py
 only DFT engine we have. On RCI today it therefore runs **xtb-only**, so any barrier it produces is
 a GFN2-xTB number, not a DFT one.
 
-That is an actionable ask rather than a blocker: **ORCA is free for academic use** and is autodE's
-best-supported backend. Getting ORCA onto RCI would let the established protocol run at DFT and
-would give the cost ladder a second, independent DFT engine — useful in its own right, since every
-number we have is currently PySCF's.
+**It is a blocker, and the requirement is structural.** I tried to work around it by promoting xtb
+to the high-level tier, on the reasoning that it would separate "we lack a DFT backend" (an install
+problem) from "the protocol fails on our chemistry" (a science problem). Three attempts, three
+different enforcement points:
+
+1. `Config.hcode = "xtb"` → `MethodUnavailable`; xtb is registered only in
+   `low_level_method_names`.
+2. appending xtb to `autode.methods.h_methods` → no effect; `h_methods` is a **local list built
+   inside `get_hmethod()`**, not a module attribute.
+3. replacing `autode.methods.get_hmethod` itself → passes the decorator gate, then fails again in
+   `reactions/reaction.py`, which imported `get_hmethod` by name at module load.
+
+Three independent guards is not an oversight. autodE's authors deliberately refuse to emit a
+reaction profile without a high-level method, and that is a defensible position — a semi-empirical
+"reaction profile" is not something they want their tool to endorse. Continuing to patch around it
+would produce numbers the protocol's own designers consider inadmissible, which defeats the entire
+point of adopting an established protocol.
+
+**So the ask is concrete: ORCA on RCI.** It is free for academic use, it is autodE's best-supported
+backend, and it would additionally give the cost ladder a second DFT engine independent of PySCF —
+every DFT number in this tree currently comes from one code. Until then autodE is installed and
+importable but cannot run a profile.
 
 ## The proposal, which also improves the walkthrough
 
