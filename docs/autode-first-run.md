@@ -20,6 +20,22 @@
 > Cause: I launched the second job while the first was still running, without checking. Same class
 > of error as everything else catalogued this fortnight — a procedure that looked fine because
 > nothing announced the collision.
+>
+> **Rerun in an isolated directory (job `11322670`) — the withdrawal was justified.**
+>
+> | | contaminated | isolated | BH9 ref |
+> |---|---|---|---|
+> | barrier | 9.58 | **11.03** | 16.98 |
+> | reaction energy | −48.21 | **−49.01** | −42.48 |
+> | TS imaginary freq | −363.80 | −363.94 | — |
+> | wallclock | 85.5 min | 71.1 min | — |
+>
+> The barrier moved **1.45 kcal/mol**, so the shared low-level cache did real damage. The imaginary
+> frequency is unchanged to 0.14 cm⁻¹ — same saddle, corrupted energies.
+>
+> Errors against BH9 at PBE0-D3BJ/def2-TZVP: barrier **−5.95**, reaction energy **−6.53**. BH9's own
+> PBE0 figures for pericyclic reactions are barrier MAE 3.34 and RE MAE 5.52, so this is ~1.8× and
+> ~1.2× the class mean — an ordinary functional error on one reaction, not a broken pipeline.
 
 **Date:** 2026-08-09 · **Job:** `adeorca-11321451` · **Work dir:**
 `/mnt/data/resynthesis/admissibility/work_autode/bh9_93_da`
@@ -77,6 +93,31 @@ thiophene-1,1-dioxide are rigid, so gap B2 is untested here. Reaction #93 was ch
 member of set A is **#436** (CO₂ + thiazolium enol, 27 atoms) — the only one with real
 conformational freedom, and the one whose BH9 reference geometry needed a full conformer search.
 That is where B2 has to be exercised.
+
+## A second, less obvious cache — directory isolation is not enough
+
+autodE writes TS templates **into the installed package**, at
+`autode/transition_states/lib/`, outside any working directory. Timestamps are unambiguous:
+
+| file | written | by |
+|---|---|---|
+| `template0.txt` | 2026-08-08 18:37 | shipped with the install |
+| `template1.txt` | 2026-08-08 20:05 | the **contaminated** run |
+| `template2.txt` | 2026-08-09 10:26 | the **"clean"** rerun |
+
+So the isolated rerun consumed a template the contaminated run had written — its TS is named
+`..._template_...` rather than the adaptive-search name. The **energy remains attributable**: a
+template supplies only a *guess* geometry, which was then constrained-optimised, TS-optimised and
+frequency-verified at ORCA level. But **71.1 min is not a from-scratch cost** — that run had a head
+start — and the earlier claim that isolating the directory had fixed the problem was incomplete.
+
+Templates 1 and 2 are quarantined to `admissibility/ts_templates_quarantine/`; job `11323319` runs
+from a genuinely empty state to get an honest cost and confirm the barrier without a seeded guess.
+
+**This is itself a walkthrough finding.** Reproducing one number from an established tool took three
+attempts, and two of the three traps were *invisible caches* — a shared working directory whose
+low-level artifacts are not method-tagged, and a template library inside site-packages. Anyone
+adopting autodE will hit both, and neither is mentioned in its paper.
 
 ## NWChem
 
