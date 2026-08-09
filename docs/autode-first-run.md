@@ -1,5 +1,26 @@
 # First run of the established protocol — autodE + ORCA on BH9 #93
 
+> ## ⚠ THE NUMBERS BELOW ARE WITHDRAWN (2026-08-09)
+>
+> The ORCA job was launched into a working directory that the NWChem job was **still writing to**,
+> under the same reaction name. Checked afterwards: **15 NWChem files were written after the ORCA
+> job started**, and both runs used xtb as the low-level method — whose artifacts autodE does *not*
+> method-tag, so the two jobs shared the conformer and low-level optimisation files.
+>
+> autodE tags high-level files by code (`_orca`, `_nwchem`), so direct reuse of a DFT energy is
+> unlikely; but "unlikely" is not a measurement, and a shared low-level cache is enough to make the
+> result unattributable to either code. **Nothing below may be quoted.** Rerunning in an isolated
+> directory (`work_autode/orca_clean_93`, job `11322670`), with the script now refusing to start in
+> a non-empty workdir.
+>
+> The qualitative outcomes survive independently of the numbers: the protocol *completes*, it
+> *locates and frequency-verifies a saddle*, and it found *no conformers to sample* on two rigid
+> reactants. Those do not depend on which code produced a given energy.
+>
+> Cause: I launched the second job while the first was still running, without checking. Same class
+> of error as everything else catalogued this fortnight — a procedure that looked fine because
+> nothing announced the collision.
+
 **Date:** 2026-08-09 · **Job:** `adeorca-11321451` · **Work dir:**
 `/mnt/data/resynthesis/admissibility/work_autode/bh9_93_da`
 
