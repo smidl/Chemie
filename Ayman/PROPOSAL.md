@@ -116,8 +116,9 @@ advantage of uncertainty-guided acquisition over random acquisition?
 **RQ2.** Can acquisition be made robust to input-dependent noise by targeting the estimated
 reducible component of uncertainty, and what does that require of the uncertainty estimator?
 
-**RQ3.** Do real high-throughput chemistry datasets fall in the regime where uncertainty-guided
-acquisition is expected to fail, and can that be established before labelling?
+**RQ3.** Is the label noise in real high-throughput chemistry datasets input-dependent, and to what
+degree — and does that place them in the regime where uncertainty-guided acquisition is expected to
+fail?
 
 - **H1 (control).** Under **homoscedastic** noise the advantage of uncertainty-guided acquisition
   over random is **unaffected in ranking terms**; any reduction observed is attributable to the
@@ -132,9 +133,12 @@ acquisition is expected to fail, and can that be established before labelling?
   extent that the estimator separates the components accurately.
 - **H5 (mechanism control).** Acquisition by the **aleatoric** component alone underperforms random
   at large R. If it does not, the proposed mechanism is falsified.
-- **H6.** An estimator assuming homoscedastic noise (a standard GP) is **mis-specified** under
-  input-dependent noise and inverts at a lower R than an estimator with an input-dependent noise
-  model.
+- **H6 (pre-registered null).** Improving the *estimator* alone — replacing a homoscedastic-noise
+  GP with one modelling input-dependent noise, while leaving the acquisition rule unchanged — is
+  expected **not** to move the inversion point materially. This is registered as a null in advance
+  because prior work in this group and in a parallel project both found that better noise modelling
+  did not improve downstream decisions. A positive result here would contradict that prior and
+  would be reported as such.
 - **H7.** Replacing greedy top-*k* batch selection with a diversity-aware rule increases the measured
   advantage at low R, and does not rescue it at high R.
 
@@ -258,14 +262,19 @@ replication of the initial design — with a demonstration of how much each chan
 | 2 | Background and Related Work | 1–2 |
 | 3 | Methods: testbeds, noise models, acquisition strategies, statistical protocol | 2–3 |
 | 4 | Results I: correcting the baseline (batch selection, replication) | 3–4 |
-| 5 | Results II: the noise dose–response and the threshold | 4–5 |
-| 6 | Results III: validation on real experimental data | 5–6 |
-| 7 | Discussion, limitations, future work | 6 |
-| 8 | Conclusion | 6 |
+| 5 | Results II: is real chemistry data heteroscedastic? R measured from replicates | 4 |
+| 6 | Results III: the R sweep on constructed noise — locating the inversion | 4–5 |
+| 7 | Results IV: can acquisition be made robust? (the open question) | 5–6 |
+| 8 | Discussion, limitations, future work | 6 |
+| 9 | Conclusion | 6 |
 
-**Milestones.** End of month 3: corrected baseline reproduced and the statistical protocol fixed —
-this is the point at which the thesis has a guaranteed defensible result regardless of what follows.
-End of month 5: threshold determined. End of month 6: real-data validation and writing complete.
+**Milestones and risk structure.** The chapters are ordered so that the uncertain work comes last
+and three independent defensible results precede it. End of month 3: corrected baseline and fixed
+statistical protocol — a guaranteed result regardless of everything after. End of month 4: R
+measured on real data — a descriptive result that cannot fail, and which determines whether the
+remaining chapters are worth running; if R proves small everywhere, that is itself the answer to
+RQ1 and redirects the thesis to the batch and sufficiency explanations. End of month 5: inversion
+located, or bounded. Month 6: the open question, plus writing.
 
 ## 12. Required Tools and Resources
 
@@ -297,16 +306,25 @@ End of month 5: threshold determined. End of month 6: real-data validation and w
    uncertainty estimation methods for deep learning-based molecular property prediction. *Journal of
    Chemical Information and Modeling, 60*(6), 2697–2717.
    https://doi.org/10.1021/acs.jcim.9b00975
-5. Yin, T., Gao, P., Panapitiya, G., & Saldanha, E. G. (2026). Out-of-distribution evaluation of
+5. Bernhardt, M., Castro, D. C., Tanno, R., Schwaighofer, A., Tezcan, K. C., Monteiro, M., et al.
+   (2022). Active label cleaning for improved dataset quality under resource constraints. *Nature
+   Communications, 13*. https://doi.org/10.1038/s41467-022-28818-3
+6. Griffiths, R.-R., Aldrick, A. A., Garcia-Ortegon, M., Lalchand, V., & Lee, A. A. (2022).
+   Achieving robustness to aleatoric uncertainty with heteroscedastic Bayesian optimisation.
+   *Machine Learning: Science and Technology, 3*(1), 015004.
+   https://doi.org/10.1088/2632-2153/ac298c
+7. Mots'oehli, M., & Baek, K. (2023). *Deep active learning in the presence of label noise: A
+   survey*. arXiv:2302.11075.
+8. Yin, T., Gao, P., Panapitiya, G., & Saldanha, E. G. (2026). Out-of-distribution evaluation of
    active learning pipelines for molecular property prediction. *RSC Advances, 16*, 5281–5295.
    https://doi.org/10.1039/d5ra08055j
-6. Zhong, H., Liu, Y., Sun, H., Liu, Y., Zhang, R., Li, B., Yang, Y., & Huang, Y. (2025). Towards
+9. Zhong, H., Liu, Y., Sun, H., Liu, Y., Zhang, R., Li, B., Yang, Y., & Huang, Y. (2025). Towards
    global reaction feasibility and robustness prediction with high-throughput data and Bayesian deep
    learning. *Nature Communications, 16*. https://doi.org/10.1038/s41467-025-59812-0
 
-**Still to be added — 6 to 12 further sources, to be located and verified before submission.**
-The template asks for 10–20; the six above are the ones whose metadata has been confirmed against an
-authoritative source. Do **not** fill the remainder from memory or from search-result snippets —
+**Still to be added — 3 to 9 further sources, to be located and verified before submission.**
+The template asks for 10–20; the nine above are the ones whose metadata has been confirmed against
+an authoritative source. Do **not** fill the remainder from memory or from search-result snippets —
 author lists in this area are routinely garbled by secondary sources. Verify each through Crossref
 (by DOI) or the arXiv API before writing it down. Topics still to cover:
 
