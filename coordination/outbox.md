@@ -129,3 +129,37 @@ conclusion depends on it.
   whether they have an ex-ante check, and whether it survives their move to real HTE data.
 
 Not sent to retro-physics-validation (barriers, unaffected) or MolGPT (no strata dependency).
+
+## 2026-08-10 — reviewed jinrehacek's LEAF 01 and set his direction
+Full note in `retro-physics-validation/coordination/inbox.md`.
+
+**Assessment.** Genuinely good, and better than the commit messages suggest. Seven scripts, ~20
+result artifacts, five tools actually executed, a ten-reaction set with verified chemistry ground
+truth including a live negative control, and an 8×5 suitability matrix with measured costs. His
+epistemics are the standout: "not suitable" vs "not suitable *for rejection*", a ReactionT5 miss
+"proves little" while a match only "supports", and DFT/Skala and CCSD(T) marked *assessed from
+literature, not run* rather than left looking tested.
+
+**The result that transfers to us.** AIMNet2 on 100 Transition1x reactions with **exact DFT
+geometries, no optimisation or TS search** — MAE **4.76** kcal/mol, Spearman 0.983. He independently
+built the design that separates the energy model from the geometry problem. Caveat now known:
+Transition1x is 99.9 % single-fragment, so that is the easy half.
+
+**Compute.** He has run **nothing on RCI** — every script is `*_colab.py`. His account `rehacji1`
+has zero jobs and its home was created 2026-08-10 10:05, two hours after his LEAF-01 commit, and he
+is **not in the `resynthesis` group**, so he cannot read the shared store. Access, not effort.
+**Action for the owner: add `rehacji1` to `resynthesis`.**
+
+**Direction set.** (1) Re-point the exact-geometry probe from Transition1x to BH9 — 57.5 %
+multi-fragment, DLPNO-CCSD(T)/CBS references, nine classes, already staged — which places a cheap
+MLIP inside BH9's own published DFT table and gives the ladder a defensible cheap-rung error bar.
+(2) The decomposition: same reactions on exact vs SMILES-built geometries, separating geometry error
+from model error. Nobody here has that and the ladder depends on it.
+
+**Withheld deliberately:** the TS-search problem. He identified it as the bottleneck and stopped
+rather than faking a result; it now has a dedicated tool.
+
+**Handed over:** the `build_endpoints` diagnosis for his failed R7 NEB (his own summary records a
+**4 Å** fragment separation and a 232.9 kcal/mol barrier — the July signature); the installed
+autodE/ORCA/NWChem/xtb stack with the two traps that cost us jobs; and the separated-reactant
+referencing plus molecularity-field conventions.
