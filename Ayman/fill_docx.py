@@ -93,8 +93,31 @@ def flush():
         buf = []
 
 in_table = False
+# a markdown bullet may wrap over several lines; its continuations are indented, and must be
+# joined back onto the bullet rather than emitted as separate paragraphs
+pending_bullet = None
+
+def flush_bullet():
+    global pending_bullet
+    if pending_bullet is None:
+        return
+    marker, txt = pending_bullet
+    p = doc.add_paragraph()
+    r = p.add_run(marker + clean(" ".join(txt)))
+    r.font.name = "Arial"; r.font.size = Pt(11)
+    p.paragraph_format.left_indent = Pt(18)
+    p.paragraph_format.space_after = Pt(4)
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    pending_bullet = None
+
 while i < len(lines):
     ln = lines[i].rstrip()
+    # continuation of a bullet: indented and not itself a new block
+    if pending_bullet is not None and ln.startswith("  ") and ln.strip() \
+       and not ln.lstrip().startswith(("- ", "|", "#", "*")) \
+       and not re.match(r"^\s*\d+\. ", ln):
+        pending_bullet[1].append(ln.strip()); i += 1; continue
+    flush_bullet()
     if ln.startswith("## "):
         flush(); in_table = False
         add(clean(ln[3:]), bold=True, size=13, space_before=14, space_after=6)
@@ -116,17 +139,14 @@ while i < len(lines):
         txt = clean(re.sub(r"^(- |\d+\. )", "", ln))
         # the template may not define list styles; fall back to a manual bullet/number
         marker = "\u2022  " if ln.startswith("- ") else re.match(r"^(\d+)\.", ln).group(1) + ".  "
-        p = doc.add_paragraph()
-        r = p.add_run(marker + txt); r.font.name = "Arial"; r.font.size = Pt(11)
-        p.paragraph_format.left_indent = Pt(18)
-        p.paragraph_format.space_after = Pt(3)
-        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        pending_bullet = (marker, [txt])
     elif not ln.strip():
         flush(); in_table = False
     else:
         if in_table: in_table = False
         buf.append(ln)
     i += 1
+flush_bullet()
 flush()
 
 doc.save(OUT)
