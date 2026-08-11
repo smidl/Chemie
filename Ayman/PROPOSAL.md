@@ -1,22 +1,15 @@
 # Thesis Proposal — proposed content
 
-*Follows the SW-1 template (v14.0, 23.07.2026); headings and numbering match it. Target 8–10 pages.
-Supporting background is in the companion `thesis-A-*.md` files in this folder.*
-
 ---
 
 ## 1. Working Title
 
-**The Effect of Noise-Model Assumptions on the Quality of Active Learning: A Sensitivity Study on
-Chemical Reaction Data**
-
-*Alternatives:* "How Much Does the Noise Model Matter in Active Learning?"; "Noise-Model
-Mis-specification and the Failure of Uncertainty-Guided Acquisition".
+**The Effect of Noise-Model Assumptions on the Quality of Active Learning of Chemical Reactions**
 
 ## 2. Abstract
 
 Active learning tries to cut the number of labels a model needs by choosing what to label instead of
-sampling at random. Results in chemistry are inconsistent: some studies report clear gains, others
+sampling at random. Results in predicting chemical reactions are inconsistent: some studies report clear gains, others
 find no difference from random selection, and there is no accepted explanation for the split.
 
 Nearly every active-learning method assumes something about how labels are corrupted — a noise
@@ -55,10 +48,6 @@ requires uncertainty estimates, retraining between rounds, and a sequential work
 advance whether that overhead will repay itself is directly useful to anyone planning a measurement
 campaign.
 
-The remainder of the proposal sets out the gap (Section 4), the objectives (5), the questions and
-hypotheses (6), the relevant literature (7), the method (8), the expected results and contribution
-(9 and 10), and the plan, resources and references (11 to 13).
-
 ## 4. Problem Statement
 
 It is not known which departures from the standard noise assumption actually degrade active
@@ -72,9 +61,9 @@ of queries are selected, or from the data itself, and these possibilities are no
 separable. Each new dataset therefore becomes an independent gamble, and negative findings are
 difficult to publish because they cannot be distinguished from implementation error.
 
-Those affected are anyone spending a fixed budget on expensive labels: experimental laboratories
+This is important for potential user of active learning: experimental laboratories
 running screening campaigns, groups running first-principles calculations, and more generally any
-user of active learning working with noisy measurements. Left unaddressed, budgets continue to be
+user of active learning working with noisy measurements. When not properly understood, budgets continue to be
 committed to machinery that may not help, contradictory benchmark results continue to accumulate
 without an organising variable, and methods developed under idealised noise assumptions continue to
 be deployed where those assumptions fail.
@@ -171,7 +160,7 @@ treats the noise model as the variable under study rather than as fixed backgrou
 
 ## 8. Methodology
 
-The work is quantitative and computational, in two parts: a descriptive study of real experimental
+The work has two parts: a descriptive study of real experimental
 data, followed by a controlled simulation study in which the ground truth is known. The first
 determines which regions of the second are practically relevant.
 
@@ -183,9 +172,7 @@ set for scale); real high-throughput reaction data carrying genuine measurement 
 The descriptive part estimates, from replicate measurements, how the variance of a measurement
 depends on the reaction, how heavy the tails of the residuals are, and how strongly errors correlate
 within an experimental batch. These three properties are the ways in which real noise departs from
-the standard assumption, and they define what is varied in the second part. Replicates are required
-for this; where they are unavailable the properties can be bounded but not measured, which is stated
-as a limitation rather than worked around.
+the standard assumption, and they define what is varied in the second part. 
 
 The controlled part is a factorial design. Noise with each of those three structures is constructed
 on top of the deterministic dataset and swept through a range that includes the standard assumption
@@ -206,7 +193,7 @@ it cannot be distinguished from zero. Where a change of sign is predicted, hypot
 by the sign of the interval rather than by significance alone. Final model error and the calibration
 of the uncertainty estimates are recorded as secondary outcomes.
 
-No human participants, personal data or animals are involved. All datasets are published and used
+No data collection is planned.  All datasets are published and used
 under their licences, and the computation reuses existing labels rather than generating new
 calculations, so the energy cost is modest.
 
@@ -338,12 +325,3 @@ be mitigated, which is the only genuinely uncertain part of the work.
 22. Zhong, H., Liu, Y., Sun, H., Liu, Y., Zhang, R., Li, B., Yang, Y., & Huang, Y. (2025). Towards
     global reaction feasibility and robustness prediction with high-throughput data and Bayesian
     deep learning. *Nature Communications, 16*. https://doi.org/10.1038/s41467-025-59812-0
-
-All twenty-two entries above have metadata confirmed against Crossref or the arXiv API, quoted from
-the raw responses rather than from search results. That is a little above the template's stated range
-of 10–20; if a reviewer prefers a shorter list, Settles (2012) and Ren et al. (2021) are the
-redundant pair and either can go.
-
-Several entries come from a verified literature pool shared across related projects, which is why the
-list leans towards the theory of adaptive selection and of epistemic uncertainty rather than towards
-chemistry — appropriate for a computer-science thesis with a chemistry testbed.
