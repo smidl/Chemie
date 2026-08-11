@@ -36,3 +36,4 @@ MolGPT/phd-proposal/
 
 # NOTE: retro-pfn/ and briefing/ are git SUBMODULES (added explicitly).
 # MolGPT/ is a tracked folder (no own git); its nested repos are ignored above.
+Ayman/.venv-docx/

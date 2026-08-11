@@ -1,10 +1,7 @@
 # Thesis Proposal — proposed content
 
-*Structured to the SW-1 template (Version 14.0, 23.07.2026). Section numbering follows the template
-exactly. Background and reasoning behind these choices are in the companion files in this folder:
-`thesis-A-scope.md` (what is in and out), `thesis-A-problem-statement.md` (the abstract framing),
-`thesis-A-testbed-choice.md` (datasets and competitors), `thesis-A-relation-to-sisters.md`
-(positioning). Target length 8–10 pages.*
+*Follows the SW-1 template (v14.0, 23.07.2026); headings and numbering match it. Target 8–10 pages.
+Supporting background is in the companion `thesis-A-*.md` files in this folder.*
 
 ---
 
@@ -16,316 +13,269 @@ Chemical Reaction Data**
 *Alternatives:* "How Much Does the Noise Model Matter in Active Learning?"; "Noise-Model
 Mis-specification and the Failure of Uncertainty-Guided Acquisition".
 
-## 2. Abstract (150–250 words)
+## 2. Abstract
 
-Active learning aims to reduce the number of labels a model needs by choosing which examples to
-label rather than sampling at random. Reported results in chemistry and molecular property
-prediction are inconsistent: some studies find clear gains, others find performance indistinguishable
-from random selection, and no organising explanation is established.
+Active learning tries to cut the number of labels a model needs by choosing what to label instead of
+sampling at random. Results in chemistry are inconsistent: some studies report clear gains, others
+find no difference from random selection, and there is no accepted explanation for the split.
 
-Almost every active-learning method rests on an assumption about how labels are corrupted — the
-*noise model*. That assumption is rarely examined and is almost always the simplest one:
-independent, identically distributed, Gaussian noise of constant magnitude. Real experimental
-measurements violate all three parts of it.
+Nearly every active-learning method assumes something about how labels are corrupted — a *noise
+model*. The usual assumption is the simplest one: independent, identically distributed, Gaussian
+noise of constant size. Real measurements break all three parts of it.
 
-This thesis asks how much that matters. It systematically varies the *true* noise structure — its
-dependence on the input, its tail behaviour, and its correlation between measurements — while
-holding the learner's assumed noise model fixed, and measures the resulting change in
-active-learning performance relative to random sampling. One specific prediction is examined in
-detail: that input-dependent noise can lead uncertainty-guided acquisition to select the least
-reliably measured examples, and therefore to perform *worse* than random.
+This thesis asks how much that matters. It varies the true noise structure — how it depends on the
+input, how heavy its tails are, and how strongly it correlates between measurements — while keeping
+the learner's assumed model fixed, and measures what happens to active-learning performance relative
+to random sampling. One prediction is examined closely: that input-dependent noise makes
+uncertainty-guided acquisition pick the *least reliably measured* examples, and so perform worse
+than random.
 
-The study also characterises the noise structure of real high-throughput chemistry datasets from
-replicate measurements. The expected contribution is a sensitivity map showing which noise-model
-assumptions materially affect active learning and which do not, together with guidance on when the
-method should be expected to help.
+The noise structure of real high-throughput chemistry datasets is also characterised from replicate
+measurements. The expected result is a sensitivity map: which noise assumptions matter, which do
+not, and when active learning is worth its overhead.
 
 ## 3. Introduction
 
-**Background.** Supervised learning needs labels, and in the natural sciences labels are expensive:
-a single experimental measurement can cost hours of laboratory time and material, and a single
-first-principles calculation can cost hours of computation. Active learning (AL) addresses this by
-letting the model choose what to label — typically selecting where its own predictive uncertainty is
-highest.
+**Background.** Labels are the bottleneck in scientific machine learning. One high-throughput
+measurement consumes reagent and instrument time; one first-principles calculation can consume
+hours. Active learning attacks this by letting the model pick what to label, usually where its
+predictive uncertainty is largest.
 
-**The overlooked assumption.** Predictive uncertainty is not a raw observation — it is produced by a
-model that assumes something about how observations are corrupted. The near-universal default is
-noise that is independent between measurements, identically distributed, Gaussian, and of constant
-magnitude across the input space. Experimental chemistry data satisfies none of these: measurement
-reliability varies with the reaction, occasional gross errors occur, and measurements sharing a
-plate or batch share systematic error.
+**The overlooked assumption.** Predictive uncertainty is not observed — it is produced by a model
+that assumes how observations are corrupted. The default is noise that is independent, identically
+distributed, Gaussian and of constant size. Experimental chemistry data is none of these:
+reliability varies between reactions, gross errors happen, and measurements on the same plate share
+systematic error.
 
-**Why it matters academically.** The theoretical picture is well developed and conditional: the
-benefit of adaptivity depends on properties of the problem, including the noise regime, and in the
-high-noise limit it is known to vanish. The empirical picture, by contrast, is reported largely as unconditional wins or losses.
-Recent benchmark work finds active learning improving one metric across all evaluated slices while
-improving another in only a subset, which indicates the question "does active learning work" is
-under-specified as usually posed.
+**Academic relevance.** Theory says the advantage of adaptive over random sampling depends on the
+noise regime and can vanish completely. The empirical literature mostly reports outcomes without
+mentioning noise at all, which may be why similar studies disagree.
 
-**Why it matters practically.** Running AL is not free — it requires uncertainty estimates,
-retraining between rounds, and a sequential experimental workflow. A laboratory or computational
-campaign that adopts it on faith may spend that overhead for no benefit. A criterion for deciding in
-advance is directly useful.
+**Practical relevance.** Active learning costs something: uncertainty estimates, retraining between
+rounds, a sequential workflow. Knowing in advance whether that pays off is worth having.
 
-**Structure.** Section 4 states the gap; Section 5 the objectives; Section 6 the questions and
-hypotheses; Section 7 the literature; Section 8 the method; Sections 9–10 expected results and
-contribution; Sections 11–13 plan, resources and references.
+**Structure.** Section 4 states the gap, 5 the objectives, 6 the questions and hypotheses, 7 the
+literature, 8 the method, 9–10 expected results and contribution, 11–13 plan, resources, references.
 
 ## 4. Problem Statement
 
-**What is not yet known.** It is not known which departures from the standard noise assumption
-materially degrade active learning, by how much, or whether any of them can reverse its advantage
-outright. Nor is it established what noise structure real chemical reaction datasets actually have.
+**What is not known.** Which departures from the standard noise assumption actually degrade active
+learning, by how much, and whether any can reverse its advantage. Also unknown: what noise structure
+real reaction datasets have.
 
-**Why the gap is important.** The literature is split. Some studies report clear gains from
-uncertainty-based acquisition; others report results indistinguishable from random on comparable
-tasks. Without an organising variable, each new dataset is an independent gamble, and negative
-results are difficult to interpret — a failure may reflect the estimator, the acquisition rule, the
-batch construction, or the task itself.
+**Why it matters.** Without this, a negative active-learning result cannot be read. The failure could
+be the uncertainty estimator, the acquisition rule, the batch construction, or the data — and these
+are not currently separable. Every new dataset becomes a gamble.
 
-**Who is affected.** Any group spending a constrained budget on expensive labels: experimental
-chemistry and materials laboratories, groups running first-principles calculations, and more broadly
-any active-learning practitioner working with noisy measurements.
+**Who is affected.** Anyone spending a fixed budget on expensive labels: experimental laboratories,
+computational campaigns, and active-learning users working with noisy measurements.
 
-**Consequences of not addressing it.** Budgets are spent on machinery that cannot help; genuine
-negative results remain unpublishable because they cannot be distinguished from implementation
-error; and the field continues to accumulate mutually contradictory benchmark results.
+**Consequences.** Budgets go to machinery that may not help; contradictory benchmarks accumulate;
+methods built on idealised noise get deployed where the idealisation fails.
 
 ## 5. Research Objectives
 
-1. **To correct** two identified defects in the existing active-learning implementation available to
-   this project — batch selection without a diversity term, and insufficient replication of the
-   initial labelled set — so that subsequent comparisons are interpretable.
-2. **To characterise** the noise structure of real high-throughput chemical reaction datasets from
-   replicate measurements: its dependence on the input, its tail behaviour, and its correlation
-   within experimental batches.
-3. **To measure** the sensitivity of active-learning performance to controlled departures from the
-   standard noise assumption, using constructed noise on a deterministic dataset where both the
-   signal and the noise are known exactly.
-4. **To test** in detail the specific prediction that input-dependent noise can invert the advantage
-   of uncertainty-guided acquisition, and to determine whether restricting acquisition to the
-   reducible component of uncertainty prevents it.
+1. **Correct** two defects in the available implementation — batch selection with no diversity term,
+   and too few repeats of the initial labelled set — so later comparisons can be interpreted.
+2. **Characterise** the noise structure of real reaction datasets from replicate measurements:
+   input-dependence, tail behaviour, and within-batch correlation.
+3. **Measure** how sensitive active learning is to controlled departures from the standard noise
+   assumption, using constructed noise where the truth is known exactly.
+4. **Test** whether input-dependent noise inverts the advantage of uncertainty-guided acquisition,
+   and whether acquiring on the reducible component only prevents that.
 
 ## 6. Research Questions and Hypotheses
 
-**RQ1.** Which departures from the standard i.i.d. constant-variance Gaussian noise assumption
-materially affect the performance of active learning relative to random sampling, and which do not?
+**RQ1.** Which departures from i.i.d. constant-variance Gaussian noise affect active-learning
+performance, and which do not?
 
-**RQ2.** What noise structure do real high-throughput chemical reaction datasets exhibit?
+**RQ2.** What noise structure do real reaction datasets have?
 
-**RQ3.** Under which of these departures, if any, does uncertainty-guided acquisition become *worse*
-than random rather than merely equivalent to it?
+**RQ3.** Under which departures, if any, does uncertainty-guided acquisition become *worse* than
+random rather than merely equal to it?
 
-Hypotheses are grouped by axis of mis-specification. Each carries a stated prior expectation, so the
-study is confirmatory rather than exploratory.
+Hypotheses are grouped by axis, each with a stated prior expectation.
 
-**Axis A — variance structure (constant vs input-dependent).**
-- **H1 (control).** Under constant-variance noise, performance relative to random is unaffected in
-  ranking terms; any degradation reflects the lowered attainable error ceiling rather than the
-  acquisition rule, and disappears when measured relative to that ceiling.
-- **H2.** Under input-dependent noise the advantage decreases monotonically with R, the ratio of
-  irreducible to reducible variation across the candidate pool.
-- **H3.** Above a determinable value of R the advantage **changes sign**, because acquisition then
-  preferentially selects the most poorly measured examples.
-- **H4.** Restricting acquisition to the estimated *reducible* component prevents the inversion, to
-  the extent that the decomposition is accurate.
+**Axis A — variance structure.**
+- **H1 (control).** Under constant-variance noise, ranking is unaffected; any loss comes from the
+  lower attainable error floor, not from acquisition.
+- **H2.** Under input-dependent noise the advantage falls monotonically with R, the ratio of
+  irreducible to reducible variation across the pool.
+- **H3.** Above some R the advantage **changes sign** — acquisition starts picking the worst-measured
+  points.
+- **H4.** Acquiring on the estimated *reducible* component only prevents the inversion, as far as the
+  decomposition is accurate.
 
-**Axis B — tail behaviour (Gaussian vs heavy-tailed).**
-- **H5.** Under heavy-tailed noise, acquisition by predictive uncertainty preferentially selects
-  outliers, degrading performance at a rate governed by the contamination fraction rather than by
-  the nominal variance.
+**Axis B — tail behaviour.**
+- **H5.** Under heavy-tailed noise, acquisition chases outliers; the damage scales with the
+  contamination fraction, not the nominal variance.
 
-**Axis C — dependence (independent vs correlated within batches).**
-- **H6.** When measurements sharing an experimental batch share error, the information gained from a
-  batch of queries is systematically overestimated, and the effect compounds with the
-  batch-selection defect identified in Objective 1.
+**Axis C — dependence.**
+- **H6.** When measurements in a batch share error, the information gained from a batch is
+  overestimated, compounding with the defect in Objective 1.
 
-**Axis D — the estimator (pre-registered null).**
-- **H7.** Improving the *estimator* alone — for example replacing a constant-variance Gaussian
-  process with one modelling input-dependent noise — while leaving the acquisition rule unchanged,
-  does **not** materially change the outcome. This is registered as a null in advance: prior work in
-  this group and in a parallel project both found that better noise modelling did not improve
-  downstream decisions, and the published successes in this area instead came from changing *what is
-  acquired* rather than how it is modelled. A positive result would contradict that prior and would
-  be reported as such.
+**Axis D — estimator (pre-registered null).**
+- **H7.** Improving only the *estimator* — e.g. swapping a constant-variance Gaussian process for one
+  with input-dependent noise, acquisition unchanged — does **not** change the outcome. Registered as
+  a null in advance: earlier unpublished experiments in the host group, and a parallel study, both
+  found better noise modelling did not improve downstream decisions, and the published successes came
+  from changing *what is acquired* instead. A positive result would contradict that and be reported.
 
 ## 7. Preliminary Literature Review
 
-**Key theories.** Classical active-learning theory characterises when adaptive sampling improves on
-passive sampling in terms of problem-dependent quantities — the geometry of the hypothesis class
-under the data distribution, and the noise regime — with the advantage collapsing in the agnostic
-high-noise limit. Batch acquisition is governed by the submodularity of information: the value of a
-set of queries is generally less than the sum of the values of its members, so greedy selection of
-the *k* individually highest-scoring points is known to be suboptimal (Kirsch, van Amersfoort & Gal,
-2019). The decomposition of predictive uncertainty into an *aleatoric* component, arising from noise
-in the data-generating process, and an *epistemic* component, arising from limited data, is the
-conceptual basis of this thesis: only the epistemic component is reducible by labelling.
+**Theory.** Classical results tie the advantage of adaptive over passive sampling to
+problem-dependent quantities including the noise regime, with the advantage vanishing in the
+high-noise limit. Batch acquisition is governed by submodularity of information — a set of queries is
+worth less than the sum of its members, so picking the *k* top-scoring points is known to be
+suboptimal (Kirsch, van Amersfoort & Gal, 2019). Splitting predictive uncertainty into an
+irreducible (*aleatoric*) and a reducible (*epistemic*) part underpins Axis A: only the second can be
+removed by labelling.
 
-**Key findings.** Uncertainty estimation for molecular property prediction has been benchmarked
-systematically, with substantial variation in the reliability of different scalable methods (Scalia,
-Grambow, Pernici, Li & Green, 2020). Recent evaluation of active-learning pipelines for molecular
-property prediction under distribution shift reports that the best acquisition strategy outperformed
-random on the area under the learning curve in all fourteen dataset–representation slices examined,
-but on the final precision–recall metric in only nine — evidence that the outcome is
-metric-dependent (Yin, Gao, Panapitiya & Saldanha, 2026). Bayesian deep learning with several
-uncertainty estimators has been applied to reaction feasibility prediction on experimental
-high-throughput data (Zhong et al., 2025), providing the experimental testbed used here.
+**Findings.** Uncertainty estimation for molecular properties has been benchmarked, with wide
+variation between scalable methods (Scalia, Grambow, Pernici, Li & Green, 2020). Active-learning
+pipelines evaluated under distribution shift beat random on learning-curve area in all fourteen
+slices tested but on the final precision–recall metric in only nine (Yin, Gao, Panapitiya &
+Saldanha, 2026) — the metric changes the answer. Bayesian deep learning with several uncertainty
+estimators has been applied to reaction feasibility on high-throughput data (Zhong et al., 2025),
+which supplies the experimental testbed here.
 
-**A pattern in the positive results.** Where noise-aware methods *have* demonstrably helped, the
-improvement came from changing **what is acquired or optimised**, not from fitting noise more
-accurately. Heteroscedastic Bayesian optimisation improved on both homoscedastic Bayesian
-optimisation and random sampling by introducing acquisition heuristics that explicitly penalise
-aleatoric noise (Griffiths, Aldrick, Garcia-Ortegon, Lalchand & Lee, 2022); active label cleaning
-improved dataset quality under a fixed budget by re-annotating suspect labels rather than acquiring
-new ones (Bernhardt et al., 2022). A survey of active learning specifically under label noise
-(Mots'oehli & Baek, 2023) organises the adjacent literature. This pattern motivates separating the
-acquisition target (Axis A) from the estimator (Axis D), and registering the latter as a null.
+**A pattern in the successes.** Where noise-aware methods have helped, the gain came from changing
+*what is acquired*, not from fitting noise better. Heteroscedastic Bayesian optimisation beat both
+its homoscedastic counterpart and random sampling by adding acquisition rules that explicitly
+penalise aleatoric noise (Griffiths, Aldrick, Garcia-Ortegon, Lalchand & Lee, 2022). Active label
+cleaning won under a fixed budget by re-annotating suspect labels rather than acquiring new ones
+(Bernhardt et al., 2022). A survey covers the label-noise case (Mots'oehli & Baek, 2023). This is why
+Axis A and Axis D are separated, and why Axis D is a null.
 
-**Identified gap.** The literature benchmarks active learning; it does not characterise its
-sensitivity to the noise assumptions it rests on, and it rarely reports the noise structure of the
-datasets used. No work located to date provides
-a criterion, computable before labelling, for deciding whether active learning will outperform
-random selection on a given task. Noise is widely acknowledged as a factor but is rarely varied
-systematically, in part because most benchmark datasets have unknown noise levels.
+**Gap.** The literature benchmarks active learning but does not test its sensitivity to the noise
+assumptions it rests on, and rarely reports the noise structure of the data used.
 
-**Fit.** This thesis treats noise as the independent variable rather than a nuisance, and reports a
-threshold rather than a win or a loss.
+**Fit.** Here the noise model is the independent variable, not a fixed background assumption.
 
 ## 8. Methodology
 
-**Research design.** Quantitative and computational, in two parts: a *descriptive* analysis of real
-experimental data, and a *controlled simulation study* with known ground truth. The first determines
-which regions of the second are practically relevant.
+**Design.** Quantitative and computational, in two parts: a descriptive study of real data, then a
+controlled simulation with known ground truth. The first says which regions of the second matter.
 
-**Part 1 — descriptive.** Estimate the noise structure of the experimental datasets from replicate
-measurements: the dependence of variance on the input, the tail behaviour of residuals, and the
-correlation of error within experimental batches. This requires replicate wells; where absent, the
-structure can be bounded but not measured, and that limitation is reported explicitly.
+**Data.** No new data is collected.
+- **Deterministic** computed reaction barriers as a noise-free base for constructed noise (BH9 —
+  Prasad et al., 2022 — plus a larger deterministic set for scale).
+- **Real experimental** high-throughput reaction data with genuine measurement noise (Zhong et al.,
+  2025).
+- A **public experimental** dataset for comparability (Perera et al., 2018).
 
-**Part 2 — controlled.** A factorial design crossing the *true* noise structure (Axes A–C, each
-swept across a range that includes the standard assumption as a control) with the acquisition target
-(total predictive uncertainty, reducible component only, irreducible component only) and the
-uncertainty estimator. Because the noise is constructed on a deterministic base, both components are
-known exactly, which additionally permits validating the estimators themselves.
+**Part 1 — descriptive.** From replicate measurements, estimate how variance depends on the input,
+how heavy the residual tails are, and how strongly error correlates within a batch. Replicates are
+required; without them these can be bounded but not measured, which is stated as a limitation.
 
-**Sampling strategy.** Repeated randomised active-learning simulations. Each configuration —
-acquisition target × noise structure × R × estimator × repeat — is run with the initial labelled set drawn
-independently across both strategy and repeat, to avoid confounding the strategy comparison with the
-variance of a shared initial draw. A minimum of 20 repeats per configuration, with the number fixed
-by a power calculation performed on pilot runs before the main study.
+**Part 2 — controlled.** A factorial design crossing true noise structure (Axes A–C, each swept
+through a range that includes the standard assumption as a control) with acquisition target (total
+predictive uncertainty, reducible only, irreducible only) and uncertainty estimator. Because noise is
+constructed on a deterministic base, both components are known exactly, which also allows the
+estimators themselves to be checked.
 
-**Data analysis.** The primary outcome is the difference in learning-curve area between an
-acquisition strategy and random selection, with bootstrap confidence intervals over matched repeats.
-Sensitivity is reported as the change in that difference per unit change along each noise axis —
-including axes where it is indistinguishable from zero, which are reported as such. Where a sign
-change is predicted, hypotheses are distinguished by the sign of the interval rather than by
-significance alone. Secondary outcomes: final model error, and calibration of the uncertainty
-estimates.
+**Sampling.** Repeated randomised simulations, with the initial labelled set drawn independently
+across both strategy and repeat so the comparison is not confounded with one shared draw. At least
+20 repeats per configuration; the final count set by a power calculation on pilot runs.
 
-**Ethical considerations.** No human participants, no personal data, no animal subjects. All
-datasets are published and used under their stated licences. Computation is on institutional
-resources; energy use is modest, as the study reuses existing labels rather than generating new
-calculations.
+**Analysis.** Primary outcome: difference in learning-curve area against random selection, with
+bootstrap confidence intervals over matched repeats. Sensitivity is the change in that difference per
+unit change along each axis — reported also where it is indistinguishable from zero. Where a sign
+change is predicted, hypotheses are separated by the sign of the interval, not by significance alone.
+Secondary: final error and calibration.
 
-**Limitations.** Constructed noise is a model of real noise and may not reproduce its structure;
-this is mitigated by informing the constructions with Part 1 and by testing more than one form per
-axis. Results are established for one task family and one model class, and no claim of generality
-beyond them will be made. Estimating noise structure on real data requires **replicate
-measurements**; without them Part 1 yields bounds rather than estimates. Findings are established for one task family and one model class, and generalisation
-beyond them is a claim the thesis will not make. Access to the experimental datasets is already in
-place.
+**Ethics.** No human participants, personal data or animals. All datasets are published and used
+under their licences. Computation reuses existing labels, so energy cost is modest.
+
+**Limitations.** Constructed noise is a model of real noise; mitigated by informing it with Part 1 and
+testing more than one form per axis. Results hold for one task family and one model class, with no
+claim beyond that. Part 1 depends on replicates being available.
 
 ## 9. Expected Results
 
-- A **sensitivity map**: for each axis of noise-model mis-specification, the magnitude of its effect
-  on active-learning performance with confidence intervals — **including axes where the effect is
-  negligible**, which are as informative as the ones where it is not.
-- A **null under constant-variance noise** (H1), localising where the problem is not.
-- A **dose–response curve** for input-dependent noise, and a determination of whether an inversion
-  occurs (H3) and where.
-- A **characterisation of the noise structure of real reaction data** — to our knowledge not
-  previously reported — establishing whether the regimes examined are practically relevant.
-- A **corrected baseline** quantifying how much of a previously observed null result is attributable
-  to batch-selection design rather than to the data. It is entirely possible that this negative
-  reverses once the defect is removed; that outcome is anticipated and is not a failure of the study.
+- A **sensitivity map**: the effect of each noise axis on active-learning performance, with
+  confidence intervals — including axes where the effect is negligible, which are equally informative.
+- A **null under constant-variance noise** (H1), showing where the problem is not.
+- A **dose–response curve** for input-dependent noise, and whether an inversion occurs (H3).
+- A **characterisation of noise in real reaction data**, apparently not previously reported, which
+  says whether the regimes tested are practically relevant.
+- A **corrected baseline** showing how much of an earlier null result came from batch selection
+  rather than the data. That null may reverse once the defect is removed; this is expected, not a
+  failure.
 
 ## 10. Expected Contribution
 
-**Academic.** A systematic sensitivity analysis of active learning with respect to the noise
-assumptions it rests on — currently absent from a literature that reports outcomes without reference
-to noise structure. The methodology transfers to other domains with noisy oracles.
+**Academic.** A systematic sensitivity analysis of active learning with respect to its own noise
+assumptions — missing from a literature that reports outcomes without reference to noise. The method
+transfers to other domains with noisy oracles.
 
-**Practical.** Guidance on when active learning is worth its overhead, grounded in a property of the
-dataset that can be estimated in advance from replicate measurements. For a laboratory deciding
-whether to adopt a sequential experimental workflow, this converts a matter of faith into a check.
+**Practical.** Guidance on when active learning repays its overhead, based on a dataset property
+measurable in advance from replicates. For a laboratory weighing up a sequential workflow, that turns
+a judgement call into a check.
 
-**Methodological.** Two concrete, reusable corrections — diversity-aware batch selection and correct
-replication of the initial design — with a demonstration of how much each changes the conclusion.
+**Methodological.** Two reusable corrections — diversity-aware batch selection, and correct
+replication of the initial design — with a measurement of how much each changes the conclusion.
 
 ## 11. Preliminary Table of Contents and Timeline
 
 | # | Chapter | Months |
 |---|---|---|
 | 1 | Introduction | 1 |
-| 2 | Background and Related Work | 1–2 |
-| 3 | Methods: testbeds, noise models, acquisition strategies, statistical protocol | 2–3 |
-| 4 | Results I: correcting the baseline (batch selection, replication) | 3–4 |
+| 2 | Background and related work | 1–2 |
+| 3 | Methods: testbeds, noise models, acquisition strategies, statistics | 2–3 |
+| 4 | Results I: correcting the baseline | 3–4 |
 | 5 | Results II: noise structure of real reaction data | 4 |
-| 6 | Results III: sensitivity of active learning to each noise axis | 4–5 |
-| 7 | Results IV: the input-dependent case in detail, and whether it can be mitigated | 5–6 |
+| 6 | Results III: sensitivity to each noise axis | 4–5 |
+| 7 | Results IV: the input-dependent case, and whether it can be fixed | 5–6 |
 | 8 | Discussion, limitations, future work | 6 |
 | 9 | Conclusion | 6 |
 
-**Risk structure.** The chapters are deliberately ordered so the uncertain work comes last and three
-independent defensible results precede it.
+**Risk structure.** Ordered so the uncertain work is last, with three defensible results before it.
 
-- *Month 3* — corrected baseline and fixed statistical protocol. A guaranteed result irrespective of
-  everything after it.
-- *Month 4* — noise structure of real data. Purely descriptive; it cannot fail, and it determines
-  which regimes in Chapter 6 deserve emphasis.
-- *Month 5* — the sensitivity map. A factorial simulation always yields a result, including the
-  informative outcome that active learning is *robust* to some axes.
-- *Month 6* — the mitigation question, the only genuinely uncertain element.
+- *Month 3* — corrected baseline and fixed statistics. Guaranteed, whatever follows.
+- *Month 4* — noise structure of real data. Descriptive, cannot fail, and sets the emphasis for
+  Chapter 6.
+- *Month 5* — the sensitivity map. A factorial always produces a result, including the useful finding
+  that active learning is robust to some axes.
+- *Month 6* — the mitigation question, the only genuinely uncertain part.
 
 ## 12. Required Tools and Resources
 
-- **Datasets:** BH9 reference barriers; a large deterministic computed-reaction dataset; acid–amine
-  experimental screening data; Suzuki coupling screening data. All already available to the group;
-  no new acquisition needed.
-- **Software:** Python; PyTorch or JAX; RDKit for molecular representations; scikit-learn; standard
-  scientific and statistical libraries. Existing group code implementing five uncertainty estimators
-  and four acquisition strategies serves as the starting point.
-- **Compute:** access to the institutional cluster (RCI) with SLURM batch submission. Requirements
-  are modest — repeated training of small models, not first-principles calculation. **Account and
-  group membership must be arranged at the start of the project rather than when first needed.**
-- **Supervision:** access to the group's prior results and to the parallel projects whose
-  methodological standards this work adopts.
+- **Datasets:** all listed above are already accessible; nothing new to acquire.
+- **Software:** Python; PyTorch or JAX; RDKit; scikit-learn; standard scientific libraries. An
+  existing implementation of several uncertainty estimators and acquisition strategies serves as the
+  starting point.
+- **Compute:** cluster access with batch submission. Requirements are modest — repeated training of
+  small models, not first-principles calculation. **The account and group membership should be
+  arranged at the start, not when first needed.**
+- **Supervision:** access to earlier results and to parallel studies whose methodological standards
+  are adopted here.
 
 ## 13. Preliminary References
 
 *Verified against Crossref or arXiv metadata. APA style.*
 
-1. Kirsch, A., van Amersfoort, J., & Gal, Y. (2019). *BatchBALD: Efficient and diverse batch
-   acquisition for deep Bayesian active learning*. arXiv:1906.08158.
-2. Perera, D., Tucker, J. W., Brahmbhatt, S., Helal, C. J., Chong, A., Farrell, W., Richardson, P.,
-   & Sach, N. W. (2018). A platform for automated nanomole-scale reaction screening and micromole-
-   scale synthesis in flow. *Science, 359*(6374), 429–434. https://doi.org/10.1126/science.aap9112
-3. Prasad, V. K., Pei, Z., Edelmann, S., Otero-de-la-Roza, A., & DiLabio, G. A. (2022). BH9, a new
-   comprehensive benchmark data set for barrier heights and reaction energies. *Journal of Chemical
-   Theory and Computation, 18*(1), 151–166. https://doi.org/10.1021/acs.jctc.1c00694
-4. Scalia, G., Grambow, C. A., Pernici, B., Li, Y.-P., & Green, W. H. (2020). Evaluating scalable
-   uncertainty estimation methods for deep learning-based molecular property prediction. *Journal of
-   Chemical Information and Modeling, 60*(6), 2697–2717.
-   https://doi.org/10.1021/acs.jcim.9b00975
-5. Bernhardt, M., Castro, D. C., Tanno, R., Schwaighofer, A., Tezcan, K. C., Monteiro, M., et al.
+1. Bernhardt, M., Castro, D. C., Tanno, R., Schwaighofer, A., Tezcan, K. C., Monteiro, M., et al.
    (2022). Active label cleaning for improved dataset quality under resource constraints. *Nature
    Communications, 13*. https://doi.org/10.1038/s41467-022-28818-3
-6. Griffiths, R.-R., Aldrick, A. A., Garcia-Ortegon, M., Lalchand, V., & Lee, A. A. (2022).
+2. Griffiths, R.-R., Aldrick, A. A., Garcia-Ortegon, M., Lalchand, V., & Lee, A. A. (2022).
    Achieving robustness to aleatoric uncertainty with heteroscedastic Bayesian optimisation.
    *Machine Learning: Science and Technology, 3*(1), 015004.
    https://doi.org/10.1088/2632-2153/ac298c
-7. Mots'oehli, M., & Baek, K. (2023). *Deep active learning in the presence of label noise: A
+3. Kirsch, A., van Amersfoort, J., & Gal, Y. (2019). *BatchBALD: Efficient and diverse batch
+   acquisition for deep Bayesian active learning*. arXiv:1906.08158.
+4. Mots'oehli, M., & Baek, K. (2023). *Deep active learning in the presence of label noise: A
    survey*. arXiv:2302.11075.
+5. Perera, D., Tucker, J. W., Brahmbhatt, S., Helal, C. J., Chong, A., Farrell, W., Richardson, P.,
+   & Sach, N. W. (2018). A platform for automated nanomole-scale reaction screening and
+   micromole-scale synthesis in flow. *Science, 359*(6374), 429–434.
+   https://doi.org/10.1126/science.aap9112
+6. Prasad, V. K., Pei, Z., Edelmann, S., Otero-de-la-Roza, A., & DiLabio, G. A. (2022). BH9, a new
+   comprehensive benchmark data set for barrier heights and reaction energies. *Journal of Chemical
+   Theory and Computation, 18*(1), 151–166. https://doi.org/10.1021/acs.jctc.1c00694
+7. Scalia, G., Grambow, C. A., Pernici, B., Li, Y.-P., & Green, W. H. (2020). Evaluating scalable
+   uncertainty estimation methods for deep learning-based molecular property prediction. *Journal of
+   Chemical Information and Modeling, 60*(6), 2697–2717. https://doi.org/10.1021/acs.jcim.9b00975
 8. Yin, T., Gao, P., Panapitiya, G., & Saldanha, E. G. (2026). Out-of-distribution evaluation of
    active learning pipelines for molecular property prediction. *RSC Advances, 16*, 5281–5295.
    https://doi.org/10.1039/d5ra08055j
@@ -333,18 +283,11 @@ independent defensible results precede it.
    global reaction feasibility and robustness prediction with high-throughput data and Bayesian deep
    learning. *Nature Communications, 16*. https://doi.org/10.1038/s41467-025-59812-0
 
-**Still to be added — 3 to 9 further sources, to be located and verified before submission.**
-The template asks for 10–20; the nine above are the ones whose metadata has been confirmed against
-an authoritative source. Do **not** fill the remainder from memory or from search-result snippets —
-author lists in this area are routinely garbled by secondary sources. Verify each through Crossref
-(by DOI) or the arXiv API before writing it down. Topics still to cover:
-
-- a general survey of active learning;
-- the theory of when adaptive sampling improves label complexity (disagreement-based analysis);
-- rates of active learning under noise conditions;
-- Bayesian active learning by disagreement (the acquisition function BatchBALD extends);
-- Monte-Carlo dropout, and deep ensembles, as uncertainty estimators;
-- the decomposition of predictive uncertainty into aleatoric and epistemic components;
-- one or two of the specific studies reporting active learning to be indistinguishable from random
-  on molecular tasks, cited directly rather than through another paper's related-work section;
-- the deterministic reaction dataset used as the noise-free base, cited to its own publication.
+**Three to nine more needed.** The template asks for 10–20; the nine above have confirmed metadata.
+Do **not** complete the list from memory or from search snippets — author lists in this area are
+often garbled by secondary sources, and one attribution in an earlier draft was wrong until checked.
+Verify each via Crossref (by DOI) or the arXiv API. Still to cover: a general active-learning survey;
+theory on when adaptive sampling lowers label complexity; rates under noise conditions; Bayesian
+active learning by disagreement; Monte-Carlo dropout and deep ensembles; the aleatoric/epistemic
+split; robust regression under heavy tails; and the deterministic reaction dataset, cited to its own
+paper.
