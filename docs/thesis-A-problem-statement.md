@@ -1,111 +1,129 @@
-# Topic A — what we currently understand about the problem
+# Topic A — problem statement
 
-**Date:** 2026-08-11 · Background for the thesis proposal. Measured claims carry their numbers;
-everything else is labelled as hypothesis.
+**Date:** 2026-08-11 (rewritten) · A computer-science thesis. Chemistry is the testbed, not the
+subject.
 
-## The practical decision
+---
 
-Labels are expensive. A wet-lab reaction feasibility measurement costs real time and material; a
-DFT barrier costs hours. So: **given a budget of N labels, which N do you acquire?** The standard
-answer is to acquire where the model is most uncertain, on the reasoning that those points are the
-most informative.
+## 1. The abstract problem
 
-In this project that answer has not worked, twice, in different settings. The thesis is to find out
-why, and to produce something that tells you in advance.
+We want to learn a function `f : X → Y` from labels that cost money. An **adaptive** sampler chooses
+each query using everything seen so far; a **passive** sampler draws i.i.d. from the pool. The
+promise of active learning is that adaptivity buys a lower label complexity for the same target
+error.
 
-## What we have measured
+That promise is **conditional**, and the theory is explicit about it. Adaptivity helps only when the
+sampler's ranking of candidate points correlates with the **actual marginal value of labelling
+them**. Write that value for a candidate `x`, given current state `S`:
 
-**1. Predicted uncertainty is nearly orthogonal to actual error.** On real noisy HTE data, Spearman
-ρ between predicted σ and realised error was **0.042** for a GP and **0.144–0.146** for ensembles.
-Acquisition by uncertainty presumes that ranking is informative. At ρ ≈ 0.04 it carries almost no
-signal, so "acquire the most uncertain" is close to "acquire arbitrarily".
+```
+V(x | S)  =  ΔU(x | S)        how much the label reduces REDUCIBLE uncertainty about f
+           × A(x | S)         how much that reduction changes the DOWNSTREAM DECISION
+           ÷ c(x)             what the label costs
+```
 
-*Caveat we must not drop:* one arm's epistemic estimator was MC-dropout, which is a weak
-approximation. So this measures *our estimators*, not uncertainty in principle.
+An acquisition function is a *proxy* for `V`. Every failure of active learning is a failure of that
+proxy, and the failures come in four structurally different kinds:
 
-**2. The signal that exists is aleatoric, not epistemic.** In our data the epistemic component
-behaved like noise while the aleatoric component carried structure. This matters more than it
-sounds: if uncertainty is dominated by *irreducible* noise, then acquiring high-uncertainty points
-means preferentially acquiring **the points whose labels are least reliable**. That is not merely
-uninformative — it can be worse than random, because the budget buys noisy labels.
+| | condition | fails when | nature |
+|---|---|---|---|
+| **C1 Estimability** | the proxy ranks `V` correctly | our uncertainty estimate is too poor to rank | statistical / algorithmic |
+| **C2 Reducibility** | uncertainty is epistemic, i.e. labels can remove it | noise dominates; high-`σ` points are *noisy*, not *informative* | property of the data-generating process |
+| **C3 Actionability** | reduced uncertainty changes the decision | the model is already good enough for the decision it feeds | property of the task |
+| **C4 Batch additivity** | the value of a batch ≈ sum of point values | information across a batch is **submodular**, so greedy top-`k` buys `k` copies of one thing | property of the *objective*, not the data |
 
-**3. The same thesis was refuted independently at scale.** The sister project (DecisionBO / PFN4BO)
-tested decision-aware training across a much larger sweep and found no benefit, then generalised the
-reason as **regret-relevant sufficiency**: a model influences the downstream decision only up to a
-quality threshold, above which the outcome is set by the acquisition rule, the search and the
-budget. Every published success they could find sat *below* such a threshold. Applied here: if the
-model is already good enough for the decision being made, better labels cannot show a benefit no
-matter how well you choose them.
+These are not competing explanations of one phenomenon. They are **different terms of the same
+expression**, and a given task can fail any subset of them. C1 and C4 are about the algorithm; C2
+and C3 are about the world.
 
-**4. Our own decision-focused results have the same shape.** A rank-trained search heuristic beat a
-vanilla value network (99.2 vs 97.5) and then lost by 8–11 points to one trained on path
-consistency. What mattered was the *structure of the objective*, not the uncertainty machinery
-around it.
+**The theoretical spine already exists.** Classical results say adaptivity's advantage is governed
+by problem-dependent quantities — the geometry of the hypothesis class under the data distribution
+(the disagreement coefficient), and the noise regime (margin/noise-exponent conditions), with the
+advantage collapsing to nothing in the agnostic high-noise limit. Batch information gain is
+submodular, so greedy selection has known suboptimality. None of this is new theory.
 
-## Four candidate explanations, and how to tell them apart
+**What is missing is the practical inverse.** These quantities are stated as *analysis* tools —
+things you can bound if you already know the problem. Nobody routinely *estimates* them before
+deciding whether to run active learning. Practice instead reports empirical wins on benchmarks whose
+conditions were never checked, which is why the literature contains both confident successes and
+confident failures on superficially similar tasks.
 
-This is the core of the thesis: they are separable by experiment, and nobody here has separated
-them.
+## 2. The question this thesis asks
 
-**H1 — the estimator is bad.** σ is uninformative because MC-dropout and small ensembles are poor
-posterior approximations. *Test:* hold the acquisition rule fixed and swap the estimator across the
-five already implemented in the testbed (BNN-SVI, BNN-NUTS, MC-dropout, deep ensemble, deep-kernel
-GP). If AL improves with a better estimator, H1 is live.
+> **Can C1–C4 be estimated *ex ante* — from unlabelled data plus a small pilot — accurately enough
+> to predict whether adaptive sampling will beat i.i.d. sampling on a given task, and by how much?**
 
-**H2 — the task is aleatoric-dominated.** No estimator can help because the uncertainty is
-irreducible. *Test:* decompose predicted uncertainty into aleatoric and epistemic parts and measure
-what fraction of total variance is reducible; then check whether acquisition on the *epistemic
-component alone* beats acquisition on total uncertainty. The testbed already has an aleatoric
-acquisition arm, which under H2 should be **worse** than random rather than merely equal.
+Three sub-questions, in increasing ambition:
 
-**H3 — batch redundancy, and this one is a concrete flaw in our current code.** `zhong_al.py`
-selects with `np.argsort(-eu)[:k]` — pure greedy top-k — with **batch size 100**. Greedy top-k with
-no diversity term picks 100 mutually near-duplicate points, so a batch of 100 may carry the
-information of a handful. This is a well-known failure mode with a well-known family of fixes
-(BatchBALD, clustering the uncertain pool, determinantal selection). *Test:* re-run with a
-diversity-aware batch rule at the same budget. **If this alone recovers the gap, our "AL doesn't
-work here" conclusion was never about uncertainty at all.** It is the cheapest hypothesis to test
-and should be tested first.
+1. **Decomposition.** Given a task where AL fails, can we attribute the failure to C1–C4? This
+   requires interventions that vary one term while holding the others fixed.
+2. **Prediction.** Can a cheap diagnostic, computed before spending the label budget, predict the
+   sign — and ideally the size — of the AL-versus-random gap?
+3. **Repair.** Where the binding constraint is C1 or C4 (algorithmic), does fixing it recover the
+   gap? Where it is C2 or C3 (the world), is *no* acquisition rule going to help, and can we say so
+   with confidence rather than by exhaustion?
 
-**H4 — sufficiency.** The model is already above the threshold where labels change the decision.
-*Test:* sweep model capacity and training-set size, and plot the AL-versus-random gap against a
-quality proxy. Under H4 the gap decays monotonically as quality rises, and any AL benefit is
-confined to the low-quality regime.
+A negative answer to (2) is itself a result: it would say the decision to run AL is not knowable in
+advance, which is worth establishing rather than assuming either way.
 
-These are not mutually exclusive, and the interesting outcome is a decomposition rather than a
-winner.
+## 3. Why this is not a chemistry project
 
-## What we have not measured
+The subject is sample-efficient learning. Chemistry supplies a testbed with three properties that
+are hard to obtain otherwise, and each one makes a different condition bite:
 
-- Whether **calibration** (as opposed to ranking) matters — we tested ρ between σ and error, not
-  whether the estimators are calibrated.
-- Whether the failure is **specific to this dataset**: binary feasibility on HTE data, with class
-  balance we have not characterised.
-- Whether **cold-start** matters: all curves begin at 100 labels; behaviour below that is unknown.
-- Whether the metric choice (**F1**) hides the effect — AL might improve calibration or tail
-  performance while leaving F1 flat.
+- **Genuine, irreducible label noise** (wet-lab high-throughput measurements) — makes **C2**
+  non-trivial. Synthetic benchmarks usually have noise that is either absent or artificially
+  injected and therefore known.
+- **Label costs spanning orders of magnitude** (seconds to hours per label, by method) — makes the
+  `÷ c(x)` term real rather than notational.
+- **A real downstream decision** (a search procedure consuming the model) — makes **C3** measurable
+  rather than hypothetical. Most AL papers stop at held-out accuracy and so cannot see C3 at all.
 
-## A methodological trap the thesis must avoid
+DFT is not the subject. It is one of the label sources, and only in the extension.
 
-Active-learning curves are unusually vulnerable to **initial-design pseudo-replication**. If every
-strategy starts from the same initial labelled set, and only a few seed values exist, then the
-difference between strategies is confounded with the variance of that one initial draw. The sister
-project found this collapsed **four** of their headline results at p ≲ 0.003, one reversing sign.
+## 4. Evidence we already hold, mapped onto the conditions
 
-The existing runs here use **two seeds**. Under ADR 0004 that is not a result. The correct
-construction is `run seed = base + s + 9973·i` so the design varies independently across strategy
-and repeat, with enough repeats to separate the two. Powering this properly is the first task and is
-worth doing even before any new idea is introduced — it may change the sign of what is currently
-believed.
+Assembled *after* the framing, and deliberately not treated as the starting point. All of it is
+suggestive, none of it is decisive, and some of it is confounded.
 
-## Why this makes a good thesis
+**On C1 (estimability).** Predicted `σ` was nearly orthogonal to realised error on real HTE data —
+Spearman **ρ = 0.042** (GP), **0.144–0.146** (ensembles). If that ranking is the proxy, it carries
+almost no signal. *Confound:* one arm's estimator was MC-dropout, a weak posterior approximation, so
+this may measure our implementation rather than the condition.
 
-The question — *when does active learning help, and can you tell in advance?* — is one the field
-asks and answers mostly with anecdote. Here it comes with a working testbed, five uncertainty
-estimators, four acquisition rules, real experimental data, two independent prior negatives to
-explain, and a concrete suspicion (H3) that the negatives may be an artefact of a fixable
-implementation choice.
+**On C2 (reducibility).** In the same data the structured signal was **aleatoric**, with the
+epistemic component behaving like noise. If that holds, high-uncertainty points are the *least
+reliably labelled* ones, and acquisition should be **worse** than random — a sharper prediction than
+"no better", and one nobody has checked.
 
-The deliverable we would most value is the **ex-ante diagnostic**: given a dataset and a model,
-predict whether uncertainty-guided acquisition will beat random *before* spending the labels. That
-is the question the sister project asked us and that nobody in either tree can currently answer.
+**On C3 (actionability).** A sister project refuted decision-aware training at scale and generalised
+the reason as *regret-relevant sufficiency*: model quality stops mattering above a threshold set by
+the downstream budget and search. Independently, our own comparison had the same shape — objective
+*structure* mattered, uncertainty machinery did not.
+
+**On C4 (batch additivity).** Our existing implementation selects by greedy top-`k` at **batch size
+100**, with no diversity term. Under submodularity that is expected to be badly suboptimal.
+This is an *instance* of C4, not evidence about it — it tells us our own prior negative may be
+uninformative about C1–C3, because C4 was violated by construction. **The first job is therefore to
+remove this confound, not to interpret it.**
+
+**A measurement caveat that touches everything above.** The existing runs use **two seeds**. AL
+curves are unusually exposed to initial-design pseudo-replication: if strategies share an initial
+labelled set and few seeds exist, the between-strategy difference is confounded with the variance of
+one draw. In the sister project this collapsed four headline results, one reversing sign. Nothing
+above should be treated as established until it is re-run with the design varying independently
+across strategy and repeat.
+
+## 5. What the thesis would produce
+
+- A **decomposition protocol**: interventions that isolate C1–C4 on a given task.
+- An **ex-ante diagnostic** and its validation — the deliverable we would most value, and the
+  question the sister project put to us and neither tree can answer.
+- A **corrected empirical picture** for at least one real, noisy, decision-coupled task, replacing
+  a currently underpowered and confounded negative.
+
+---
+
+*Reference list to be assembled at proposal stage. Per project rules, every citation must be
+verified against Crossref/arXiv metadata before it is written down — the theoretical results named
+in §1 are standard, but their attribution must not be reconstructed from memory.*
