@@ -10,8 +10,8 @@ exactly. Background and reasoning behind these choices are in the companion file
 
 ## 1. Working Title
 
-**When Does Active Learning Stop Working? An Empirical Determination of the Label-Noise Threshold
-for Uncertainty-Guided Acquisition**
+**When Does Uncertainty-Guided Acquisition Invert? Heteroscedastic Label Noise as the Controlling
+Variable in Active Learning**
 
 *Alternatives:* "A Noise Threshold for Active Learning: Calibrating When Adaptive Sampling Beats
 Random Sampling"; "The Price of Noise in Active Learning: Locating the Point Where Uncertainty-Based
@@ -25,16 +25,20 @@ published results on chemically motivated prediction tasks are split between cle
 outcomes indistinguishable from random selection, with no established explanation for the
 difference.
 
-This thesis investigates one candidate explanation: **irreducible label noise**. Learning theory
-indicates that the advantage of adaptive sampling degrades as noise increases, because
-high-uncertainty examples become the least reliably labelled rather than the most informative ones.
-That prediction is rarely tested directly, because most benchmark datasets have either unknown or
-absent noise.
+This thesis investigates one candidate explanation, stated precisely. Uniform (homoscedastic) noise
+is *not* expected to be the problem: it enters predictive uncertainty as a constant offset and
+therefore leaves the ranking of candidates unchanged. The problem is **input-dependent
+(heteroscedastic) noise**, where measurement reliability varies across the input space. There, total
+predictive uncertainty mixes a reducible component with an irreducible one, and once the irreducible
+component varies more widely than the reducible one, acquiring "the most uncertain" example means
+acquiring **the most poorly measured** one — so the strategy should perform *worse* than random, not
+merely no better.
 
-The study takes a deterministic reaction-property dataset, injects label noise at controlled levels,
-and measures the gap between uncertainty-guided and random acquisition as a function of noise. The
-aim is to locate the level at which the gap disappears, and then to test whether real experimental
-high-throughput chemistry data — where noise is genuine — falls above or below that level.
+The study constructs noise with controlled input dependence on a deterministic reaction-property
+dataset, sweeps the ratio R of aleatoric to epistemic variation, and measures where the advantage of
+uncertainty-guided acquisition changes sign. It then asks whether real high-throughput experimental
+chemistry data exhibits such input-dependent noise, and whether standard uncertainty estimators can
+recover the reducible component from it.
 
 Two known methodological defects in existing implementations are corrected first: greedy batch
 selection without a diversity term, and insufficient replication of the initial labelled set. The
@@ -67,9 +71,11 @@ contribution; Sections 11–13 plan, resources and references.
 
 ## 4. Problem Statement
 
-**What is not yet known.** It is not known how much label noise a task can carry before
-uncertainty-guided acquisition ceases to outperform random selection, nor whether that point can be
-identified from data before committing a label budget.
+**What is not yet known.** It is not known at what degree of *input-dependent* noise
+uncertainty-guided acquisition ceases to outperform random selection — nor whether it merely
+degrades to random or actively inverts — and whether that point can be identified from data before
+committing a label budget. Noise magnitude alone is the wrong variable: uniform noise raises the
+attainable error floor without disturbing the ranking that acquisition depends on.
 
 **Why the gap is important.** The literature is split. Some studies report clear gains from
 uncertainty-based acquisition; others report results indistinguishable from random on comparable
@@ -91,35 +97,46 @@ error; and the field continues to accumulate mutually contradictory benchmark re
    implementation — batch selection without a diversity term, and insufficient replication of the
    initial labelled set — so that subsequent comparisons are interpretable.
 2. **To measure** the performance gap between uncertainty-guided and random acquisition as a
-   function of controlled label noise on a deterministic reaction-property dataset.
-3. **To identify** the noise level at which that gap becomes statistically indistinguishable from
-   zero, with confidence intervals.
-4. **To evaluate** whether the behaviour observed on a real, genuinely noisy experimental dataset is
-   consistent with the threshold determined under controlled conditions.
+   function of the ratio R between input-dependent (aleatoric) and reducible (epistemic) variation,
+   on a deterministic dataset with constructed noise.
+3. **To identify** the value of R at which that gap becomes indistinguishable from zero and,
+   separately, at which it changes sign — distinguishing degradation from inversion.
+4. **To determine** whether acquisition restricted to the estimated *reducible* component is immune
+   to that inversion, and how the immunity depends on the uncertainty estimator's ability to
+   separate the two components.
+5. **To evaluate** whether real high-throughput experimental data exhibits input-dependent noise, to
+   estimate its R from replicate measurements, and to test whether its observed behaviour matches
+   the controlled prediction.
 
 ## 6. Research Questions and Hypotheses
 
-**RQ1.** How does the magnitude of irreducible label noise influence the advantage of
-uncertainty-guided acquisition over random acquisition in molecular and reaction property
-prediction?
+**RQ1.** How does the *structure* of label noise — uniform versus input-dependent — influence the
+advantage of uncertainty-guided acquisition over random acquisition?
 
-**RQ2.** Can the noise level of a dataset be used, before labelling, to predict whether active
-learning will outperform random selection?
+**RQ2.** Can acquisition be made robust to input-dependent noise by targeting the estimated
+reducible component of uncertainty, and what does that require of the uncertainty estimator?
 
-**RQ3.** To what extent are previously reported failures of active learning on such tasks
-attributable to batch-selection design rather than to properties of the data?
+**RQ3.** Do real high-throughput chemistry datasets fall in the regime where uncertainty-guided
+acquisition is expected to fail, and can that be established before labelling?
 
-- **H1.** The advantage of uncertainty-guided acquisition over random decreases monotonically with
-  increasing label noise.
-- **H2.** Above a determinable noise level, uncertainty-guided acquisition performs **no better
-  than** random selection.
-- **H3 (stronger form, tested separately).** Above that level, uncertainty-guided acquisition
-  performs **worse** than random, because the acquisition preferentially selects the most poorly
+- **H1 (control).** Under **homoscedastic** noise the advantage of uncertainty-guided acquisition
+  over random is **unaffected in ranking terms**; any reduction observed is attributable to the
+  lowered error ceiling rather than to acquisition, and disappears when performance is measured
+  relative to the attainable floor.
+- **H2.** Under **heteroscedastic** noise the advantage decreases monotonically with R, the ratio of
+  aleatoric to epistemic dynamic range.
+- **H3.** Above approximately R = 1 the advantage **changes sign**: acquisition by total predictive
+  uncertainty performs *worse* than random, because it preferentially selects the least reliably
   measured examples.
-- **H4.** Replacing greedy top-*k* batch selection with a diversity-aware rule increases the
-  measured advantage at low noise levels, and does not rescue it at high noise levels.
-- **H5 (null hypothesis to be reported as such if supported).** The uncertainty estimator has no
-  significant effect on the location of the threshold.
+- **H4.** Acquisition restricted to the **estimated epistemic component** does not invert, to the
+  extent that the estimator separates the components accurately.
+- **H5 (mechanism control).** Acquisition by the **aleatoric** component alone underperforms random
+  at large R. If it does not, the proposed mechanism is falsified.
+- **H6.** An estimator assuming homoscedastic noise (a standard GP) is **mis-specified** under
+  input-dependent noise and inverts at a lower R than an estimator with an input-dependent noise
+  model.
+- **H7.** Replacing greedy top-*k* batch selection with a diversity-aware rule increases the measured
+  advantage at low R, and does not rescue it at high R.
 
 ## 7. Preliminary Literature Review
 
@@ -167,8 +184,15 @@ data.
 - a **public experimental** dataset for external comparability (Suzuki coupling reaction screening —
   Perera et al., 2018).
 
+**Design.** A **2 × 3 factorial** with a swept covariate: noise structure (homoscedastic control
+versus heteroscedastic, with R swept across roughly two orders of magnitude) × acquisition target
+(total predictive / epistemic-only / aleatoric-only), repeated across uncertainty estimators that
+differ in whether they model input-dependent noise. Heteroscedastic noise is constructed by making
+σ²(x) a controlled function of position in the representation space, so that R is set by design and
+known exactly.
+
 **Sampling strategy.** Repeated randomised active-learning simulations. Each configuration —
-acquisition strategy × noise level × repeat — is run with the initial labelled set drawn
+acquisition target × noise structure × R × estimator × repeat — is run with the initial labelled set drawn
 independently across both strategy and repeat, to avoid confounding the strategy comparison with the
 variance of a shared initial draw. A minimum of 20 repeats per configuration, with the number fixed
 by a power calculation performed on pilot runs before the main study.
@@ -185,21 +209,25 @@ datasets are published and used under their stated licences. Computation is on i
 resources; energy use is modest, as the study reuses existing labels rather than generating new
 calculations.
 
-**Limitations.** Injected noise is a model of real noise and may not reproduce its structure — real
-measurement error may be heteroscedastic or systematic rather than independent and identically
-distributed; this is addressed by including a real-data validation step and by testing more than one
-noise model. Findings are established for one task family and one model class, and generalisation
+**Limitations.** Constructed noise is a model of real noise. Real measurement error may be
+systematic rather than random, or its input dependence may follow structure not captured by the
+constructed σ²(x); this is addressed by testing more than one form of input dependence and by the
+real-data validation step. Estimating R on real data requires **replicate measurements**; if the
+available experimental data lacks replicates, R can only be bounded rather than measured, and the
+validation becomes correspondingly weaker. Findings are established for one task family and one model class, and generalisation
 beyond them is a claim the thesis will not make. Access to the experimental datasets is already in
 place.
 
 ## 9. Expected Results
 
-- A **monotonic decay** of the active-learning advantage with increasing noise (H1), reported as a
-  dose–response curve rather than a binary outcome.
-- A **numerical threshold**, with a confidence interval, above which uncertainty-guided acquisition
-  is indistinguishable from random.
-- Evidence on whether acquisition becomes **actively harmful** above that threshold (H3) — a
-  sharper and more useful result than "no better than random" if it holds.
+- **No ranking effect under homoscedastic noise** (H1) — a null result, and an important one,
+  because it localises the problem and rules out the interpretation that "noise breaks active
+  learning" in general.
+- A **monotonic decay with R** under heteroscedastic noise (H2), reported as a dose–response curve.
+- A **sign change** near R ≈ 1 (H3), locating an inversion rather than merely a vanishing advantage
+  — a sharper and more actionable result than "no better than random".
+- Evidence on whether **epistemic-only acquisition is immune** (H4), and on how much of that
+  immunity survives real, imperfect uncertainty decomposition.
 - A **corrected baseline**: quantification of how much of a previously observed null result is
   attributable to greedy batch selection rather than to the data (H4). It is entirely possible that
   the existing negative result reverses once this defect is removed; that outcome is anticipated and
