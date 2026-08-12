@@ -111,8 +111,25 @@ template supplies only a *guess* geometry, which was then constrained-optimised,
 frequency-verified at ORCA level. But **71.1 min is not a from-scratch cost** — that run had a head
 start — and the earlier claim that isolating the directory had fixed the problem was incomplete.
 
-Templates 1 and 2 are quarantined to `admissibility/ts_templates_quarantine/`; job `11323319` runs
-from a genuinely empty state to get an honest cost and confirm the barrier without a seeded guess.
+Templates 1 and 2 were quarantined to `admissibility/ts_templates_quarantine/` and job `11323319`
+ran from a genuinely empty state.
+
+**Resolved — the barrier is reproducible, and the template affected only cost.**
+
+| run | barrier | wallclock | TS imaginary freq | TS route |
+|---|---|---|---|---|
+| contaminated (shared workdir) | 9.58 | 85.5 min | −363.80 | adaptive |
+| isolated workdir, template present | **11.03** | 71.1 min | −363.94 | template |
+| from scratch, templates quarantined | **11.03** | **88.0 min** | −363.92 | adaptive |
+
+The barrier reproduces **exactly** across the two clean runs, so 11.03 kcal/mol is attributable. The
+imaginary frequency agrees to 0.02 cm⁻¹, and the TS name reverts to the adaptive-search form once no
+template is available — confirming the middle run really was consuming one. The template bought
+**17 minutes, about 19 %**, and changed nothing else, so the honest from-scratch cost of one 17-atom
+reaction at this level is **88 minutes on a single core**.
+
+Net: the withdrawal was justified — the shared working directory moved the barrier by 1.45 kcal/mol —
+while the template leak cost only timing.
 
 **This is itself a walkthrough finding.** Reproducing one number from an established tool took three
 attempts, and two of the three traps were *invisible caches* — a shared working directory whose
