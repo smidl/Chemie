@@ -10,9 +10,10 @@ Work dirs under `/mnt/data/resynthesis/admissibility/work_autode/`
 | 93 | thiophene-1,1-dioxide + ethylene | 17 | 11.03 | 16.98 | **−5.95** | −363.9 | 88 min, 1 core |
 | 92 | thiophene S-oxide + 2,3-dihydrofuran | 21 | 13.66 | 16.64 | **−2.98** | −398.7 | 53 min, 8 cores |
 | 107 | 1-methylcyclopropene + methyl azide | 17 | 12.83 | 15.30 | **−2.47** | −425.9 | 45 min, 8 cores |
-| 436 | CO₂ + thiazolium enol | 27 | — | 7.18 | — | — | pending |
+| 436 | CO₂ + thiazolium enol | 27 | **refused** | 7.18 | — | — | 36 min, 8 cores |
 
 Every completed run located a transition state and verified it with **exactly one imaginary mode**.
+Reaction 436 did not complete, for a reason worth its own section below.
 
 **These errors are normal.** BH9's own assessment of PBE0 on pericyclic reactions gives a
 barrier-height MAE of **3.34 kcal/mol**. Reactions 92 and 107 sit at −2.98 and −2.47, i.e. right at
@@ -62,6 +63,44 @@ This matters well beyond our pipeline. A retrosynthesis planner emits unmapped, 
 stereochemistry-free SMILES. Feeding that to any barrier oracle invites an 8.5 kcal/mol error that no
 choice of functional, basis set or convergence threshold will recover — and nothing in the output
 announces it. The barrier looks fine; it is simply a barrier for a different reaction.
+
+## Reaction 436 refuses to run, and it is right to
+
+The only type-IX case in set A, and the only one with real conformational freedom, stops with
+`NoConformers` after 36 minutes. The cause is not conformer *generation* — 8, 8 and 27 candidate
+structures were produced — but autodE's `prune_diff_graph`, which discards any conformer whose
+connectivity changes during optimisation. Every one changed.
+
+Measuring the optimised product geometries directly:
+
+| conformer | CO₂-unit C–O | nearest C–C | verdict |
+|---|---|---|---|
+| conf0 | 1.158 / 1.162 Å | 3.024 Å | dissociated |
+| conf1 | 1.160 / 1.161 Å | 3.070 Å | dissociated |
+| conf3 | 1.159 / 1.161 Å | 3.400 Å | dissociated |
+
+A C–O bond of 1.16 Å is **free CO₂**; a bound carboxylate would be near 1.25 Å. A C–C bond is 1.54 Å,
+and these are 3.0–3.4 Å apart. **The product expels CO₂ during optimisation in all three cases.**
+
+That is correct chemistry, not a defect. The product is a thiazolium-carboxylate **zwitterion**, and a
+zwitterion is generally not a minimum in the gas phase — BH9's reverse barrier of 9.50 kcal/mol says
+the adduct sits in a shallow well, and without solvent it slides out of it. BH9 flags this directly:
+its charged types are strongly solvent-stabilised and it "experienced difficulties finding some of
+these TSs".
+
+**Two things follow, and they point in opposite directions.**
+
+The good one: autodE **refused to produce a number** rather than reporting a barrier for a product
+that does not exist at this level of theory. That is the behaviour our own pipeline failed to show in
+July, when a corrupt endpoint yielded a confident 434 kcal/mol. A tool that stops is worth more than
+one that answers.
+
+The bad one: **no case in set A now exercises conformational sampling.** Reactions 93, 92 and 107
+found 1, 2 and 1 conformers respectively — they are rigid. 436 was the only flexible member and it
+cannot be run gas-phase. So the sampling question raised as gap B2 remains untested, and testing it
+requires either implicit solvation or a different reaction. This is not a gap in the plan; it is the
+plan meeting the boundary that BH9 itself identified — the reaction classes closest to our specialty
+chemistry are exactly the ones a gas-phase pipeline cannot attempt.
 
 ## Cost, now that parallelism is fixed
 
