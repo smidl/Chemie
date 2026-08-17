@@ -1,5 +1,29 @@
 # retrosyntesis — branch triage after the departures
 
+> **Executed 2026-08-17.** 24 branches → **1** (`main`). 23 `archive/*` tags pushed to origin first,
+> so every deleted branch remains reachable. `18-handover` merged (Robin's 12 tests pass); the
+> green-routes extraction salvaged from the FlowER branch; the retro-fallback harness confirmed
+> duplicated in `retro-pfn/xif/harness/` and therefore not salvaged.
+>
+> **One thing the merge created and nobody should leave alone:** `reaction_complex.py` now exists
+> **twice** in main, and the copies have diverged.
+>
+> | | `coordination/handover/` | `src/validation/` |
+> |---|---|---|
+> | lines | 364 | 304 |
+> | tests | 18 | 12 |
+> | `SUBMERGED_BARRIER` | yes | **no** |
+> | Open Babel backend | yes | **no** |
+> | `e_separated` (separated-reactant reference) | yes | **no** |
+> | `endpoints_are_same_surface_minima` | yes | **no** |
+>
+> The `src/` copy is Robin's July snapshot; the handover copy carries four later changes. The
+> integration in `validation_dft_neb.py` imports the **`src/` one**, so the pipeline currently runs
+> without the submerged-barrier fix, the separated-reactant referencing, or the Open Babel backend.
+> Reconciling these — porting the four changes into `src/` and deleting the handover copy — is the
+> obvious first task for whoever picks the line up.
+
+
 **Date:** 2026-08-17 · 24 remote branches assessed against `origin/main`.
 
 ## Summary
