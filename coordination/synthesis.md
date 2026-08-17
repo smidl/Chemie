@@ -1175,3 +1175,38 @@ the oracle ladder, and the barrier work.
    make an OOD claim at all.
 Until one of these lands, **no OOD claim from this tree is admissible** — and per ADR 0004 the
 existing ones are not grandfathered.
+
+## DEEP STATUS 2026-08-17
+
+**Moved:** retro-physics-validation (jinrehacek), Chemie. **Silent since 08-05/06:** retrosyntesis
+(moczyjor, mollerob), retro-generation, retro-pfn, retro-planning.
+
+**AIMNet2 on BH9** (jinrehacek, 449 reactions / 898 barriers, exact geometries):
+
+| | MAE (kcal/mol) |
+|---|---|
+| barriers, general `aimnet2` | 16.70 |
+| barriers, domain-routed | 4.728 — in-sample; fallback chosen after inspecting BH9 |
+| reaction energies, routed | 2.881 — beats 19 of 25 DFT variants in BH9 Table IV |
+| worst TS failures | up to 77 |
+
+Same model scored 4.76 on Transition1x. BH9 is 57.5 % multi-fragment; Transition1x 0.1 %.
+Not a safe final kinetic oracle. Step 2 (geometry error) blocked on BH9 SMILES — answered in his
+inbox: connectivity from XYZ acceptable, stereochemistry is leakage.
+
+**R7 — our July diagnosis was incomplete.** `build_endpoints` gave a guarded 2.5 Å contact; the
+reactant still relaxed to 4.632 Å under AIMNet2-rxn. `NO_AIMNET_CONTACT_MINIMUM`, NEB not started,
+no barrier claimed. Placement was a defect, not the defect.
+
+**Barrier pipeline** (this node, autodE 1.4.5 + ORCA 6.1.1): errors −5.95, −2.98, −2.47 on three
+pericyclic reactions vs BH9's PBE0 pericyclic MAE 3.34. DLPNO-CCSD(T) rescore of one: 11.03 → 16.25
+vs 16.98 reference. Geometry right, error is the functional. Stereochemistry-free input SMILES:
++8.57 kcal/mol error. Zwitterionic product expels CO₂ under gas-phase optimisation (C–O 1.16 Å,
+C–C 3.0–3.4 Å); autodE refuses a barrier.
+
+**Unowned:** implicit solvation; conformational sampling (untested — everything that ran is rigid,
+the one flexible case cannot run gas-phase); hydrogen-resolved atom mapping, three consumers.
+
+**Fixed:** `rehacji1` now in the `resynthesis` group.
+
+**Unrecorded:** Joris and Robin departure dates; no successor for retrosyntesis integration.
