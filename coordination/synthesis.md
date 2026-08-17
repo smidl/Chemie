@@ -1209,4 +1209,14 @@ the one flexible case cannot run gas-phase); hydrogen-resolved atom mapping, thr
 
 **Fixed:** `rehacji1` now in the `resynthesis` group.
 
-**Unrecorded:** Joris and Robin departure dates; no successor for retrosyntesis integration.
+**Departures — recorded 2026-08-17.** Joris (moczyjor) and Robin (mollerob) have left. Last commits
+2026-08-05 and 2026-08-06.
+
+**Succession.** The physics/numerics line transfers to jinrehacek **gradually**, not at once. First
+piece sent 2026-08-17: run R7 through autodE + ORCA — one bounded reaction that settles his own open
+question, with the working invocation and the five environment traps supplied. Explicitly retained
+here for now: the six-reaction walkthrough, cost-ladder validation at DFT level, solvation, and
+planner integration. BH9 Step 2 stays his higher priority.
+
+**Open:** `retrosyntesis` is now unowned — its `AGENTS.md` still lists `owners: [moczyjor, mollerob]`.
+Owner intends to take it as the shared integration node.
