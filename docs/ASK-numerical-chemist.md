@@ -1,3 +1,7 @@
+> **Superseded 2026-08-18.** The maintained version is published in the knowledge base at
+> `briefing/asks/barrier-computation.md`, which carries the n=3 rescore. This copy is kept only as
+> the drafting record.
+
 # Are we driving this correctly?
 
 We compute reaction barriers from SMILES, automatically, at planner scale — thousands of candidate

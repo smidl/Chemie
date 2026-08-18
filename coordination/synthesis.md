@@ -1199,8 +1199,9 @@ reactant still relaxed to 4.632 Å under AIMNet2-rxn. `NO_AIMNET_CONTACT_MINIMUM
 no barrier claimed. Placement was a defect, not the defect.
 
 **Barrier pipeline** (this node, autodE 1.4.5 + ORCA 6.1.1): errors −5.95, −2.98, −2.47 on three
-pericyclic reactions vs BH9's PBE0 pericyclic MAE 3.34. DLPNO-CCSD(T) rescore of one: 11.03 → 16.25
-vs 16.98 reference. Geometry right, error is the functional. Stereochemistry-free input SMILES:
+pericyclic reactions vs BH9's PBE0 pericyclic MAE 3.34. DLPNO-CCSD(T) rescore of **all three**,
+single points on the same geometries: errors **−0.73, +0.92, −0.88**, mean absolute **0.84** vs
+PBE0's 3.80, signs differing. Geometry right, error is the functional, at n=3. Stereochemistry-free input SMILES:
 +8.57 kcal/mol error. Zwitterionic product expels CO₂ under gas-phase optimisation (C–O 1.16 Å,
 C–C 3.0–3.4 Å); autodE refuses a barrier.
 

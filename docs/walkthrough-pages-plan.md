@@ -25,10 +25,11 @@ Thiophene-1,1-dioxide + ethylene, 17 atoms, BH9 reference 16.98 kcal/mol.
 | S5–S6 | the TS search and the band, as an energy profile |
 | S7 | the guard's verdict, and **the frequency check: one imaginary mode at −363.9 cm⁻¹** |
 | S8 | barrier 11.03 vs 16.98, error −5.95, wallclock 88 min |
-| **closing** | the DLPNO-CCSD(T) rescore: **16.25, error −0.73** — 87 % of the gap is the functional, so the geometry is right |
+| **closing** | the DLPNO-CCSD(T) rescore, all three reactions: errors **−0.73, +0.92, −0.88**, mean absolute **0.84** vs PBE0's 3.80 — the geometry is right, the error is the functional |
 
 The closing block is the point of the page. It says the procedure finds essentially the correct
-transition state, and that the visible error is a level-of-theory choice.
+transition state and that the visible error is a level-of-theory choice — on three reactions, with
+differing signs, so it is scatter rather than a systematic offset.
 
 ## Page 2 — The same reaction twice (#93 and #92)
 
