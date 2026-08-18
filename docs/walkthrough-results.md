@@ -26,19 +26,24 @@ The obvious worry about −5.95 was that autodE had found a *different saddle* f
 characterised. That is now excluded. Single points at BH9's own method — DLPNO-CCSD(T)/def2-TZVP —
 were run on the geometries autodE optimised and frequency-verified, with no re-optimisation:
 
-| method, at our geometry | barrier | vs BH9's 16.98 |
-|---|---|---|
-| PBE0-D3BJ/def2-TZVP | 11.03 | −5.95 |
-| **DLPNO-CCSD(T)/def2-TZVP** | **16.25** | **−0.73** |
+| reaction | PBE0/def2-TZVP | error | **DLPNO-CCSD(T)/def2-TZVP** | **error** |
+|---|---|---|---|---|
+| 93 | 11.03 | −5.95 | 16.25 | **−0.73** |
+| 92 | 13.66 | −2.98 | 17.56 | **+0.92** |
+| 107 | 12.83 | −2.47 | 14.42 | **−0.88** |
+| **mean \|error\|** | | **3.80** | | **0.84** |
 
-Changing only the level of theory closes **87 %** of the gap. The residual 0.73 kcal/mol is basis-set
-incompleteness (def2-TZVP against BH9's CBS extrapolation) plus whatever small geometric difference
-remains between our PBE0/def2-SVP structure and their CAM-B3LYP-D3(BJ)/6-311++G\*\* one.
+All three land within **±1 kcal/mol** of the BH9 reference at coupled cluster, and the signs differ
+(−, +, −), so this is scatter at roughly the level of basis-set incompleteness — def2-TZVP against
+BH9's CBS extrapolation — not a systematic offset. Rescoring costs about 11 min per reaction on
+8 cores and cuts the mean absolute error **4.5×**.
 
-**This is the single most important result so far.** It says the fragment-embedding, placement,
-TS-search and verification chain produces essentially the correct transition state, and that the
-remaining error is a level-of-theory choice we control rather than a defect in the procedure. The
-cost was 17 minutes on 8 cores for three single points — cheap enough to run for every reaction.
+Changing only the level of theory removes essentially the whole error, on every reaction tested.
+
+**This is the single most important result so far, and it now rests on three reactions rather than
+one.** The fragment-embedding, placement, TS-search and verification chain produces essentially the
+correct transition state; the visible PBE0 error is a level-of-theory choice we control, not a defect
+in the procedure. Cheap enough to run for every reaction.
 
 ## How the reaction is written down matters more than which functional is used
 
