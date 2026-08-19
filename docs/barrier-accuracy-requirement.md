@@ -3,6 +3,23 @@
 **Date:** 2026-08-18 · `scripts/K1_perturb.py`, jobs `11367242` (ρ=0) and `11367273` (ρ=1) ·
 Data: retro-fallback on the 190 hard targets, three feasibility models, 133–141 rankable targets each
 
+> **Framing correction, 2026-08-19.** DFT is deterministic: the same geometry and settings give the
+> same number every time. So a rung's error is **not noise** — it is a fixed function of the reaction.
+> The experiment below draws errors from a distribution, which is the wrong picture of the mechanism,
+> though not of the arithmetic.
+>
+> What the two columns really contrast is whether the error is **common to the steps of a route** or
+> **varies between them** — a property of the error *function*, not of a noise process. On that
+> reading the conclusion stands unchanged, and reads more cleanly: what matters is whether a
+> functional is wrong in the same direction for every step of a route.
+>
+> What does not survive: the 20 repeats and the seed discipline are arithmetic, not statistics. They
+> average over *possible reactions*, not over reruns, since a rerun would return the identical number.
+> The flip rates should be read as expectations over which reactions a route happens to contain.
+>
+> This also exposes an axis the experiment ignored entirely — the **numerical parameters** of the
+> calculation, which are deterministic and tunable. See `numerical-parameters.md`.
+
 ## The question
 
 We validated the DFT oracle to ±1 kcal/mol without ever establishing what a barrier *buys*. This
