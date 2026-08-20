@@ -1221,3 +1221,43 @@ planner integration. BH9 Step 2 stays his higher priority.
 
 **Open:** `retrosyntesis` is now unowned — its `AGENTS.md` still lists `owners: [moczyjor, mollerob]`.
 Owner intends to take it as the shared integration node.
+
+## DEEP STATUS 2026-08-21
+
+**Moved:** this node + `briefing`. **Silent:** retro-generation, retro-pfn, retro-planning
+(pre-08-17); retrosyntesis (only our merge/salvage).
+
+**jinrehacek — working, then quiet.** 39 RCI jobs, all on **08-17 itself** and all behind the report
+he committed that day (`r7-aimnet-neb` ×6, `bh9-aimnet-{full,2025,routed}` ×7). Nothing since:
+no jobs, no commits, 4 working days. Three tasks outstanding, assigned that same day after his
+commit — BH9 Step 2 (priority), the R7 autodE/ORCA run, and the `reaction_complex.py` reconciliation.
+The last needs no compute, so local work would be invisible. Not chased yet.
+
+**This node.** Barrier-accuracy requirement measured on real routes: error **correlation** dominates
+**magnitude** — a 16.70 kcal/mol oracle with error common to a route's steps disturbs the chosen route
+less than a 0.84 kcal/mol oracle whose error varies (8.3 % vs 14.4 % top-1 flip at w=20). Proposes
+selecting the functional by `|ME|/MAE` rather than MAE; BH9's Table V already tabulates it (ωB97M-V
+2.15/2.06; PBE0 3.34/**−0.05**, i.e. autodE's default is the scatter case). **Deliberately unpublished**
+pending confirmation — job `11381115` rescores the three validated geometries at ωB97M-V.
+
+Framing correction recorded: DFT error is deterministic, not noise, so the perturbation repeats are
+arithmetic over reactions, not statistics. Numerical settings measured at **0.047 kcal/mol** total
+(SCF 0.028, grid 0.019, COSX 0.000) — axis closed, and it exonerates our configuration.
+
+**Briefing** carries the confirmed results only: the working DFT oracle, the DLPNO rescore, AIMNet2 on
+BH9, the two mapping failures, stereochemistry at 8.57, the zwitterion, and Transition1x being 99.9 %
+single-fragment. Correlation result withheld.
+
+**retrosyntesis** triaged 24 branches → **1**, 23 `archive/*` tags pushed first. Robin's never-merged
+`18-handover` integration is on main (his 12 tests pass). **Open:** `reaction_complex.py` now exists
+twice and has diverged — `validation_dft_neb` imports the older `src/` copy, so the pipeline runs
+without `SUBMERGED_BARRIER`, `e_separated` or the Open Babel backend. Assigned to jinrehacek.
+
+**Board:** 3 messages, 2 open to pfn4bo (2026-08-02 sufficiency, 2026-08-06 leaked OOD). No replies.
+
+**Cluster note:** a `corpus_v1_iv` array (~99 tasks) and the `army-*` line run under `smidlva1` and are
+not this tree's. Unlabelled RSA key in `~/.ssh/authorized_keys` still unidentified.
+
+**Unowned:** implicit solvation; conformational sampling (untested — everything that ran is rigid, the
+one flexible case cannot run gas-phase); hydrogen-resolved atom mapping; `retrosyntesis` ownership
+(`AGENTS.md` still lists both departed students).
