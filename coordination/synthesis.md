@@ -1627,3 +1627,36 @@ manufacture the complete-reaction corpus for `retro-generation`, **filtering the
 training on `[H]`/`[O]` as reagents would teach a generative model that atomic radicals are ordinary
 species. The 7 % residue — redox steps missing their reagent — is the honest open problem, and it is
 *reagent identification*, not balancing.
+
+## THREE-ARM RERUN + THE GATE IS BUILT (2026-08-26)
+
+**Rerun** (`admissibility/scripts/C4_allarms.py`, job `11419180`, 55 s). The single-arm numbers in the
+entry above were drawn from `gp` only at a 70 % reconstruction rate; repeated across all three
+feasibility-model arms they hold.
+
+| | single arm (316 steps) | **pooled, 3 arms (728 steps)** |
+|---|---|---|
+| balanced as emitted | 1.27 % | **0.96 %** (7/728) |
+| SynRBL repairs | 98.72 % | **98.06 %** (707/721) |
+| repairs via an atomic radical | 7.14 % | **6.79 %** (48/707); `[H]`×70, `[O]`×25 |
+| clean, energetics-ready | 92.86 % | **93.21 %** (659/707) |
+
+Reconstruction per arm: gp 96/137 targets full, independent 85/133, mechanism-gp 96/141 — so 64–70 %,
+and the bias is now visible rather than assumed: route **depth** distribution is mode 3 with 4–7 well
+represented (gp `{2:5, 3:93, 4:27, 5:8, 6:4}`), so the sample is not only shallow routes. Still, the
+30–36 % that hit `template_no_match` are unmeasured and could be systematically harder.
+
+**Built:** `retrosyntesis/src/completion/` (`c7e29ee`) — `element_counts`, `is_balanced`,
+`added_species`, a `Verdict` taxonomy with an `admissible` property, and `gate` / `gate_batch`.
+Placed **outside `validation/` deliberately**: two consumers, so per this file's own 2026-07-31 rule
+it must not travel with numerics at handover. Balance is verified by independent element counting and
+never from SynRBL's own report, so the gate can contradict it. SynRBL is imported lazily — balance
+checking and the filter work without it installed. **27 tests, pure RDKit, no quantum chemistry**,
+passing in the cluster venv including the SynRBL paths.
+
+The verdicts a caller branches on: `BALANCED_AS_GIVEN` and `REPAIRED` are admissible;
+`REPAIRED_WITH_ATOMIC_SPECIES` (the 6.79 %), `UNREPAIRED` (1.94 %) and `UNPARSEABLE` are not.
+
+**Unpushed.** `retrosyntesis` is declared external in `AGENTS.md` ("inventory + coordination only")
+even though the owner intends to take it as the shared integration node. Committing code there is a
+change of posture and the push is the owner's call.
