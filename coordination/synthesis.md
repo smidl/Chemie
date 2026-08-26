@@ -1502,3 +1502,64 @@ remains the strongest owner-owned asset in the tree. See the paper discussion fo
 not have survived the first referee who knows how USPTO-190 was built. Per ADR 0004 §"positive
 control", this is the pattern to repeat: the cheap split-independent version of a dramatic claim,
 before the claim is committed to.
+
+## COMPLETION LAYER: MEASURED, AND IT IS AN ADOPT — NOT A BUILD (2026-08-26)
+
+**Corrects the "highest-leverage unowned piece" framing** used at `synthesis.md:834`
+("two customers and one spec"), `synthesis.md:940` ("still the only unowned piece, now with three
+consumers") and `outbox.md` 2026-07-30 ("the single highest-leverage unowned piece of work in the
+tree"). Those entries are superseded: **the piece is not unowned, it is unadopted.** An off-the-shelf
+implementation has been in our own literature pool the whole time — `phan2024_synrbl`, cited in
+`retro-physics-validation/literature/sota.md` as "a *prerequisite* for any energetics" — and a
+benchmark with a violation-mode taxonomy landed in April 2026 (`phan2026_synrxn`, Sci. Data 13(1),
+CC-BY: MNC 33 147, MOS 12 781, MBS 491, Complex 1748).
+
+### Measured on OUR corpus, not theirs
+
+`scripts/C1_synrbl.py`, SynRBL 1.0.6 in `admissibility/.venv-synrbl`, 2000 records sampled at stride
+900 across all 1 939 253 rows of `uspto.csv`. **Balance verified independently of SynRBL**, by RDKit
+element counting on both sides including implicit H, so the verdict does not rest on the tool's own
+reporting.
+
+| | n | % |
+|---|---|---|
+| balanced **as stored** | 35 / 2000 | **1.75 %** |
+| unbalanced as stored | 1965 / 2000 | 98.25 % |
+| SynRBL output balances (verified) | 1581 / 1965 | **80.46 %** of the unbalanced |
+| SynRBL output still unbalanced | 384 / 1965 | 19.54 % |
+| output unparseable / no output | 0 / 0 | — |
+
+**Corpus balance 1.75 % → 80.80 %.** Solved by: MCS-based 1171, rule-based 410, unresolved 384.
+Cost **35.5 ms/reaction** at `n_jobs=4` → **≈19 core-hours for the entire 1.94 M-record corpus.**
+
+Two honest notes. (i) The 1.75 % baseline **reproduces** our own 2.4 % (6/250) figure within sampling
+noise — that measurement was sound. (ii) **80.46 % is below SynRBL's published 89.83–99.75 % success
+range**, and the likely reason is selection: their validation used "171,913 reactions with at most two
+products that have balanced Reaxys records", a curated subset, where we sampled `uspto.csv`
+indiscriminately. So on our data it works well but ~9–19 points worse than advertised — which is
+exactly what "how well does it work in our case" was asked to find out.
+
+### What this changes
+
+1. **The completion layer is a ~19-core-hour batch job, not a research project.** Any proposal to
+   build one must beat 80.8 % at 35 ms/reaction first.
+2. **rektomar's blocker is removed.** His arbitrary-subset-conditioning miniproject was gated on
+   corpus completeness measured at 2.4 %; it is 80.8 % for one overnight job. These two facts have sat
+   in separate documents in this tree for a month.
+3. **Stop quoting 2.4 % as a headline.** It is a *pre-repair* number and `phan2026_synrxn`'s taxonomy
+   supersedes it. The interesting residue is the **19.54 % SynRBL cannot fix** — that, not the raw
+   imbalance, is the real completion gap, and characterising it against SynRXN's MNC/MOS/MBS/Complex
+   modes is the follow-up worth doing.
+4. **The 07-30 "nothing in our stack bridges the two" claim is doubly retired** — already by the
+   same-day PROBE retraction, and now by SynRBL for the balance half plus SCINE Chemoton (published
+   "up to 80%") for the elementary-step half.
+
+### Still open, and genuinely ours
+
+Running SynRBL on **planner-proposed** reactions rather than database records. Not done, because the
+route artifacts store *templates*, not concrete reaction SMILES (`top_routes` entries carry
+`templates` + `n_rxn` + `feasibility`; 137/190 non-empty), so planner steps must be reconstructed by
+template application before they can be tested. **The distinct risk to measure there: SynRBL was
+validated on reactions that really happened. A planner proposes reactions that may not. A repair tool
+that confidently balances a nonsense reaction is worse than one that fails on it** — and nothing in
+its published evaluation covers that case.
