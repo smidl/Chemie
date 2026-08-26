@@ -81,7 +81,59 @@ distribution breaks, and Maziarz as the precedent for this kind of audit on the 
    chemist referee will ask whether our *measurement protocol* is right — the balance criterion, what
    counts as multi-fragment, whether the clash threshold is defensible. `briefing/asks/barrier-computation.md`
    still has no reply. Chase it.
-3. **Prerequisite before drafting:** the three queued PDFs (`toniato2023`, `stuyver2024`,
-   `young2021`) are all bot-blocked and must be downloaded by hand. **We cannot write against
-   Toniato from a web summary** — their exact scope and claims decide our positioning, and our own
-   citation rules forbid it. This is the blocking item.
+3. ~~**Prerequisite before drafting:** the three queued PDFs are bot-blocked.~~ **RESOLVED
+   2026-08-26** — operator supplied all three; fully pooled with digests. The read changed the
+   verdict; see the addendum below.
+
+
+## ADDENDUM 2026-08-26 — after reading the full texts, the audit paper is thinner than the verdict above
+
+The three PDFs are now pooled and digested. Toniato is substantially closer to us than its abstract
+suggested, and two more of our findings turn out to have published precedent.
+
+**Our granularity finding is Toniato's published finding.** They report it as a worked diagnosis:
+*"If one were to rely on the atom mapping to steer the exploration with Chemoton, no reactions would
+be found, and Chemoton would erroneously report that this chemical transformation was not possible."*
+Same failure, same cause, published 2023 — and our own version was retracted on 07-30 anyway. They
+also price the alternative (brute-force exploration: >10 000 calculations, exceeding 1 000 000 when
+broadened) and report that even hand-decomposed Friedel–Crafts failed at step two. **Do not claim
+this. Cite it.**
+
+**"Nothing bridges overall transformations to elementary steps" is false as stated.** SCINE Chemoton
+does, by exploring the network from the endpoints rather than requiring the step — at a published
+success rate of *"up to 80%"* on a generic test set. The defensible version is that the bridge is
+expensive and incomplete, not that it is absent. Our internal framing has been overstating this since
+2026-07-30 and the outbox still carries the stronger claim.
+
+**autodE already publishes the endpoint-sensitivity magnitude**: conformer choice alone gives *"a
+range in activation energies of more than 5 kcal mol−1 and reaction energies that differ by up to
+17 kcal mol−1."* Our 8.57 kcal/mol is a sharper, distinct instance — *unspecified stereochemistry
+selecting a different diastereomeric TS*, which is not conformer choice — but it must be positioned
+against this number rather than presented as a new phenomenon.
+
+### What is genuinely ours after the full read
+
+| asset | status |
+|---|---|
+| **Rates on real corpora** — 2.4 % atom-balanced (6/250), 92.6 % multi-fragment, 98.4 % vs 0 % clash split (n=800), 10/11 steps refused | **unmeasured anywhere in this literature.** Toniato reports no frequency for any failure mode; Stuyver's 95 % is on curated elementary reactions with specified stereochemistry, and he notes tri-/multimolecular pathways are "typically not benchmarked" |
+| **8.57 kcal/mol for unspecified stereochemistry** | distinct from autodE's conformer number, but adjacent — cite, don't claim novelty of the phenomenon |
+| **Mapper: confidence is not a usable filter** (fails at 0.330 *and* 0.968) | narrow but ours; Toniato mapped manually and left automation to future work |
+| **Error structure dominates error magnitude** (8.3 % vs 14.4 % top-1 flip on real route sets) | **the strongest genuinely-novel result in the tree, and unrelated to any of these three papers** — but its actionable half was inverted on 2026-08-26 (`../wb97mv-rescore.md`) and it needs the n≫3 campaign |
+
+### Recommendation — revised
+
+The failure-mode audit does **not** support a standalone paper. Its framing, its two most striking
+findings and its cost argument are all in `toniato2023`, and what remains is a rate table following a
+paper that named every one of the gaps. That is a contribution, but a small one — a short
+methods/data note citing Toniato as origin, not a headline.
+
+**The better use of the same effort is the error-structure result**, which is the one place this tree
+would own the finding rather than the measurement. It needs barriers across several reaction families
+on shared geometries at n ≫ 3, which is the argument for adopting **RGD1** (176 992 reactions shipping
+TSs, barriers, endpoint geometries and atom mappings) rather than generating them — already
+recommended on independent grounds in `../strategy-after-dft.md` §2 and now promoted to blocking in
+`../barrier-accuracy-requirement.md` item 3.
+
+If the audit is written anyway, the honest one-line contribution is: *automated TS tools report 95–97 %
+success on curated elementary reactions; here is what a retrosynthesis planner actually emits,
+measured.* Nothing more than that.
