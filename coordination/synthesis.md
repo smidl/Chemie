@@ -1563,3 +1563,67 @@ template application before they can be tested. **The distinct risk to measure t
 validated on reactions that really happened. A planner proposes reactions that may not. A repair tool
 that confidently balances a nonsense reaction is worse than one that fails on it** — and nothing in
 its published evaluation covers that case.
+
+## SynRBL ON REAL PLANNER OUTPUT (2026-08-26) — 92.9 % usable, and the 7.1 % residue has a signature
+
+Follow-up to the entry above, and it answers the design question "plan first and fill the gaps later,
+or make the planner emit complete reactions?". `scripts/C2_planner_synrbl.py` + `C3_suspect.py`.
+
+**Reconstruction.** Route artifacts store *retro SMARTS templates*, not reaction SMILES, so steps had
+to be rebuilt: frontier of molecules from the target, apply each template to whichever frontier
+molecule it matches, record the forward step `precursors >> molecule`. Of 137 targets with routes,
+**96 reconstructed fully**, 41 hit `template_no_match` partway (their partial steps are kept), giving
+**316 unique planner steps**. Sampling caveat: a 70 % full-reconstruction rate could bias toward
+simpler routes.
+
+| | n | % |
+|---|---|---|
+| planner steps balanced **as emitted** | 4 / 316 | **1.27 %** |
+| unbalanced as emitted | 312 / 316 | 98.73 % |
+| **SynRBL output balances (verified independently)** | **308 / 312** | **98.72 %** |
+| still unbalanced | 4 / 312 | 1.28 % |
+
+**The predicted risk did not materialise — the opposite did.** I expected SynRBL to do *worse* on
+proposed reactions than on database records. It does **much better**: 98.72 % vs **80.46 %** on raw
+`uspto.csv`. The reason is that template-generated steps are *cleaner* than patent records — exactly
+one product, a well-defined reaction centre, no OCR noise or odd multi-product stoichiometry — i.e.
+close to SynRBL's own curated validation regime (≤2 products, Reaxys-backed).
+
+**Where it does fail, it fails informatively.** 22 of 308 fixes — **7.14 %** — achieve balance by
+inserting an **atomic radical**: `[H]` (38 instances) or `[O]` (10). Those are not valid energetics
+inputs: DFT on a hydrogen atom is radical chemistry, not the polar reaction intended. And the
+signature is chemically coherent rather than random — every case is a **redox step whose reagent the
+planner never specified**:
+
+- `Ar-Cl >> Ar-H` balanced as `+ [H].[H] >> + Cl` (real: hydrogenolysis / a hydride source)
+- ester `>> ` primary alcohol balanced as `+ [H]×4` (real: LiAlH₄ or DIBAL)
+- sulfide `>>` sulfone with mCPBA balanced as `+ [O]` (real: **two** equivalents of peracid — so this
+  is a *stoichiometry* failure papered over with atomic oxygen)
+
+So: **SynRBL cannot balance a redox step without the redox reagent, and it silently substitutes an
+atomic species instead of failing.** That is precisely the "launders an implausible step into a
+well-formed one" hazard, and it is confined to a recognisable 7 %.
+
+**286 / 308 = 92.86 % of fixes are clean and directly usable as energetics input.**
+
+### The consequence, and it settles the design question
+
+**Fill-later wins for the physics path.** A two-line filter — reject any step whose balancing added an
+atomic species — costs microseconds, retains 92.9 %, and flags exactly the steps that need reagent
+identification rather than balancing. That filter *is* the cheap admissibility pre-check this tree has
+wanted since the 81-minutes-of-DFT-on-invalid-input episode, and it now exists as a criterion.
+
+**Planner-side completeness is not justified by planning cost, and is not refuted by it either.** The
+corpus is completed **once, offline** (≈19 core-hours for 1.94 M records); inference emits complete
+reactions because that is what was trained, so there is **no per-node cost in the search**. The
+argument for it was never load — it is that (i) a likelihood over incomplete reactions is not a
+feasibility signal, and (ii) conservation becomes structural rather than learned, where
+`retro-generation`'s own FlowER reproduction measured **0 non-conserving predictions in 5 184 064
+samples** against 17.2–33.0 % for G2S/MT on the *same balanced corpus*.
+
+**Recommendation: both, in this order.** (1) Adopt SynRBL + the atomic-species filter now as the
+physics-arm gate — it is measured, cheap, and unblocks the oracle input path today. (2) Use SynRBL to
+manufacture the complete-reaction corpus for `retro-generation`, **filtering the 7.14 % first**, since
+training on `[H]`/`[O]` as reagents would teach a generative model that atomic radicals are ordinary
+species. The 7 % residue — redox steps missing their reagent — is the honest open problem, and it is
+*reagent identification*, not balancing.
