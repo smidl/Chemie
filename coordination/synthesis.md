@@ -1261,3 +1261,225 @@ not this tree's. Unlabelled RSA key in `~/.ssh/authorized_keys` still unidentifi
 **Unowned:** implicit solvation; conformational sampling (untested — everything that ran is rigid, the
 one flexible case cannot run gas-phase); hydrogen-resolved atom mapping; `retrosyntesis` ownership
 (`AGENTS.md` still lists both departed students).
+
+## RECONCILIATION 2026-08-26 — the portfolio is labour-bound, and the strongest assets are the evaluation negatives
+
+Owner asked for a reconciliation: too many open streams, where is the highest gain. This section is
+the triage. It **supersedes the "five efforts" framing** in `AGENTS.md` and `briefing/README.md`,
+both of which still read as though five lines are live.
+
+### The binding constraint, measured
+
+Last **non-owner** commit per node, checked against `origin/main`:
+
+| node | last student commit | reality |
+|---|---|---|
+| `retro-pfn` | **none in last 20 commits** | dormant since 06-18 |
+| `retro-planning` | **none in last 20 commits** | no real work since 07-05 |
+| `MolGPT` | **none in last 20 commits** | dormant |
+| `retrosyntesis` | 08-07 (mollerob, departed) | **unowned** |
+| `retro-generation` | 2026-07-30 in git | **but working on RCI to 08-10** — see below |
+| `retro-physics-validation` | 2026-08-17 (jinrehacek) | training ramp, quiet 9 days |
+
+Every node's most recent commit is the owner's. Three of six have no student activity in recent
+history at all. **Anything that needs a student to finish is already parked whether or not we said
+so.** The real choice is what the owner finishes alone, plus which single student bet gets protected.
+
+**Consequence for academic priority 1 (uncertainty-aware planning).** Recorded as having nobody on it
+on 08-02. Twenty-four days later: still nobody, node dormant, and both gating experiments (G1 capacity
+sweep, G2 seeding audit) still unowned. It is an aspiration, not a priority. Record it as parked.
+
+### rektomar is NOT silent — the git signal was wrong
+
+`git log` shows nothing since 07-30, but `/mnt/data/resynthesis/retro-generation/` has work to
+**2026-08-10** and an **unpushed `coordination/outbox.md` on the cluster**. This is exactly the
+"uncommitted work is invisible to a pointer pull" trap `AGENTS.md` warns about, and the 08-21 deep
+status called him silent on the strength of git alone. **Withdraw that.**
+
+What is in the unpushed outbox, and it is substantial:
+
+- **FlowER reproduced at full scale on its own benchmark.** 162 002 elementary steps × 32 samples =
+  **5 184 064 ODE integrations**, ~45 V100-hours, scored with upstream's own `sequence_evaluation.py`.
+  All **13** reported numbers within 0.5 pp (top-1 step 88.41 vs published 88.48; pathway 88.75 vs
+  88.97; validity 94.84 vs 94.94). Targets read from the article's Source Data spreadsheet, not off
+  the plot.
+- **The conservation claim is exact and replicates: 0 non-conserving predictions in 5 184 064
+  samples.** Against Fig. 2a's 17.2–33.0 % cumulative conservation for G2S/MT on the *same* balanced
+  corpus. His conclusion, and it should be adopted: **consume balance structurally rather than learn
+  it.** This closes his Q4 twice over.
+- **Four things the paper does not say.** (i) The metric is **unseeded** — `eval_multiGPU.py` never
+  calls `set_seed`; rerunning one shard moves top-1 pathway by **1.10 pp**, and Fig. 2b/c carry no
+  error bar, so the published number cannot be reproduced exactly by anyone including the authors.
+  (ii) Pathway accuracy is **teacher-forced** — it scores ranks along the ground-truth graph with the
+  true intermediate at every branch, so it carries no compounding error and is not what
+  `beam_predict.py` does. (iii) Inference costs **~100× Molecular Transformer** per reaction on
+  identical V100s (~1.0 step/s vs 17.6 rxn/s at 5.8 steps/reaction) — for a propose→validate loop
+  this **inverts** the efficiency comparison the paper makes on parameter count. (iv) The 7M-vs-16M
+  framing holds: at top-1 FlowER-7M is third of four, 3.54 pp behind G2S on pathway; parity needs
+  16M, i.e. G2S's own budget. Conservation is free only at matched capacity.
+- **Two leakage facts nobody reports**, from a 3.8M-step scan of both corpora: `master`'s training set
+  contains **2.72 %** of the *published* test split, and within each corpus **~4 %** of test steps
+  appear verbatim in train (reaction-level split, step-level scoring). Also: the May 2026
+  `flower_new_dataset` is **a different benchmark, not a patch** — same reactions (+2.5 %) cut into
+  31 % more elementary steps, only 64 % of old steps surviving, 52 % of the new test split new material.
+- **Still open, and it gates his own headline:** overlap between FlowER's corpus and the **USPTO-MIT
+  test split**, which decides whether anything trained there is reportable against his 85.4.
+
+**This materially changes the paper picture** (below): benchmark-integrity findings are no longer one
+person's analysis of one target list. Independent person, independent benchmark, same class of defect
+— unseeded metrics, teacher-forced evaluation, train/test leakage, corpus substitution.
+
+### ωB97M-V returned, five days unread, and it inverted its own prediction
+
+Job `11381115` COMPLETED 2026-08-21T00:41:36 — **four minutes after** the deep status that calls it
+"pending" was committed (00:37:42). Full record: `docs/wb97mv-rescore.md`.
+
+| rung, identical geometries | errors | MAE | \|ME\|/MAE |
+|---|---|---|---|
+| PBE0 (autodE default) | −5.95, −2.98, −2.47 | 3.80 | **1.00** |
+| ωB97M-V | −1.56, +1.32, −0.54 | **1.14** | **0.23** |
+| DLPNO-CCSD(T) | −0.73, +0.92, −0.88 | 0.84 | 0.27 |
+
+Predicted from BH9 Table V: ωB97M-V 0.96 (systematic), PBE0 0.015 (random). **Measured: the reverse.**
+On the criterion we proposed, PBE0 is the best of the three. Likely mechanism — accuracy and
+systematicity are **not independent axes**, because removing systematic error is what makes a method
+accurate, so a high |ME|/MAE is the signature of a large uncorrected bias.
+
+**Survives:** the perturbation arithmetic (8.3 % vs 14.4 %), and that error *structure* dominates
+error *magnitude*. **Withdrawn:** choosing a functional by |ME|/MAE read off a published table
+(`barrier-accuracy-requirement.md` item 2, now struck; `docs/sota/` banner-corrected). **Gained
+anyway:** ωB97M-V is a near-DLPNO rung at ~4× less compute (MAE 1.14 at ~4.3 min/reaction vs 0.84 at
+~17 min) — adopt it on cost-accuracy grounds, not on error structure. **Newly blocking:** measuring
+our own error correlation, which now needs n ≫ 3 across families on shared geometries — the argument
+for adopting **RGD1** rather than generating it.
+
+Second independent confirmation that the geometry is right: ωB97M-V and DLPNO are single points on
+PBE0/def2-SVP geometries and both scatter small; a bad saddle would depress every method on it.
+
+### The OOD fix was applied to the CODE ONLY — the strata were never regenerated
+
+`retrosyntesis/src/benchmark/calculate_ood_190.py` was corrected by Smox656 on **2026-08-07**
+("feat: ood stratification resolved (code only)") — the day after our 08-06 finding, before he left.
+It now builds base K from **USPTO products** rather than ORD, i.e. it implements fix option 1.
+
+But `src/benchmark/data/benchmark_190_hard_targets.csv` still carries **137/25/28**, the pre-correction
+ORD-referenced strata. So the code is fixed, the labels in use are not, and **any rerun using that CSV
+still reproduces the void stratification.** Regenerating it is cheap and unowned.
+
+### Portfolio triage — what is actually finished
+
+**Finished, defensible, needs only writing (owner-only, no student, no compute):**
+- Benchmark integrity: 83.7 % of the 190 hard targets appear verbatim as USPTO products, rising
+  monotonically to 100 % in the stratum labelled most novel (n=137/25/28, 1 939 253 rows).
+  Round-trip artifact-prone on in-distribution chemistry (Draslovka MMA: NLL ≈ 0.000, round-trip
+  FAIL). Exact-match is the wrong metric — likelihood accepts 81.5 % where top-1 accepts 63.0 %
+  (18.5 pp). Survivorship-conditioned MEEA metrics. Baseline corrections verified byte-for-byte
+  (MT 90.4 not 88.8; ReactionT5 journal ≠ preprint; RDKit-version flip 41/40 000). **Plus rektomar's
+  FlowER findings above.**
+- Admissibility: retro templates emit overall transformations; a TS exists only for an elementary
+  step; nothing bridges them. Four independent gates — 2.4 % of USPTO records atom-balanced (6/250),
+  10/11 planner steps unbalanced (xTB refused), **0/11 yielded a barrier** after balance repair
+  (3 reproduced as NON_MONOTONIC_PATH), 92.6 % of reactant sides multi-fragment where naive embedding
+  clashes 98.4 % of the time. Plus the robust shortcut negative (Skala over LST, 225 × 2, MAE 47.72,
+  +102 % bias).
+
+**Solid backbone, thin alone:** the oracle (0.84 at n=3), AIMNet2 on BH9 (449 rxn: 16.70 / 4.728 /
+2.881), numerical settings closed at 0.047, ωB97M-V as above.
+
+**One healthy method bet:** rektomar's any-subset conditioning — real baseline (85.4 top-1 at 5.7 M
+params, 3.4 pp behind MT like-for-like), two components publishable independent of chemistry
+(permutation-invariant likelihood over an exchangeable side; hard verifiable atom conservation).
+Blocked on data completeness → **the completion layer, still unowned, now with one consumer rather
+than three** — which makes it cheaper, not less necessary.
+
+**One published claim of uncertain validity:** the L\* result (64.43 vs 61.86, 6/6, n=18 876/arm) is
+in `briefing` and **G2, the seeding audit, is unowned**. DecisionBO's pseudo-replication trap
+collapsed four of their results at p ≲ 0.003, one reversing sign. Correctness exposure, not housekeeping.
+
+### The reading, and the recommendation
+
+The tree's strongest, most finished, most defensible results are all **measurements of why the field's
+standard evaluation practice does not work** — benchmark leaked, OOD axis inverted, round-trip
+artifact-prone, exact-match wrong, planner output inadmissible to physics, baselines miscited, metrics
+survivorship-conditioned and unseeded. Seven-plus findings, all measured, none needing a student or
+more compute. Meanwhile every *method* bet has lost its mechanism (σ failed in all three leaves,
+DecisionBO refuted the objective-side version, mechanism kernel null at route level).
+
+So: **stop treating the evaluation findings as debris of failed method work and recognise them as the
+contribution.** One paper written by the owner; one method bet (rektomar) actively protected by
+resourcing the completion layer; everything else parked explicitly in writing.
+
+**DSVR (`dominant-structural-variant-ranker`, tevang, MIT, cloned 2026-08-26): do not invest now.**
+It addresses endpoint microstate quality — solvation, conformers, protomers, stereo — which only
+starts to matter *after* the admissibility gate, and 0 of 11 real planner steps currently pass it.
+Optimising past the binding constraint is the error `strategy-after-dft.md` warns about. **One
+exception:** it is the natural constructive answer to the admissibility paper's endpoint-state gate,
+so contributing the two regression cases (8.57 kcal/mol stereochemistry; the CO₂-expelling zwitterion)
+and the AIMNet2 fragment-count finding is worth ~a day *as a by-product of writing the paper*. Hold
+the correlation result back — as of 08-26 it is not merely unconfirmed but inverted. Assessment in
+full: this node's chat record, to be folded into a `docs/` note if the collaboration proceeds.
+
+### Gate before committing to the paper — IN FLIGHT
+
+The leakage headline has one soundness hole. The 190 targets were **drawn from USPTO by
+construction**, and standard practice holds out the target's own *reaction* while the molecule may
+legitimately appear elsewhere. We scanned the full 1.94 M-row corpus, not a training split. So
+"appears as a USPTO product" may be expected rather than scandalous — and `calculate_ood_190.py`/CLOVER
+is **our own code**, so the broken label is an internal correction, not a published benchmark's defect.
+The publishable claim is the leakage one, and it needs this settled.
+
+**Split-independent test, job `11418664`** (`scripts/B2_multiplicity.py`): count **distinct** USPTO
+reactions producing each target. Benchmark construction can hold out one reaction per target; it
+cannot hold out reactions it never associated with the target. So k ≥ 2 ⇒ leaked under *any*
+reaction-level split, with no need to know the split. k = 0 genuinely unseen, k = 1 consistent with
+correct hold-out.
+
+### RESULT — the leakage claim does NOT survive. The gate did its job.
+
+COMPLETED, 1 939 253 rows rescanned; output `admissibility/out/multiplicity.csv`.
+
+| stratum | n | k=0 | k=1 | **k≥2** | **k≥2 %** | median k | max k |
+|---|---|---|---|---|---|---|---|
+| in-distribution | 137 | 30 | 98 | 9 | **6.6 %** | 1 | 7 |
+| close | 25 | 1 | 24 | 0 | **0.0 %** | 1 | 1 |
+| far | 28 | 0 | 27 | 1 | **3.6 %** | 1 | 2 |
+| **ALL** | 190 | 31 | **149** | **10** | **5.3 %** | 1 | 7 |
+
+It reproduces B0 exactly — 159/190 = 83.7 % appear in USPTO — and then explains it away.
+**78.4 % of the targets appear as a product exactly once.** That is precisely the signature of a
+benchmark that held out each target's own reaction correctly. The split-independent leakage bound is
+**5.3 %, ten targets**, not 83.7 %.
+
+**Retracted, and it must not be repeated:**
+- "**100 % of deep-OOD targets are verbatim USPTO products … the stratum labelled most novel is the
+  most memorised**" — 27 of those 28 targets have **k = 1**, so their one producing reaction is
+  consistent with correct hold-out. Appearing in the corpus is **not** memorisation, and we conflated
+  them. The dramatic reading was wrong.
+- The **inverted gradient** as evidence of anything. On the split-independent measure the strata are
+  flat and tiny (6.6 / 0.0 / 3.6 %), and such order as there is runs the *ordinary* way, with
+  in-distribution marginally more leaked. Nothing to explain.
+- Joris's "ReactionT5 is robust to chemical novelty → it is 100 % memorisation" rebuttal. The
+  contamination-shaped explanation for his 97 % is **not supported by this measurement**. His result
+  needs a different explanation, or none; the ORD/USPTO ReactionT5 training-corpus overlap is a
+  separate and still-live concern, but it is not established by target leakage.
+
+**Survives, on its own reasoning and unaffected by this test:**
+- The **label references the wrong corpus** — product-structure distance to ORD, while the planner
+  learned USPTO *reactions*. That mismatch is conceptual, not empirical, and the strata remain void as
+  a measure of novelty-relative-to-planner-knowledge. It is an **internal correction to our own
+  code** (`calculate_ood_190.py`, CLOVER — ours), which is what it always was.
+- Every fix option in `docs/ood-strata-invalid.md` §6, especially option 2 (novelty over *reactions*,
+  not products) — this test independently shows product-level membership carries almost no signal.
+
+**Consequence for the paper.** The benchmark-integrity spine loses its headline number, and with it
+the claim that the field's standard hard-target benchmark is compromised. It is not. What remains in
+that column is (i) rektomar's FlowER findings, which *are* about a published benchmark and are
+externally valid, (ii) the metric findings (round-trip artifacts, exact-match 18.5 pp, survivorship
+conditioning), and (iii) the byte-verified baseline corrections. **The paper should re-centre on
+admissibility** — the planner-granularity/physics mismatch, which this test does not touch and which
+remains the strongest owner-owned asset in the tree. See the paper discussion following this entry.
+
+**Cost of the gate: one 8-minute CPU job.** It prevented writing a paper around a claim that would
+not have survived the first referee who knows how USPTO-190 was built. Per ADR 0004 §"positive
+control", this is the pattern to repeat: the cheap split-independent version of a dramatic claim,
+before the claim is committed to.

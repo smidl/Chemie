@@ -1,5 +1,18 @@
 # Our angle — error structure vs magnitude for barrier oracles
 
+> **CORRECTED 2026-08-26 — the worked example below is inverted by our own measurement.**
+> The "next action implied" at the foot of this page (ωB97M-V on the three walkthrough reactions)
+> ran as job `11381115` and returned: ωB97M-V errors −1.56 / +1.32 / −0.54, i.e. **MAE 1.14 but
+> |ME|/MAE 0.23** — signs vary. On the same geometries PBE0 is **3.80 / 1.00**, perfectly
+> one-signed. So on the criterion this page proposes, **PBE0 is the best of the three and ωB97M-V
+> is the scatter case** — the reverse of the BH9 Table V prediction used below.
+> Likely mechanism: accuracy and systematicity are not independent axes, because removing
+> systematic error is what makes a method accurate; a high |ME|/MAE is the signature of a large
+> uncorrected bias. **What survives:** the perturbation result (8.3 % vs 14.4 %) and the framing
+> that error *structure* dominates error *magnitude*. **What does not:** reading |ME|/MAE off a
+> published benchmark table as an actionable method-selection rule. Full record and limits:
+> `../wb97mv-rescore.md`. Do not pitch this angle externally in its current form.
+
 Core: [[sota/oracle-error-structure-vs-magnitude]] · local, 2026-08-19
 
 ## Our question
@@ -44,7 +57,14 @@ errors (−5.95, −2.98, −2.47) are all one sign, which hints at structure bu
 And the whole result is conditional on the barrier→feasibility map, whose steepness is unknown; at the
 Eyring limit no rung survives.
 
-## Next action implied
+## Next action implied — RUN, AND IT FAILED (2026-08-26)
 
-Switch autodE's high-level method from PBE0 to ωB97M-V and re-run the three walkthrough reactions.
-Cheap, and it tests the prediction directly.
+~~Switch autodE's high-level method from PBE0 to ωB97M-V and re-run the three walkthrough
+reactions.~~ Done, job `11381115`. It tested the prediction directly and the prediction lost: see
+the correction banner at the top and `../wb97mv-rescore.md`.
+
+**The real next action** is no longer cheap. Measuring our own error correlation needs barriers
+across several reaction families on shared geometries at n ≫ 3. At 45–90 min per reaction that is a
+campaign, not a run — which is the argument for adopting **RGD1** (176 992 reactions shipping TSs,
+barriers, endpoint geometries *and* atom mappings) instead of generating it. Until that exists this
+angle has a measured result (8.3 % vs 14.4 %) and no validated selection rule.

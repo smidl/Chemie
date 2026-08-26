@@ -60,7 +60,18 @@ There is also a floor: under systematic error the flip rate stops improving at ~
 accurate the oracle. That is the residual from a genuinely small 6.25 % median gap between the best
 two routes — irreducible by any oracle.
 
-## Which functionals have systematic error? BH9 already says
+## Which functionals have systematic error? BH9 already says — AND WE MEASURED IT WRONG
+
+> **CORRECTED 2026-08-26.** The prediction in this section was tested (job `11381115`, ωB97M-V
+> single points on the same three geometries) and **inverted**. Measured: ωB97M-V MAE 1.14,
+> |ME|/MAE **0.23**; PBE0 3.80, |ME|/MAE **1.00**; DLPNO 0.84, **0.27**. So PBE0 — predicted here
+> to be "essentially random" — is the only one of the three whose error is one-signed, and
+> ωB97M-V, predicted "highly systematic", is not. Reading |ME|/MAE off BH9's Table V does **not**
+> predict our own measurement on the same reaction class. Likely mechanism: accuracy and
+> systematicity are not independent axes — a high |ME|/MAE is the signature of a large uncorrected
+> bias, so they trade off rather than compose. Details, and the tension with BH9's pericyclic
+> ME of −0.05, in `wb97mv-rescore.md`. The table below is retained as the reasoning of record.
+
 
 The correlation is not a free parameter — BH9's own Table V reports **both** MAE and mean error per
 functional per reaction type, and `|ME|/MAE` is a direct proxy. For pericyclic reactions:
@@ -81,12 +92,21 @@ as PBE0 yet 55× more systematic, and may well rank routes better despite being 
 1. **Do not build active learning to reduce barrier error yet.** The experiment it would optimise
    shows accuracy is the second-order variable. An acquisition loop targeting MAE would spend
    expensive labels on the axis that matters least.
-2. **Choose the functional by `|ME|/MAE`, not by MAE.** Concretely: switch autodE's high-level method
-   from PBE0 to ωB97M-V and re-run the three walkthrough reactions. Cheap, and it tests the
-   prediction directly.
+2. ~~**Choose the functional by `|ME|/MAE`, not by MAE.**~~ **WITHDRAWN 2026-08-26** — the test it
+   proposed (ωB97M-V on the three walkthrough reactions) ran and inverted the prediction; see the
+   correction above and `wb97mv-rescore.md`. What replaces it: ωB97M-V is worth adopting anyway on
+   **cost-accuracy** grounds (MAE 1.14 at ~4.3 min/reaction vs DLPNO's 0.84 at ~17 min), but not on
+   error-structure grounds. Selecting a rung by error structure requires measuring *our* error
+   correlation across families at n ≫ 3 — see item 3, which is now the blocking item rather than a
+   nice-to-have.
 3. **Measure our own error correlation.** ρ=0 and ρ=1 are the extremes; the real value is unmeasured.
    Our three PBE0 errors were −5.95, −2.98, −2.47 — all the same sign, suggesting more structure than
    BH9's class-wide ME of −0.05 implies, but n=3 cannot settle it.
+   **Promoted to blocking, 2026-08-26.** With item 2 withdrawn this is the only route left to an
+   actionable rung criterion, and it is no longer cheap: it needs several reaction families on shared
+   geometries at n ≫ 3. At 45–90 min per reaction, adopt **RGD1** (176 992 reactions with TSs,
+   barriers, endpoint geometries and atom mappings) rather than generate it — `strategy-after-dft.md`
+   §Recommendation 2 already argues for this on independent grounds.
 
 ## Limits
 

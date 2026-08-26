@@ -1,5 +1,30 @@
 # The 190-hard OOD stratification is invalid — analysis and consequences
 
+> **PARTIALLY RETRACTED 2026-08-26 — the memorisation reading is wrong.** Job `11418664`
+> (`scripts/B2_multiplicity.py`) counted **distinct** USPTO reactions producing each target, a
+> split-independent test: benchmark construction can hold out a target's own reaction, but not
+> reactions it never associated with the target, so only **k ≥ 2** implies leakage under any
+> reaction-level split. Result over the same 1 939 253 rows: **k=0 for 31 targets, k=1 for 149
+> (78.4 %), k≥2 for only 10 (5.3 %)** — per stratum k≥2 is 6.6 % in-distribution, 0.0 % close,
+> **3.6 % far**.
+>
+> So §2's 83.7 % reproduces exactly and then **explains away**: 78.4 % of targets appear as a product
+> *exactly once*, which is the signature of correct hold-out, not of memorisation. **Retract** the
+> claim that "100 % of deep-OOD targets are verbatim USPTO products ⇒ the stratum labelled most novel
+> is the most memorised" (§Summary, §2, §5), and the inverted-gradient reading built on it — on the
+> split-independent measure the strata are flat and tiny. Appearing in a corpus is not memorisation;
+> this document conflated them.
+>
+> **What still stands, on its own reasoning:** §3 — the label measures product-structure distance to
+> **ORD** while the planner learned **USPTO reactions**, so the strata remain void as a measure of
+> novelty-relative-to-planner-knowledge. That is conceptual and untouched. It is an internal
+> correction to our own code (CLOVER is ours), which is all it ever was. §6 option 2 (novelty over
+> *reactions*, not products) is now independently supported: product-level membership carries almost
+> no signal.
+>
+> **Not publishable as a benchmark critique.** Full record: `../coordination/synthesis.md`
+> §RECONCILIATION 2026-08-26.
+
 **Date:** 2026-08-06 · **Status:** settled · **Scope:** every per-stratum claim in this tree
 **Scripts and logs:** `/mnt/data/resynthesis/admissibility/` — `B0_leak.py`, `B1_basek.py`,
 `logs/leak-11315356.log`, `logs/basek-11315362.log`
