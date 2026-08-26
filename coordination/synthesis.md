@@ -1376,12 +1376,31 @@ still reproduces the void stratification.** Regenerating it is cheap and unowned
   (18.5 pp). Survivorship-conditioned MEEA metrics. Baseline corrections verified byte-for-byte
   (MT 90.4 not 88.8; ReactionT5 journal ≠ preprint; RDKit-version flip 41/40 000). **Plus rektomar's
   FlowER findings above.**
-- Admissibility: retro templates emit overall transformations; a TS exists only for an elementary
-  step; nothing bridges them. Four independent gates — 2.4 % of USPTO records atom-balanced (6/250),
-  10/11 planner steps unbalanced (xTB refused), **0/11 yielded a barrier** after balance repair
-  (3 reproduced as NON_MONOTONIC_PATH), 92.6 % of reactant sides multi-fragment where naive embedding
-  clashes 98.4 % of the time. Plus the robust shortcut negative (Skala over LST, 225 × 2, MAE 47.72,
-  +102 % bias).
+- **SMILES→barrier failure modes** (corrected framing, see the block below): the multi-fragment
+  embedding collapse (92.6 % of real reactant sides multi-fragment; naive ETKDG clashes <0.8 Å in
+  98.4 % of them vs **0 %** single-fragment, n=800; the acetone+HCN case at 0.142 Å → 75 Ha endpoint
+  gap), the unrelaxed-endpoint mechanism and its one-step fix, `NON_MONOTONIC_PATH` shown unsafe as a
+  criterion (1 false positive in 4 on perfect geometries), balance (2.4 % of USPTO records atom-balanced,
+  6/250; 10/11 planner steps unbalanced so xTB refused), stereochemistry-free input at 8.57 kcal/mol,
+  the CO₂-expelling zwitterion, and mapper failure at **both** confidence tails (0.330 and 0.968).
+  Plus the robust shortcut negative (Skala over LST, 225 × 2, MAE 47.72, +102 % bias).
+
+> **CORRECTION 2026-08-26 to this same entry — I mis-stated the admissibility asset above and in the
+> paper proposal that followed it.** I listed "**0/11 yielded a barrier** ⇒ the binding gate is
+> elementary-step granularity" as a load-bearing gate. **That was retracted on 2026-07-30** by this
+> file's own §PROBE and §MECHANISM FOUND AND FIXED blocks, and the 07-30 evidence audit records it as
+> "positive control failed → cannot attribute to the inputs". The retraction stands: the run *measured
+> our conversion step, not the chemistry*, the root cause was a collapsed multi-fragment embedding
+> with unrelaxed endpoints, and it has a one-step fix (relax both endpoints at the NEB's own level
+> before interpolating — arm E recovers a valid barrier on both failing cases). **The
+> elementary-step-granularity claim remains unsupported by that evidence**, retaining only the
+> independent and weaker Draslovka/Biltz lumping argument. `coordination/outbox.md` 2026-07-30 is
+> **stale** on this point and should not be quoted.
+>
+> Consequence for the paper: its thesis cannot be "planner output is inadmissible to physics". The
+> defensible thesis is the **constructive** one — SMILES→barrier is a pipeline of silent, quantified
+> failure modes, most of which we diagnosed and fixed. That needs no chemistry-authority claim about
+> mechanism, which is also the honest answer to the "do we need a domain authority" objection.
 
 **Solid backbone, thin alone:** the oracle (0.84 at n=3), AIMNet2 on BH9 (449 rxn: 16.70 / 4.728 /
 2.881), numerical settings closed at 0.047, ωB97M-V as above.
