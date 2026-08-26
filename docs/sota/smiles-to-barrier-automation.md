@@ -137,3 +137,37 @@ recommended on independent grounds in `../strategy-after-dft.md` §2 and now pro
 If the audit is written anyway, the honest one-line contribution is: *automated TS tools report 95–97 %
 success on curated elementary reactions; here is what a retrosynthesis planner actually emits,
 measured.* Nothing more than that.
+
+## SUBPROBLEM SEARCH 2026-08-26 — "take Toniato as the problem definition and fix it"
+
+Checked each gap Toniato names, independently of who cites them. **Most are being closed, and the one
+we most wanted is already solved — by a paper that has been in our own pool since before today.**
+
+| Toniato's gap | state of the art | verdict for us |
+|---|---|---|
+| exploration cost / bounding | `unsleber2023` (JCIM 63(11):3392–3403) — reaction templates as a filtering mechanism so autonomous exploration is not "trapped in regions … not of interest". Plus Pathfinder (2022), a human–machine interface for network exploration (Nat. Commun. 2024), "steering wheel" (2023), NOCTIS (2025) | **occupied by Reiher's group**, dedicated SCINE stack, NCCR Catalysis funding. Do not compete here |
+| elementary-step identification | same group, QM side. The QM-native alternative, **QCaRA** (Maeda), is explicitly limited: "utilized for predicting a very simple reaction that involves only one elementary step", and "QCaRA for multistep reactions has hitherto been impossible" | occupied on the QM side; genuinely open on the planner side |
+| **byproduct completion / balance / stoichiometry** — Toniato 2023: "no computational tool currently exists to estimate the stoichiometry of precursors" | **`phan2024_synrbl` — already in our pool.** Dual strategy, rule-based for non-carbon + MCS for carbon: "the rule-based method exceeded 99% accuracy, while MCS-based accuracy varied from 81.19 to 99.33%"; overall success/accuracy "89.83 to 99.75% and 90.85 to 99.05%". And now **`phan2026_synrxn`** (Sci. Data 13(1), CC-BY, same first author) ships a rebalancing benchmark partitioned by violation mode: MNC 33 147, MOS 12 781, MBS 491, Complex 1748 | **SOLVED AND BENCHMARKED. Adopt, do not build.** Toniato's sentence was true in 2023 and is false now |
+| automated atom mapping | RXNMapper (`schwaller2021_rxnmapper`, pooled) + precise atom-to-atom mapping via human-in-the-loop ML (Nat. Commun. 2024); `phan2026_synrxn` lists mapping toolchains | partly closed; our "confidence is not a filter" point survives as a narrow observation |
+| precursor **role** determination | — | **we should decline this one.** Our 2026-07-31 reframing established roles are consumer-dependent and not identifiable from the reaction alone; the gap is mis-specified, and saying so is a contribution |
+
+### The consequence, stated plainly
+
+Since 2026-07-30 this tree has called the completion/balancing layer **"the single highest-leverage
+unowned piece of work"**, with three consumers, and has repeatedly proposed resourcing a build. An
+off-the-shelf implementation at 90–99 % accuracy **was already sitting in our own literature pool**
+(`phan2024_synrbl`, pooled and cited in `retro-physics-validation/literature/sota.md` as "a
+*prerequisite* for any energetics"), and a benchmark with a violation-mode taxonomy landed in April
+2026. We pooled the answer and kept planning the build.
+
+**Actions:** (i) the completion layer is an **adopt-and-evaluate** task, not a build — run SynRBL over
+our own planner output and report against SynRXN's taxonomy; (ii) our 2.4 %-of-records-balanced
+statistic is a motivating number that SynRXN's counts supersede — stop quoting it as a headline;
+(iii) `synthesis.md`'s "highest-leverage unowned piece" framing needs correcting wherever it appears.
+
+**What remains genuinely open on the planner side**, and is the honest residue of "fix Toniato":
+making a *generative* model emit physics-ready reactions — balanced, mapped, elementary,
+stereo-specified — rather than post-hoc repairing them. That is `retro-generation`'s arbitrary-subset
+conditioning over **complete** reactions, and SynRBL is precisely the tool that manufactures the
+complete-reaction corpus it needs to train on. The two fit together; neither needs to be built from
+scratch.
