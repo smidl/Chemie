@@ -1767,3 +1767,83 @@ repo) with the filter and the reproduction script.
 *(Housekeeping: this entry was first appended to `retro-generation/coordination/synthesis.md` by a
 `cd` error and reverted there — `8050085`. A leaf must not carry a `synthesis.md`; it is an
 orchestrator artifact.)*
+
+## (C) MEASURED 2026-08-27 — the proposer's error is INDEPENDENT along a route, so accuracy is back
+
+**This reverses the 2026-08-26 reading of the barrier-accuracy result, and the reversal was earned by
+one cheap experiment on data we already had.** Owner's question did it: DFT error structure cannot
+matter because DFT is not in the planning loop — but the *proposer* is, on every node, and nobody had
+measured its error structure.
+
+### Three correlation objects, previously conflated
+
+`retro-pfn/path-correlation/README.md` already distinguished two; the third was missing.
+
+- **(A) similarity correlation of feasibility** — what retro-fallback's latent-GP ξ_f models
+  (`_reaction_similarity_kernel` over Morgan FPs, `K(r,r)=1`, `noise_var=1e-6`; marginal hand-set at
+  0.5 constant or 0.75 decaying with template rank). **Assumed, never fitted.**
+- **(B) path dependence of feasibility** — deflated 2026-06-11 to "the shadow of unrecorded reaction
+  conditions". **Stays parked**; its criteria have not been met.
+- **(C) correlation of ESTIMATOR ERROR along a route** — the ρ that
+  `docs/barrier-accuracy-requirement.md` sweeps. **Never measured. Now measured.**
+
+**(A) does not deliver (C):** steps within a route are dissimilar transformations, so a similarity
+kernel correlates *competing alternatives at one node*, not a route's own successive steps.
+
+### The result — ICC ≈ 0.05
+
+Job `11422415`, 2000 PaRoutes n1 reference routes / **5757 recorded steps** (patent-extracted, so every
+step is known-feasible by construction — no new ground truth needed), scored with AiZynthFinder's USPTO
+expansion policy, the same template classifier retro-fallback builds ξ_f on.
+
+| error definition | ICC over routes | within/between mean \|Δ\| |
+|---|---|---|
+| surprisal −log p | **0.0477** | 0.9717 |
+| log rank | **0.0389** | 0.9818 |
+| miss (binary) | **0.0229** | 0.9641 |
+| surprisal, found-only | **0.0548** | — |
+
+Within-route step pairs differ by **97–98 %** as much as random cross-route pairs. Censoring is not
+driving it. Error is flat in depth (2.703 → 2.205 over depths 0–4), so there is no route-level
+"hard route" factor for error to load onto.
+
+### Consequence — accuracy is the binding axis after all
+
+Reading the correct column of the perturbation table at w = 20:
+
+| | 0.84 | 3.80 | 4.73 | 16.70 |
+|---|---|---|---|---|
+| **ρ = 0 — measured** | **14.4 %** | **40.0 %** | **46.8 %** | **85.0 %** |
+| ρ = 1 — assumed on 08-26 | 5.6 % | 5.4 % | 5.8 % | 8.3 % |
+
+A 20× accuracy improvement buys **85.0 % → 14.4 %**. So *"error structure dominates magnitude, do not
+chase MAE"* was **conditional on ρ**, and ρ ≈ 0. **Withdraw it for the in-loop estimator.** What
+survives from that entry is narrower and still true: within a *reaction family* a functional's error
+can be one-signed (PBE0 on 3 pericyclics), but a route mixes families, so that structure does not
+propagate to route ranking. `docs/barrier-accuracy-requirement.md` item 1 ("do not build active
+learning to reduce barrier error yet") rested on the same assumption and needs re-deriving.
+
+### And it answers the retro-fallback question
+
+Tripp 2024 §6.2, verbatim: retro-fallback's advantage is *"particularly large for the feasibility
+models with no correlations between reactions"*, because *"when GP-induced correlations are introduced,
+these backup plans disappear … since similar reactions will likely both be feasible or both be
+infeasible."* So **GP-ξ_f is not better, it is a different regime** — (A)-correlation destroys the value
+of hedging, which is retro-fallback's whole contribution. The correlation structure of ξ_f is the
+*problem property* that decides which planning approximation binds: the `sim2science` thesis
+instantiated on retrosynthesis, and a candidate answer to that project's conceded HIGH-severity gap
+("no real simulator, no native noise").
+
+### Two by-products worth keeping
+
+**AZF USPTO single-step recall on PaRoutes reference steps** — a baseline this tree lacked:
+**55.95 % @1**, 76.22 @5, 79.71 @10, **82.65 @50**, **17.35 % miss**, median rank 1 when found.
+
+**A representability bound the tree has never stated:** only **1202/2000 = 60.10 %** of reference
+routes have *every* recorded step inside the policy's top-50. For the other 40 % the reference route is
+not reachable by *any* search over this policy at k=50. That is a different failure from the
+budget-exhaustion finding that seeded `retro-planning`, and it caps what better search can buy.
+
+**Next:** repeat over LocalRetro / Chemformer / ReactionT5 — all already wired into the harness. If all
+four give ICC ≈ 0, (C) ≈ 0 is a property of the task and the accuracy axis is settled; if they differ,
+(C) becomes a model-selection criterion.
