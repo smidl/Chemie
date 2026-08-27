@@ -1734,3 +1734,36 @@ to check working trees covers *submodules*; these are **externals**, whose clust
 are not checked at all. The `/coord status` recipe should add: for externals with RCI allocations, list
 `/mnt/data/resynthesis/<node>/` and diff against `origin/main`. Cheap, and it would have caught all
 three.
+
+## SynRXN `_b` CARRIES SynRBL-INSERTED ATOMIC RADICALS (2026-08-27) — measured on the published corpus
+
+Follow-up to the concession above, and the one thing this node has that `retro-generation`'s M0 review
+does not. His caveat was that SynRXN's "balance provenance is SynRBL + the SynCat release, not manual
+review at scale". Quantified, on the shipped corpora (SynRXN v1.2.1, Zenodo
+`10.5281/zenodo.22045145`; `admissibility/scripts/C5_synrxn_scan.py`):
+
+| corpus | reactions | contain `[H]`/`[O]` as a component | instances | attributed to rebalancing |
+|---|---|---|---|---|
+| **`uspto_50k_b`** | 50 016 | **6 270 — 12.54 %** | `[H]` 14 243 · `[O]` 620 | **6270 / 6270** |
+| `schneider_b` | 50 000 | **2 463 — 4.93 %** | `[O]` 2 294 · `[H]` 693 | **2463 / 2463** |
+| `tpl_b` | 445 115 | **9 505 — 2.14 %** | `[O]` 9 616 · `[H]` 2 346 | **9505 / 9505** |
+
+Attribution is by paired `_b` vs `_u` diff on `r_id`: **`already_in_source` = 0 in all three corpora**,
+so every occurrence was introduced by the rebalancing rather than inherited. They land overwhelmingly
+on the **LHS** (14 688 vs 175 in `uspto_50k_b`) — inserted *as reagents*. Mechanism matches our planner
+finding exactly: redox steps whose reagent the record never specified (`USPTO_8` ketone→alcohol via
+`[H].[H]`; `sch_15` oxidative cyanamide via `[O]`).
+
+**Why it is worth reporting.** A generative model trained on `uspto_50k_b` learns that atomic hydrogen
+is a purchasable reagent in **one reaction in eight**, and **no conservation metric reveals it** because
+those reactions are balanced — a constraint-satisfaction check passes them. Contamination is **worst in
+`uspto_50k`**, the field's most-used retrosynthesis benchmark, and mildest in `tpl`.
+
+This **generalises our own 6.79 % planner-step number** from an internal observation to a property of a
+published, CC-BY corpus that other groups train on — the first result in this thread that is about
+someone else's artifact rather than our own pipeline. Sent to `retro-generation` (`fb916bc` in that
+repo) with the filter and the reproduction script.
+
+*(Housekeeping: this entry was first appended to `retro-generation/coordination/synthesis.md` by a
+`cd` error and reverted there — `8050085`. A leaf must not carry a `synthesis.md`; it is an
+orchestrator artifact.)*
