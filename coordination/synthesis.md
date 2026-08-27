@@ -1847,3 +1847,59 @@ budget-exhaustion finding that seeded `retro-planning`, and it caps what better 
 **Next:** repeat over LocalRetro / Chemformer / ReactionT5 — all already wired into the harness. If all
 four give ICC ≈ 0, (C) ≈ 0 is a property of the task and the accuracy axis is settled; if they differ,
 (C) becomes a model-selection criterion.
+
+## (C) CONFIRMED MODEL-INDEPENDENT 2026-08-28 — the accuracy axis is settled
+
+Second proposer, paired on the identical 2000 routes / 5757 steps (job `11422605`, 2h56m):
+**ReactionT5v2 fine-tuned on USPTO_50k**, a template-**free** seq2seq — the maximally different
+architecture from AZF's template classifier, and matched in strength deliberately (the ORD-only base
+scores 13.8 % top-1 on USPTO_50k and would not have been a fair contrast; the fine-tuned variant
+reports 71.2 %).
+
+| | AZF (template classifier) | ReactionT5 (seq2seq) |
+|---|---|---|
+| recall@1 | 55.95 % | **61.30 %** |
+| recall@5 | 76.22 % | 76.06 % |
+| **recall@20** | **81.43 %** | **81.33 %** |
+| **ICC, log rank** | **0.0421** | **0.0530** |
+| **ICC, miss** | **0.0323** | **0.0413** |
+
+Two unrelated architectures, different training corpora, **within 0.1 pp on recall@20** and both
+**ICC ≈ 0.04–0.05**. Variance components rule out a ceiling artifact (ReactionT5 log-rank MSB 2.2937
+vs MSW 1.9757 — ample error variance, almost none of it between routes).
+
+**So (C) ≈ 0 is a property of the task, not of a model class.** The ρ = 0 column of
+`docs/barrier-accuracy-requirement.md` applies unconditionally, and the 2026-08-26 reading ("error
+structure dominates magnitude, do not chase MAE") is **withdrawn** for the in-loop estimator rather
+than merely doubted. Accuracy is the binding axis, and at w = 20 the span it controls is
+**14.4 % → 85.0 %** top-1 flip.
+
+**The sharper finding, from the paired cross-model comparison** (n = 5757): Pearson **r = 0.3500** on
+log-rank error; **433 steps (7.52 %) missed by both** at k=20 against **3.47 % expected under
+independence — 2.17× enrichment**; 29.72 % missed by at least one. Stated as the result:
+
+> **Per-step difficulty is real and partly model-independent, but it does not aggregate into a
+> route-level factor.**
+
+That is exactly the condition under which a route's feasibility product accumulates independent
+errors. The ρ = 0 conclusion now follows from measurement rather than assumption.
+
+**Three consequences beyond the ρ question.**
+
+1. **`docs/barrier-accuracy-requirement.md` item 1 is now actively wrong**, not just unsupported. It
+   says "do not build active learning to reduce barrier error yet" because accuracy is second-order.
+   Under ρ ≈ 0 accuracy is first-order. The item needs rewriting, and the active-acquisition programme
+   — this orchestrator's organising thesis — is *rehabilitated* on its original terms.
+2. **Disagreement is now a measured signal, not a rhetorical device.** r = 0.35 means the two models
+   disagree on ~65 % of the error variance. `Draslovka/slides` justifies escalation by "tools
+   disagreeing with each other" precisely to avoid a calibration claim we could not support; that
+   argument now has a number behind it.
+3. **A representability floor:** 7.52 % of recorded steps sit outside top-20 for *both* architectures.
+   Combined with the 08-27 route-level bound (only 60.10 % of reference routes have every step inside
+   top-50 for AZF), the ceiling on this model class is structural and independent of search budget —
+   a different failure from the budget-exhaustion finding that seeded `retro-planning`.
+
+**Not run:** LocalRetro and Chemformer need the vendored `RetroCrosstalk` repo, its checkpoints and
+their own dependency stacks (DGL pins; a lightning stack). Deprioritised rather than blocked — with two
+maximally different architectures already agreeing to 0.1 pp, a third template-ish and a second seq2seq
+model would add little. Full record: `retro-pfn/path-correlation/README.md` (`ced0604`).
