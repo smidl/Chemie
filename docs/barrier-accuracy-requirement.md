@@ -1,26 +1,23 @@
 # What barrier accuracy does the planner actually need?
 
-**Date:** 2026-08-18 · `scripts/K1_perturb.py`, jobs `11367242` (ρ=0) and `11367273` (ρ=1) ·
+**Experiment:** 2026-08-18 · `scripts/K1_perturb.py`, jobs `11367242` (ρ=0) and `11367273` (ρ=1) ·
 Data: retro-fallback on the 190 hard targets, three feasibility models, 133–141 rankable targets each
+**Rewritten 2026-08-28**, when ρ stopped being a free parameter. Audit trail of what was withdrawn is
+at the foot of the page — nothing here is silently edited.
 
-> **Framing correction, 2026-08-19.** DFT is deterministic: the same geometry and settings give the
-> same number every time. So a rung's error is **not noise** — it is a fixed function of the reaction.
-> The experiment below draws errors from a distribution, which is the wrong picture of the mechanism,
-> though not of the arithmetic.
->
-> What the two columns really contrast is whether the error is **common to the steps of a route** or
-> **varies between them** — a property of the error *function*, not of a noise process. On that
-> reading the conclusion stands unchanged, and reads more cleanly: what matters is whether a
-> functional is wrong in the same direction for every step of a route.
->
-> What does not survive: the 20 repeats and the seed discipline are arithmetic, not statistics. They
-> average over *possible reactions*, not over reruns, since a rerun would return the identical number.
-> The flip rates should be read as expectations over which reactions a route happens to contain.
->
-> This also exposes an axis the experiment ignored entirely — the **numerical parameters** of the
-> calculation, which are deterministic and tunable. See `numerical-parameters.md`.
+## Answer, up front
 
-## The question
+**ρ ≈ 0, measured, model-independently. So barrier accuracy is the first-order variable and the
+oracle ladder matters.**
+
+This document originally read the opposite way. The experiment sweeps a parameter ρ — whether the
+oracle's error is *common to the steps of a route* or *varies between them* — and found that the
+correlated case is far more forgiving. What it could not do was say which case we live in. That was
+settled on 2026-08-27/28 by measuring the error structure of the estimator that is actually in the
+planning loop (`retro-pfn/path-correlation/`): **ICC ≈ 0.04–0.05 over routes, for two architecturally
+unrelated proposers.** Independent, not common. So the ρ = 0 column is the live one.
+
+## The question and the method
 
 We validated the DFT oracle to ±1 kcal/mol without ever establishing what a barrier *buys*. This
 measures the requirement: perturb each step's barrier by a rung's **measured** error, recompute route
@@ -35,84 +32,97 @@ Reported as the **top-1 flip rate**: how often the best route changes. Not a tie
 median top-1/top-2 gap is **6.25 %**, the top-100 spread 52 %, and the median count of routes exactly
 tied with the best is **1**.
 
-## Result — correlation beats accuracy, and not narrowly
+> **Framing correction, 2026-08-19 (still stands).** DFT is deterministic: the same geometry and
+> settings give the same number every time. So a rung's error is **not noise** — it is a fixed function
+> of the reaction. The experiment draws errors from a distribution, which is the wrong picture of the
+> mechanism though not of the arithmetic. What the two columns really contrast is whether the error is
+> **common to the steps of a route** or **varies between them** — a property of the error *function*.
+> Consequently the 20 repeats are arithmetic, not statistics: they average over *possible reactions*,
+> not over reruns. Read the flip rates as expectations over which reactions a route happens to contain.
+> This also exposed an axis the experiment ignored — the **numerical parameters** of the calculation,
+> since measured at 0.047 kcal/mol total and closed (`numerical-parameters.md`).
 
-Top-1 flip rate, `gp` arm (the other two agree within ~2 points):
+## Result
 
-| | **independent error (ρ=0)** | | | | **systematic error (ρ=1)** | | | |
+Top-1 flip rate, `gp` arm (the other two agree within ~2 points). **The left half is the applicable
+half.**
+
+| | **independent error (ρ=0) — MEASURED REGIME** | | | | systematic error (ρ=1) — not our regime | | | |
 |---|---|---|---|---|---|---|---|---|
 | **w** | 0.84 | 3.80 | 4.73 | 16.70 | 0.84 | 3.80 | 4.73 | 16.70 |
 | 0.593 | 91.0 % | 96.0 % | 96.3 % | 96.8 % | 10.4 % | 17.1 % | 17.4 % | 18.3 % |
 | 2 | 65.5 % | 93.2 % | 94.6 % | 96.6 % | 6.2 % | 11.2 % | 12.3 % | 17.3 % |
 | 5 | 36.5 % | 82.0 % | 87.1 % | 95.6 % | 5.6 % | 7.1 % | 8.4 % | 14.3 % |
 | 10 | 20.7 % | 62.8 % | 70.4 % | 93.2 % | 5.6 % | 5.8 % | 6.2 % | 10.9 % |
-| 20 | 14.4 % | 40.0 % | 46.8 % | 85.0 % | 5.6 % | 5.4 % | 5.8 % | 8.3 % |
+| 20 | **14.4 %** | **40.0 %** | **46.8 %** | **85.0 %** | 5.6 % | 5.4 % | 5.8 % | 8.3 % |
 
-**A 16.70 kcal/mol oracle with systematic error disturbs the route choice less than a 0.84 kcal/mol
-oracle with independent error** — 8.3 % against 14.4 % at w=20, and 18.3 % against 91.0 % at Eyring.
+**In the measured regime, accuracy dominates.** At w = 20, moving from a 16.70 kcal/mol rung to a
+0.84 kcal/mol rung takes the top-1 flip rate from **85.0 % to 14.4 %** — a 6× reduction in how often
+you act on the wrong route. Even the intermediate rungs matter: AIMNet2-routed (4.73) sits at 46.8 %,
+PBE0 (3.80) at 40.0 %.
 
-Holding the map fixed at w=20: improving accuracy **20×**, from 16.70 to 0.84, buys 8.3 % → 5.6 %
-under systematic error. Holding accuracy fixed at 0.84 and moving from systematic to independent
-error costs 5.6 % → 14.4 %. **The correlation structure of the error matters more than its
-magnitude.**
+The ρ = 1 column is retained because it is the correct contrast and it is what makes the result
+interpretable: had error been route-common, a 20× accuracy gain would have bought only 8.3 % → 5.6 %
+and the ladder would have been over-engineered. It is not the regime we are in.
 
-There is also a floor: under systematic error the flip rate stops improving at ~5.6 % however
-accurate the oracle. That is the residual from a genuinely small 6.25 % median gap between the best
-two routes — irreducible by any oracle.
-
-## Which functionals have systematic error? BH9 already says — AND WE MEASURED IT WRONG
-
-> **CORRECTED 2026-08-26.** The prediction in this section was tested (job `11381115`, ωB97M-V
-> single points on the same three geometries) and **inverted**. Measured: ωB97M-V MAE 1.14,
-> |ME|/MAE **0.23**; PBE0 3.80, |ME|/MAE **1.00**; DLPNO 0.84, **0.27**. So PBE0 — predicted here
-> to be "essentially random" — is the only one of the three whose error is one-signed, and
-> ωB97M-V, predicted "highly systematic", is not. Reading |ME|/MAE off BH9's Table V does **not**
-> predict our own measurement on the same reaction class. Likely mechanism: accuracy and
-> systematicity are not independent axes — a high |ME|/MAE is the signature of a large uncorrected
-> bias, so they trade off rather than compose. Details, and the tension with BH9's pericyclic
-> ME of −0.05, in `wb97mv-rescore.md`. The table below is retained as the reasoning of record.
-
-
-The correlation is not a free parameter — BH9's own Table V reports **both** MAE and mean error per
-functional per reaction type, and `|ME|/MAE` is a direct proxy. For pericyclic reactions:
-
-| functional | MAE | ME | \|ME\|/MAE | error is |
-|---|---|---|---|---|
-| **ωB97M-V** | **2.15** | **2.06** | **0.96** | highly systematic |
-| PBE | 7.98 | −6.55 | 0.82 | systematic |
-| PBE0 | 3.34 | −0.05 | **0.015** | essentially random |
-
-**This inverts how the rung should be chosen.** PBE0 — autodE's default, and what we have been
-running — is accurate but its error is near zero-mean, i.e. the bad case. ωB97M-V is both **more
-accurate and far more systematic**, so it should be better on both axes. PBE is twice as inaccurate
-as PBE0 yet 55× more systematic, and may well rank routes better despite being the worse oracle.
+There is also a floor, and it survives regardless: under systematic error the flip rate stops
+improving at ~5.6 % however accurate the oracle — the residual of a genuinely small 6.25 % median gap
+between the best two routes, irreducible by any oracle.
 
 ## What this changes
 
-1. **Do not build active learning to reduce barrier error yet.** The experiment it would optimise
-   shows accuracy is the second-order variable. An acquisition loop targeting MAE would spend
-   expensive labels on the axis that matters least.
-2. ~~**Choose the functional by `|ME|/MAE`, not by MAE.**~~ **WITHDRAWN 2026-08-26** — the test it
-   proposed (ωB97M-V on the three walkthrough reactions) ran and inverted the prediction; see the
-   correction above and `wb97mv-rescore.md`. What replaces it: ωB97M-V is worth adopting anyway on
-   **cost-accuracy** grounds (MAE 1.14 at ~4.3 min/reaction vs DLPNO's 0.84 at ~17 min), but not on
-   error-structure grounds. Selecting a rung by error structure requires measuring *our* error
-   correlation across families at n ≫ 3 — see item 3, which is now the blocking item rather than a
-   nice-to-have.
-3. **Measure our own error correlation.** ρ=0 and ρ=1 are the extremes; the real value is unmeasured.
-   Our three PBE0 errors were −5.95, −2.98, −2.47 — all the same sign, suggesting more structure than
-   BH9's class-wide ME of −0.05 implies, but n=3 cannot settle it.
-   **Promoted to blocking, 2026-08-26.** With item 2 withdrawn this is the only route left to an
-   actionable rung criterion, and it is no longer cheap: it needs several reaction families on shared
-   geometries at n ≫ 3. At 45–90 min per reaction, adopt **RGD1** (176 992 reactions with TSs,
-   barriers, endpoint geometries and atom mappings) rather than generate it — `strategy-after-dft.md`
-   §Recommendation 2 already argues for this on independent grounds.
+1. **Build the accuracy ladder, and active acquisition around it, on the original terms.** Accuracy is
+   first-order in the measured regime, so an acquisition loop that spends expensive labels to reduce
+   barrier error is optimising the axis that matters. This *reinstates* the orchestrator's
+   active-acquisition thesis, which the 2026-08-26 reading had suspended.
+2. **Adopt ωB97M-V as the working rung on cost-accuracy grounds.** MAE **1.14** at ~4.3 min/reaction
+   against DLPNO's 0.84 at ~17 min (`wb97mv-rescore.md`) — a near-DLPNO rung at ~4× less compute. Not
+   on error-structure grounds; see the audit trail.
+3. **The remaining unknown is `w`, not ρ.** The answer still depends on the barrier→feasibility map's
+   steepness: at the Eyring limit no rung survives (91–97 % flip across the board), at w = 20 accuracy
+   buys a great deal. Establishing `w` is now the single prerequisite this experiment cannot supply,
+   and it is a question for a **synthetic chemist** — what computed barrier makes a practitioner
+   abandon a step — not for more compute.
+4. **Route-level error structure is a live research direction, not a nuisance parameter.** ρ ≈ 0 is
+   itself a finding: per-step difficulty is real and partly model-independent (cross-model Pearson
+   r = 0.35, 2.17× shared-miss enrichment) yet does **not** aggregate into a route-level factor. See
+   `retro-pfn/path-correlation/`.
 
 ## Limits
 
-The map steepness `w` remains unknown and the answer depends on it — at Eyring nothing works, at
-w=20 systematic error is tolerable. Establishing the barrier→feasibility map is therefore still the
-prerequisite, and this experiment sharpens rather than removes that need. Per-step feasibility is
+`w` remains unknown and the conclusion is conditional on it, as above. Per-step feasibility is
 recovered as `feasibility^(1/n_rxn)`, i.e. assumed uniform across a route's steps. Top-1 flip is a
 demanding criterion on a 6.25 % median gap; the top-10 Jaccard and Spearman columns in the raw output
-are gentler and tell the same story.
+are gentler and tell the same story. And the ρ measurement is of the **expansion policy's** error, not
+the barrier oracle's — the policy was chosen because it is in the loop on every node while the oracle
+is not in the loop at all, but the substitution is an assumption. The one hint about the oracle points
+the same way: PBE0's error was one-signed within a *single* reaction family (3 pericyclics), and a
+route mixes families.
+
+---
+
+## Audit trail — what this page used to claim
+
+Kept per this tree's convention that corrections are dated rather than silent.
+
+**WITHDRAWN 2026-08-28 — "correlation beats accuracy, and not narrowly", and item 1 "do not build
+active learning to reduce barrier error yet".** Both were correct readings of the ρ = 1 column and
+wrong about which column applies. ρ was an unmeasured free parameter presented as if the forgiving
+case were the default. Measurement (`retro-pfn/path-correlation/README.md`; jobs `11422415`,
+`11422605`): ICC over routes = 0.0421 (AZF log-rank), 0.0530 (ReactionT5 log-rank), 0.0323 / 0.0413
+(miss), with within-route step pairs differing 97–98 % as much as random cross-route pairs, on 5757
+recorded PaRoutes steps and two architecturally unrelated proposers matching to 0.1 pp on recall@20.
+The general claim that error *structure* can outweigh *magnitude* is sound and remains the reason the
+experiment was worth running; the claim that it does so **for us** does not survive.
+
+**WITHDRAWN 2026-08-26 — "choose the functional by `|ME|/MAE`, not by MAE".** The test it proposed
+(ωB97M-V single points on the three validated geometries, job `11381115`) inverted the prediction:
+ωB97M-V measured MAE 1.14 with |ME|/MAE **0.23**, PBE0 3.80 with **1.00**, DLPNO 0.84 with 0.27 — so
+PBE0, predicted "essentially random" from BH9 Table V, was the only one-signed rung. Reading |ME|/MAE
+off a published table does not predict our own measurement on the same reaction class. Likely
+mechanism: accuracy and systematicity are not independent axes, because a high ratio is the signature
+of a large uncorrected bias. Full record in `wb97mv-rescore.md`.
+
+The BH9 Table V figures the withdrawn criterion rested on, retained so the reasoning is auditable —
+pericyclic subset: ωB97M-V 2.15 / 2.06 / 0.96 · PBE 7.98 / −6.55 / 0.82 · PBE0 3.34 / −0.05 / 0.015
+(MAE / ME / |ME|÷MAE).
