@@ -1660,3 +1660,77 @@ The verdicts a caller branches on: `BALANCED_AS_GIVEN` and `REPAIRED` are admiss
 **Unpushed.** `retrosyntesis` is declared external in `AGENTS.md` ("inventory + coordination only")
 even though the owner intends to take it as the shared integration node. Committing code there is a
 change of posture and the push is the owner's call.
+
+## CONCEDED 2026-08-27 — the SynRBL-corpus idea IS dataset curation, and it was already done and released
+
+Owner's objection: "if we complement existing databases using Phan, don't we do just dataset
+curation? Isn't this a common job that is done?" **Correct, and it is worse than that.** The
+rebalanced corpora are already published, and **`retro-generation` established this on 2026-08-04** —
+three weeks before yesterday's recommendation — in `reviews/complete-reactions_data-and-models.md`,
+which is **on the cluster and unpushed**, so it was invisible to `git log`.
+
+His bottom line, quoted:
+
+> "**So completeness is *constructed* — and someone already did it, at scale, and released it. The
+> brief's 2.4 % balance figure describes *raw* USPTO, not the available data. This is the most
+> consequential finding for M0.**"
+
+What already exists, from his review:
+- **FlowER**: 250,782 / 2,801 / 28,049 overall reactions → **1,445,189 / 15,744 / 162,002 elementary
+  steps**, conserving heavy atoms, protons and electrons *by construction*, Figshare + MIT.
+- **SynRXN `_B`**: **445,115 / 50,000 / 50,016** SynRBL-rebalanced reactions, `Complete = Yes`,
+  CC-BY 4.0 — "packaged as *classification* benchmarks, which is why reaction prediction hasn't
+  noticed them."
+- Plus mech-USPTO-31k, PMechDB, RMechDB, ReactMech (29,604 mechanisms / 104,964 steps).
+- And his caveat on the SynRXN rebalancing sets I cited yesterday: they are **evaluation only**,
+  "explicitly not intended for model training". The `_B` sets are the trainable ones.
+
+### Two corrections to what this node recorded yesterday
+
+**(i) "SynRBL removes rektomar's 2.4 % blocker" was wrong twice.** There was no blocker — complete
+data exists at ~10⁶ scale — and the specific remedy proposed (run SynRBL over USPTO ourselves)
+duplicates a released CC-BY corpus. Retract the framing in the 2026-08-26 entries. The 2.4 % figure
+describes raw USPTO and should never again be quoted as a constraint on the generative track.
+
+**(ii) I mis-described SynRBL's headline evaluation.** I attributed the gap between its published
+89.83–99.75 % and our measured 80.46 % on raw `uspto.csv` to a "curated ≤2-product Reaxys subset".
+Read from the PDF, the larger factor is that the 171,913-reaction Reaxys test set is **artificially
+unbalanced**: "We artificially made these data unbalanced by removing the smaller product molecule in
+reactions with two products. In addition, all non-carbon compounds are removed from both sides."
+So the headline is largely *can SynRBL put back a species we deliberately deleted*, with the answer
+known by construction. Real records are unbalanced for messier reasons, which explains our 80 % far
+better than my earlier guess. (A separate `5420` appears in its confidence-estimation table.) This
+also sharpens rektomar's caveat that SynRXN's "balance provenance is SynRBL + the SynCat release, not
+manual review at scale."
+
+### What survives
+
+**Not the corpus work.** Adopt `SynRXN _B` or FlowER's set; do not rebuild either.
+
+**The gate does, but modestly and for a different reason.** `retrosyntesis/src/completion/` filters
+*proposed* reactions at the point of physics gating — novel model output that no dataset contains — so
+it is a runtime admissibility check, not curation. The 6.79 %-atomic-radical finding is about what a
+repair tool does to chemistry that may not be real, which no curation paper measures. That is a small
+engineering contribution, not a research result, and it should be described as such.
+
+**The real niche is unchanged and is NOT a data-curation task.** From his §1.6: "**None models a
+distribution over a complete reaction with an arbitrary conditioning set**", and "**no corpus carries
+conditions *and* atom balance**". He explains why the intersection is empty *structurally*:
+"Conditions live in the patent/ELN record; balance lives in mechanistic corpora built by applying
+templates to reactants — and those pipelines *discard* the condition metadata." Constructing that
+intersection is genuinely unoccupied work; re-running SynRBL is not.
+
+**And he has already priced the architecture question.** Trained on >1 M balanced steps, SMILES
+seq2seq models conserve heavy atoms in only **27.7–39.1 %** of predictions and mass+protons+electrons
+in **17.2–33.0 %** — so "balance is *not* learnable from balanced data by our architecture family."
+That is the strongest available argument for structural conservation, and it is his, measured, from
+the paper's own numbers.
+
+### Process finding — third incident today
+
+Unpushed cluster-side work has now cost this node three times in one day: rektomar's outbox (FlowER
+reproduction), this review, and the resulting bad recommendation. `AGENTS.md`'s standing instruction
+to check working trees covers *submodules*; these are **externals**, whose cluster working directories
+are not checked at all. The `/coord status` recipe should add: for externals with RCI allocations, list
+`/mnt/data/resynthesis/<node>/` and diff against `origin/main`. Cheap, and it would have caught all
+three.
