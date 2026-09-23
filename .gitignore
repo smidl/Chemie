@@ -16,6 +16,14 @@ datasets.tar.gz
 # tmp / scratch
 *.tmp
 .tmp.*
+*.log
+~$*
+
+# large working folders — results live on RCI / in the pool, not here
+Milan/
+
+# PDFs already deposited in ~/agents/library (do not duplicate them here)
+Ayman/email/
 
 # unenrolled / transparent siblings (kept out of the coordination repo)
 RetroDemo/
@@ -27,6 +35,12 @@ RetroDemo/
 /proposal/
 MolGPT/MolPFN/
 MolGPT/phd-proposal/
+MolGPT/result_coordination/
+Ayman/retro-activelearning/
+
+# external collaborator's own repo (tevang/dominant-structural-variant-ranker)
+# — his code, his history/LICENSE; checked out here for use, never tracked here
+/dominant-structural-variant-ranker/
 
 # legacy Synthesis layer — content being re-homed (Concern C), then removed
 /Synthesis/
