@@ -16,11 +16,11 @@ coord:
       flow: out
       link: submodule
   external:
-    - path: ./retrosyntesis
-      remote: git@github.com:aicenter/retrosyntesis.git
-      kind: student
     - path: ./retro-generation
       remote: git@github.com:aicenter/retro-generation.git
+      kind: student
+    - path: ./Ayman/retro-activelearning
+      remote: git@github.com:aicenter/retro-activelearning.git
       kind: student
     - path: ./retro-physics-validation
       remote: git@github.com:CVUT-students/retro-physics-validation.git
@@ -41,6 +41,13 @@ orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
   Scope after the split is the **molecule** track only — it is no longer the program's reaction
   proposer (that role, ADR-0003 "T3", now sits with `retro-generation`). Declares its own
   external `MolPFN` + `result_coordination` and boundary `phd-proposal`.
+- `retrosyntesis/` — the program's **integration** node: the CLOVER pipeline
+  (Knowledge → Planning → Validation), planner harnesses, K-P-V benchmark.
+  **Reassigned from student-external to owner-operated on 2026-09-01** after
+  moczyjor and mollerob left; owners now `[vsmidl]`. Plain sibling checkout
+  (gitignored here), remote `aicenter/retrosyntesis` — *not* a submodule like
+  `retro-pfn`/`retro-planning`; see the open decision at the end of this file.
+  The supervisor hands-off/inbox-only rule no longer applies to it.
 - `retro-planning/` — **learned search heuristics** for retrosynthesis planning
   (the search-`h` side). Seeded 2026-06-18 from the status finding that the
   190-hard budget wall is search guidance, not feasibility (SAScore `h` vs a
@@ -56,10 +63,15 @@ orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
   managed as one.
 
 ## External & boundary (declared here — Chemie is the single inventory owner)
-- `retrosyntesis/` — **external** student route-generation/validation repo (inventory only).
 - `retro-generation/` — **external** student **reaction-generation** repo (owner rektomar,
   `aicenter/retro-generation`); handoff of the generative-reaction line from MolGPT (2026-07-24).
   Inventory + coordination (inbox/outbox) only.
+- `Ayman/retro-activelearning/` — **external** student repo (owner Ayman,
+  `aicenter/retro-activelearning`; enrolled 2026-09-21). **Active learning where the error is
+  reducible**: the escalation policy over the oracle ladder — which reactions get moved to a more
+  expensive rung, and to which. Reframes the thesis away from injected (irreducible) label noise
+  toward measured (reducible) model error; rationale and evidence in `Ayman/WORKING-reducible-noise.md`.
+  Inventory + coordination only. **Owner handle is a placeholder** pending his account name.
 - `retro-physics-validation/` — **external** student **physics-based validation-tool evaluation**
   repo (owner jinrehacek, `CVUT-students/retro-physics-validation`; 2026-07-24). First task = blind
   tool-suitability study on anonymized candidate routes. Inventory + coordination only.
@@ -89,19 +101,26 @@ in its marker; they roll up under this tree.)
 - `RetroDemo/` — Manim demo-animation stack (mock data, presentation asset).
 - `datasets/`, `datasets.tar.gz` — local data; `_lib-inbox/` — `/lib` staging.
 
-## Personnel & succession (2026-08-01) — read before planning any student work
-Two of the four students are **leaving**; two **stay**. This shapes everything below.
+## Personnel & succession (updated 2026-09-01) — read before planning any student work
+Two of the four students have **left**; two **stay**.
 
 | who | node | role | horizon |
 |---|---|---|---|
-| Joris Moczygeba (`moczyjor`) | `retrosyntesis` | **integration** — K-P-V benchmark, planner harnesses, learned validators | **leaving** |
-| Robin Molle (`mollerob`) | `retrosyntesis` | **numerics** — DFT-NEB, Skala, the oracle ladder | **leaving** |
+| Joris Moczygeba (`moczyjor`) | *(was `retrosyntesis`)* | **integration** — K-P-V benchmark, planner harnesses, learned validators | **left** |
+| Robin Molle (`mollerob`) | *(was `retrosyntesis`)* | **numerics** — DFT-NEB, Skala, the oracle ladder | **left** |
 | Jindřich Řeháček (`jinrehacek`) | `retro-physics-validation` | **training now**, then **inherits numerics from Robin** | stays |
 | Martin Rektoris (`rektomar`) | `retro-generation` | generative reaction modelling | stays |
 
-- **`retrosyntesis` is intended to become the shared place**, owner-maintained after Joris and Robin
-  leave. It is an **integration** project: when numerics is settled it is consumed from there, not
-  developed there.
+- **`retrosyntesis` is now owner-operated** (`owners: [vsmidl]`, reassigned 2026-09-01). The
+  succession intent above is complete: it *is* the shared place, and it is edited directly rather
+  than through an inbox. It remains an **integration** project: when numerics is settled it is
+  consumed from there, not developed there.
+- **Departure debt, discovered 2026-09-01 while running the Němec demo:** the CLOVER pipeline as
+  committed is **not runnable by anyone but Joris** — `script/run_p.sh` and `script/run_v.sh` source
+  `/home/moczyjor/retrosyntesis/venv_chimie`, which is `Permission denied` outside that account, and
+  no owner env had `aizynthfinder`. A working owner-side env (`conda activate nemec` on RCI) and
+  replacement runners exist in `/mnt/data/resynthesis/NemecChallenge/scripts/`. Folding those back
+  into this repo is the first task of owner operation.
 - **`retro-physics-validation`'s slow start is deliberate** — the Phase 0→6 blind study is a
   *training curriculum* for inheriting the oracle, not an idle node. Do **not** re-charter it or
   install anyone else in it; that would destroy the mechanism the succession depends on.
@@ -143,7 +162,7 @@ All in `coordination/synthesis.md` + `coordination/adr/`.
 
 ## On session start
 Run `/coord status` — pull children's `coordination/outbox.md` (**retro-pfn, retro-planning,
-MolGPT**), the three student externals (`retrosyntesis`, `retro-generation`,
+MolGPT, retrosyntesis**), the two remaining student externals (`retro-generation`,
 `retro-physics-validation` — `git fetch` them; their outboxes live on *their* main),
 boundary inbound (`proposal`, `briefing`), open messages on the `~/agents` board.
 Leaf outboxes go stale — for children, also check `git log` and the **working tree** of the
@@ -154,3 +173,20 @@ subtree or the `~/agents` board/pool.
 
 Literature pools to `~/agents/library` via `/lib add`/`/lib sota`; machine compute
 invariant in `~/agents/compute`.
+
+## Open decisions (2026-09-01, from the retrosyntesis reassignment)
+
+1. **Make `retrosyntesis` a submodule?** `retro-pfn` and `retro-planning` are submodules;
+   `retrosyntesis` is a gitignored sibling checkout, which was right while it was student-external
+   and is now inconsistent with its owned status. Recommend converting, but it is a git-structure
+   change with a pointer-tracking consequence — owner's call, not done automatically.
+2. **Branch divergence is load-bearing, do not treat it as housekeeping.** `main` carries the full
+   validation ladder (`validation_dft.py`, `validation_dft_neb.py`, `validation_energy.py`,
+   `validation_kinetics.py`, `validation_skala.py`, `validationaimnet.py`, `validation_forward_ml.py`,
+   plus `src/oracle_benchmark/`), and `main_validation.py` wires forward-ML → RDKit → rdchiral →
+   MLIP → DFT → energy. The RCI checkout at `/mnt/data/resynthesis/retro-fallback-harness` sits on
+   **`retropfn/active-xif`**, a stripped-down retro-pfn working branch with none of that. Any claim
+   about "what the pipeline validates" must name the branch — an audit of the RCI checkout alone
+   concluded there was no physics rung at all, which is true of that branch and false of `main`.
+3. **Owner-side runnability.** See "Departure debt" above. The replacement env and runners live in
+   `/mnt/data/resynthesis/NemecChallenge/scripts/`; folding them in is the first integration task.
