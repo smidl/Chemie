@@ -1,0 +1,75 @@
+{
+  "summary": {
+    "arm": "deep_lstar",
+    "cs": 50,
+    "solved": 6,
+    "n": 6
+  },
+  "rows": [
+    {
+      "smi": "CC(C)(O)C#N",
+      "solved": true,
+      "iters": 1,
+      "expanded": 1,
+      "depth": 1,
+      "route": [
+        "CC(C)=O.[C-]#N>>CC(C)(O)C#N"
+      ]
+    },
+    {
+      "smi": "C=C(C)C(=O)OC",
+      "solved": true,
+      "iters": 1,
+      "expanded": 1,
+      "depth": 1,
+      "route": [
+        "C=C(C)C(=O)O.CO>>C=C(C)C(=O)OC"
+      ]
+    },
+    {
+      "smi": "O=C1NC(=O)C(c2ccccc2)(c2ccccc2)N1",
+      "solved": true,
+      "iters": 1,
+      "expanded": 1,
+      "depth": 1,
+      "route": [
+        "CCO.NC(N)=O.O=C(C(=O)c1ccccc1)c1ccccc1>>O=C1NC(=O)C(c2ccccc2)(c2ccccc2)N1"
+      ]
+    },
+    {
+      "smi": "CC1(C)NC(=O)NC1=O",
+      "solved": true,
+      "iters": 5,
+      "expanded": 5,
+      "depth": 5,
+      "route": [
+        "CCOC(=O)C(C)(C)O.NC(N)=O>>CC1(C)NC(=O)NC1=O",
+        "CC(C)(O)C(N)=O.CCO>>CCOC(=O)C(C)(C)O",
+        "COC(=O)C(C)(C)O.N>>CC(C)(O)C(N)=O",
+        "CC(C)(O)C(=O)O.CO>>COC(=O)C(C)(C)O",
+        "C=C(C)C(=O)O.O>>CC(C)(O)C(=O)O"
+      ]
+    },
+    {
+      "smi": "O=C(O)CN(CCN(CC(=O)O)CC(=O)O)CC(=O)O",
+      "solved": true,
+      "iters": 20,
+      "expanded": 21,
+      "depth": 2,
+      "route": [
+        "CC(=O)[O-].CC(=O)[O-].CC(=O)[O-].CC(=O)[O-].NCCN>>O=C(O)CN(CCN(CC(=O)O)CC(=O)O)CC(=O)O",
+        "CC(=O)O>>CC(=O)[O-]"
+      ]
+    },
+    {
+      "smi": "C[N+](C)(C)CCCl",
+      "solved": true,
+      "iters": 1,
+      "expanded": 1,
+      "depth": 1,
+      "route": [
+        "CN(C)C.ClCCBr>>C[N+](C)(C)CCCl"
+      ]
+    }
+  ]
+}

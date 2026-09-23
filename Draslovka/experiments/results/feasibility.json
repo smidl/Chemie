@@ -1,0 +1,50 @@
+[
+  {
+    "name": "phenytoin",
+    "smi": "O=C1NC(=O)C(c2ccccc2)(c2ccccc2)N1",
+    "step": "NC=O.O=C([O-])[O-].O=C(c1ccccc1)c1ccccc1.[C-]#N>>O=C1NC(=O)C(c2ccccc2)(c2ccccc2)N1",
+    "nll": 0.0,
+    "roundtrip_pass": true,
+    "top_pred": "O=C1NC(=O)C(c2ccccc2)(c2ccccc2)N1"
+  },
+  {
+    "name": "5,5-dimethylhydantoin",
+    "smi": "CC1(C)NC(=O)NC1=O",
+    "step": "CCOC(=O)C(C)(C)O.NC(N)=O>>CC1(C)NC(=O)NC1=O",
+    "nll": 0.0,
+    "roundtrip_pass": true,
+    "top_pred": "CC1(C)NC(=O)NC1=O"
+  },
+  {
+    "name": "EDTA",
+    "smi": "O=C(O)CN(CCN(CC(=O)O)CC(=O)O)CC(=O)O",
+    "step": "O=C([O-])CN(CCN(CC(=O)[O-])CC(=O)[O-])CC(=O)[O-]>>O=C(O)CN(CCN(CC(=O)O)CC(=O)O)CC(=O)O",
+    "nll": 0.0,
+    "roundtrip_pass": true,
+    "top_pred": "O=C(O)CN(CCN(CC(=O)O)CC(=O)O)CC(=O)O"
+  },
+  {
+    "name": "MMA",
+    "smi": "C=C(C)C(=O)OC",
+    "step": "CCOCCO.CN(C)c1ccc(C(=O)c2ccc(N(C)C)cc2)cc1>>C=C(C)C(=O)OC",
+    "nll": 1.6,
+    "roundtrip_pass": false,
+    "top_pred": "CN(C)c1ccc(C(O)c2ccc(N(C)C)cc2)cc1"
+  },
+  {
+    "name": "chlormequat",
+    "smi": "C[N+](C)(C)CCCl",
+    "step": "CN(C)C.ClCCBr>>C[N+](C)(C)CCCl",
+    "nll": 2.055,
+    "roundtrip_pass": false,
+    "top_pred": "Cl"
+  },
+  {
+    "name": "acetone cyanohydrin",
+    "smi": "CC(C)(O)C#N",
+    "step": "CC(C)(C#N)O[Si](C)(C)C>>CC(C)(O)C#N",
+    "nll": 3.191,
+    "roundtrip_pass": false,
+    "top_pred": null
+  }
+]

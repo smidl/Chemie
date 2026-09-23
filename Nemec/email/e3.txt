@@ -1,0 +1,9 @@
+Dobrý den,
+
+Ideální by bylo kdybych ty syntetické cesty mohl vidět ve formě 2D structurních vzorců (tzn vidět ty molekuly v grafické podobě tak jak to chemici kreslí), protože se SMILES se bude pracovat těžko.
+
+V první řadě mě nemusí zajímat ani cena reagentů, stačí když uvidím jak to rozloží složité molekuly na jednodušší stavební bloky.
+
+S pozdravem,
+
+Vašek

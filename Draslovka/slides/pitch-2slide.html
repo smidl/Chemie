@@ -1,0 +1,333 @@
+<style>
+  /* Deck deliberately commits to a single light look — it is projected and printed.
+     Palette: dataviz reference instance. Accent = categorical slot 1 (#2a78d6).
+     Status = good #0ca30c / critical #d03b3b, each ALWAYS paired with a glyph and a
+     word, because that pair fails CVD separation (ΔE 4.1 deutan) and must never
+     carry meaning by hue alone. */
+  .deck {
+    color-scheme: light;
+    --surface:        #fcfcfb;
+    --plane:          #f9f9f7;
+    --ink:            #0b0b0b;
+    --ink-2:          #52514e;
+    --ink-3:          #7a7975;
+    --rule:           #e3e2dd;
+    --accent:         #2a78d6;
+    --good:           #0ca30c;
+    --good-text:      #006300;
+    --bad:            #d03b3b;
+    --font: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--plane);
+    color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 24px 16px 64px;
+  }
+  .deck * { box-sizing: border-box; }
+
+  .slide {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    max-width: 1120px;
+    margin: 0 auto 28px;
+    padding: 40px 44px 36px;
+    position: relative;
+  }
+  .slide + .slide { margin-top: 0; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  h1 { font-size: 30px; line-height: 1.2; font-weight: 680; margin: 0 0 6px; letter-spacing: -.01em; }
+  .sub { font-size: 15px; color: var(--ink-2); margin: 0 0 26px; max-width: 74ch; }
+  h2 {
+    font-size: 12px; font-weight: 680; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-3); margin: 30px 0 12px; padding-bottom: 7px; border-bottom: 1px solid var(--rule);
+  }
+
+  /* ---- stat tiles: hero number + label, no plot, no chartjunk ---- */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--rule); border-radius: 8px; overflow: hidden; }
+  .tile { background: var(--surface); padding: 18px 20px 16px; }
+  .tile .n { font-size: 38px; font-weight: 690; letter-spacing: -.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .tile .n small { font-size: 20px; font-weight: 600; color: var(--ink-2); letter-spacing: 0; }
+  .tile .k { font-size: 13px; font-weight: 620; margin-top: 7px; }
+  .tile .d { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.4; }
+
+  /* ---- the headline insight ---- */
+  .insight {
+    margin: 26px 0 4px; padding: 18px 22px; background: var(--plane);
+    border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+  }
+  .insight p { margin: 0; font-size: 19px; font-weight: 620; line-height: 1.35; letter-spacing: -.005em; }
+  .insight .why { margin-top: 7px; font-size: 13.5px; font-weight: 400; color: var(--ink-2); }
+
+  /* ---- tables ---- */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th {
+    text-align: left; font-size: 11px; font-weight: 650; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-3); padding: 0 12px 8px 0;
+    border-bottom: 1px solid var(--rule); vertical-align: bottom;
+  }
+  td { padding: 11px 12px 11px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rx { font-weight: 620; }
+  .rx em { display: block; font-weight: 400; font-style: normal; font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
+
+  /* status: glyph + word + colour. Never colour alone. */
+  .st { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 620; white-space: nowrap; }
+  .st .g { font-size: 13px; line-height: 1; }
+  .st-bad  { color: var(--bad); }
+  .st-good { color: var(--good-text); }
+  .who { font-weight: 620; font-size: 12.5px; }
+  .who-us   { color: var(--accent); }
+  .who-them { color: var(--ink); }
+
+  .ladder td.rung { font-weight: 620; }
+  .ladder tr.reject td { background: #fdf6f6; }
+  .ladder tr.reject td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
+
+  /* ---- two-column ---- */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+  .phase h3 { font-size: 15px; font-weight: 670; margin: 0 0 3px; }
+  .phase .tag { font-size: 11.5px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+  .phase ul { margin: 10px 0 0; padding-left: 18px; }
+  .phase li { font-size: 13.5px; margin-bottom: 8px; color: var(--ink-2); }
+  .phase li b { color: var(--ink); font-weight: 620; }
+
+  .ask { margin-top: 26px; padding: 20px 22px; background: var(--plane); border: 1px solid var(--rule); border-radius: 8px; }
+  .ask h3 { margin: 0 0 4px; font-size: 16px; font-weight: 670; }
+  .ask .lead { margin: 0 0 12px; font-size: 13.5px; color: var(--ink-2); }
+  .asklist { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0; padding: 0; list-style: none; }
+  .asklist li { font-size: 13px; padding-left: 13px; border-left: 2px solid var(--accent); }
+  .asklist li b { display: block; font-weight: 640; margin-bottom: 2px; }
+  .asklist li span { color: var(--ink-2); }
+  .ask .close { margin: 14px 0 0; font-size: 13px; color: var(--ink-2); }
+  .ask .close b { color: var(--ink); font-weight: 620; }
+
+  .foot { margin-top: 22px; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 11.5px; color: var(--ink-3); }
+  .slideno { position: absolute; top: 40px; right: 44px; font-size: 11px; font-weight: 650; letter-spacing: .08em; color: var(--ink-3); }
+
+  @media (max-width: 820px) {
+    .tiles, .asklist { grid-template-columns: 1fr; }
+    .cols { grid-template-columns: 1fr; gap: 24px; }
+    .slide { padding: 28px 22px; }
+    h1 { font-size: 24px; }
+  }
+  .scroll { overflow-x: auto; }
+  @media print {
+    .deck { background: #fff; padding: 0; }
+    .slide { page-break-after: always; border: none; border-radius: 0; margin: 0; max-width: none; min-height: 100vh; }
+  }
+</style>
+
+<div class="deck">
+
+  <!-- ============================ SLIDE 1 ============================ -->
+  <section class="slide">
+    <div class="slideno">1 / 2</div>
+    <p class="eyebrow">What happened when we ran our stack on your chemistry</p>
+    <h1>We tested today's retrosynthesis tools on six of your products</h1>
+    <p class="sub">
+      Six Draslovka products — acetone cyanohydrin, MMA, phenytoin, 5,5-dimethylhydantoin, EDTA,
+      chlormequat. We asked the standard questions a synthesis-planning tool is supposed to answer,
+      and recorded where it succeeded and where it failed.
+    </p>
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="n">6<small> / 6</small></div>
+        <div class="k">Routes found</div>
+        <div class="d">And this tells you nothing. Five of six are purchasable commodities, so
+          "find a route" is trivially solved. Route <em>existence</em> is not your problem.</div>
+      </div>
+      <div class="tile">
+        <div class="n">3<small> / 6</small></div>
+        <div class="k">Feasibility verdicts were wrong</div>
+        <div class="d">The standard feasibility check <b>rejected textbook-correct chemistry</b> —
+          an esterification, a named condensation, a quaternization. All three central to your platform.</div>
+      </div>
+      <div class="tile">
+        <div class="n">1<small> / 11</small></div>
+        <div class="k">Steps a physics check could accept</div>
+        <div class="d">Of eleven proposed reaction steps, ten could not even be submitted to a
+          quantum-chemistry calculation as written.</div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <p>The tools are not ignorant of your chemistry. They are being fed malformed inputs.</p>
+      <p class="why">
+        Every failure we traced had a bookkeeping cause, not a chemical one — a scoring test asking the
+        wrong question, one arrow standing for several reaction steps, or a missing byproduct or
+        counter-ion. Two completely independent methods, a language model and a quantum-chemistry
+        calculation, flagged the <em>same three causes</em>. That agreement is why we are confident
+        in the diagnosis.
+      </p>
+    </div>
+
+    <h2>Every failure, its cause, and who has to fix it</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:27%">Reaction</th>
+            <th style="width:14%">Verdict</th>
+            <th style="width:37%">Actual cause</th>
+            <th style="width:22%">Fixed by</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rx">Fischer esterification<em>methacrylic acid + methanol → MMA</em></td>
+            <td><span class="st st-bad"><span class="g">✕</span>Wrong — rejected</span></td>
+            <td>The model was <b>completely confident it was right</b>. The pass/fail test wrapped
+              around it asked the wrong question, and the reaction was written without its water byproduct.</td>
+            <td><span class="who who-us">Us — scoring protocol</span></td>
+          </tr>
+          <tr>
+            <td class="rx">Biltz synthesis<em>benzil + urea → phenytoin</em></td>
+            <td><span class="st st-bad"><span class="g">✕</span>Wrong — rejected</span></td>
+            <td>A single arrow standing for an entire multi-step condensation — so there is
+              <b>no one reaction event to evaluate</b>. A solvent was even listed as a reactant.</td>
+            <td><span class="who who-us">Us — step decomposition</span></td>
+          </tr>
+          <tr>
+            <td class="rx">Menshutkin quaternization<em>Me₃N + 1-bromo-2-chloroethane → chlormequat</em></td>
+            <td><span class="st st-bad"><span class="g">✕</span>Wrong — rejected</span></td>
+            <td>Charged product, and the bromide counter-ion was simply missing from the equation.
+              Public training data under-represents this chemistry.</td>
+            <td><span class="who who-us">Us — representation</span><br><span class="who who-them">You — coverage &amp; conditions</span></td>
+          </tr>
+          <tr>
+            <td class="rx">EDTA via acetate alkylation<em>ethylenediamine + acetate → EDTA</em></td>
+            <td><span class="st st-good"><span class="g">✓</span>Right — rejected</span></td>
+            <td>Genuinely wrong chemistry: acetate cannot alkylate an amine. The tool caught it.
+              <b>This is the one thing that worked as advertised.</b></td>
+            <td><span class="who">—</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="foot">
+      Three of four failures are ours to fix and need none of your data. That is the point of the next slide.
+    </p>
+  </section>
+
+  <!-- ============================ SLIDE 2 ============================ -->
+  <section class="slide">
+    <div class="slideno">2 / 2</div>
+    <p class="eyebrow">What we would build, in what order</p>
+    <h1>A feasibility layer that is honest about what it can and cannot judge</h1>
+    <p class="sub">
+      Judging whether a reaction will actually work is a question of <em>rates</em>, not just energies —
+      and rates are expensive. We have measured exactly how expensive, and what you can and cannot
+      economise on.
+    </p>
+
+    <h2>The cost ladder — measured, on 225 reference reactions</h2>
+    <div class="scroll">
+      <table class="ladder">
+        <thead>
+          <tr>
+            <th style="width:26%">Rung</th>
+            <th style="width:30%">Question it answers</th>
+            <th style="width:24%">Accuracy</th>
+            <th style="width:20%">Cost per reaction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rung">Structure rules &amp; round-trip</td>
+            <td>Is this even plausible?</td>
+            <td>Screening only — see slide 1</td>
+            <td class="num">under 1 second</td>
+          </tr>
+          <tr>
+            <td class="rung">Reaction energy<br><span style="font-weight:400;color:var(--ink-2)">learned functional</span></td>
+            <td>Is the product favoured?</td>
+            <td class="num">±4.0 kcal/mol · r = 0.996</td>
+            <td class="num">seconds</td>
+          </tr>
+          <tr>
+            <td class="rung">Reaction barrier<br><span style="font-weight:400;color:var(--ink-2)">fast setting</span></td>
+            <td><b>Will it actually go?</b></td>
+            <td class="num">±9.9 kcal/mol · ρ = 0.85</td>
+            <td class="num">~6.5 minutes</td>
+          </tr>
+          <tr>
+            <td class="rung">Reaction barrier<br><span style="font-weight:400;color:var(--ink-2)">reference setting</span></td>
+            <td>Ground truth to calibrate against</td>
+            <td class="num">±8.8 kcal/mol · ρ = 0.90</td>
+            <td class="num">~22 minutes</td>
+          </tr>
+          <tr class="reject">
+            <td class="rung"><span class="st st-bad"><span class="g">✕</span>Barrier shortcut</span></td>
+            <td>Tested — can we skip the expensive search?</td>
+            <td class="num"><b>±47.7 kcal/mol — unusable</b></td>
+            <td class="num">~4 minutes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot" style="margin-top:14px;padding-top:10px">
+      <b style="color:var(--ink)">The load-bearing finding:</b> reaction <em>energies</em> are cheap and
+      essentially solved. Reaction <em>barriers</em> cannot be shortcut — we tried, and the shortcut is
+      off by a factor of five. So the only way to afford them is <b style="color:var(--ink)">triage</b>:
+      run the expensive rung only where the cheap rungs disagree. Knowing which shortcuts fail is
+      itself the result.
+    </p>
+
+    <h2>Two phases</h2>
+    <div class="cols">
+      <div class="phase">
+        <span class="tag">Phase 1 · starts now · no data needed</span>
+        <h3>Make your routes checkable, then score them</h3>
+        <ul>
+          <li><b>The missing plumbing.</b> Turn planner output into complete, balanced, single-step
+            reactions — the thing that took our physics check from 1 usable step out of 11 to 8.
+            Unglamorous, and nothing downstream works without it.</li>
+          <li><b>A reliability map.</b> For N molecules you choose: scored routes, a stated operating
+            point, and an explicit <em>"we cannot judge this"</em> bucket. A gate that hides its
+            blind spots is worse than no gate.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <span class="tag">Phase 2 · unlocked by data</span>
+        <h3>Your chemistry, where no public tool is competent</h3>
+        <ul>
+          <li><b>Coverage where public data is thin</b> — cyanide and nitrile platform chemistry,
+            quaternary salts, charged and organometallic species.</li>
+          <li><b>Real conditions.</b> Feasibility depends on solvent, catalyst and temperature.
+            Public data mostly does not record them; a process plant necessarily does.</li>
+          <li><b>The no-precedent frontier.</b> For chemistry with no literature analogue, a physics
+            calculation is the only available judge — this is where the ladder above becomes the product.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ask">
+      <h3>What we would need from you — and it is not your IP</h3>
+      <p class="lead">
+        The gap is not clever methods. It is the ordinary bookkeeping that public reaction databases
+        systematically discard — which is precisely why ten of eleven steps could not be checked.
+      </p>
+      <ul class="asklist">
+        <li><b>Complete equations</b><span>Full stoichiometry, byproducts and counter-ions included.</span></li>
+        <li><b>The conditions you actually ran</b><span>Solvent, catalyst, temperature, concentration.</span></li>
+        <li><b>The failures too</b><span>What did not work is worth more than what did — nobody publishes it.</span></li>
+      </ul>
+      <p class="close">
+        You already hold all three, because you run these reactions at plant scale.
+        <b>A public database records that a reaction happened; your records say what actually went in,
+        under what conditions, and how often it failed.</b> That difference is the whole gap.
+      </p>
+    </div>
+  </section>
+
+</div>

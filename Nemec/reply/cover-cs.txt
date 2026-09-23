@@ -1,0 +1,52 @@
+Dobrý den Vašku,
+
+díky za zprávu — trefil jste přesně problém, který jsme měřili i my.
+
+Nejdřív oprava: Claude Vaši publikaci nečte. Ověřili jsme to. Naše znalostní
+báze (1 048 347 produktů z ORD a patentů) vrátila pro MU1700 **0 shod**; všechny
+kroky pocházejí z modelu trénovaného na patentech USPTO, kde Váš J. Med. Chem.
+2024 článek není. Cesty tedy vznikly nezávisle na Vaší publikaci — proto je
+srovnání s Vaší cestou smysluplné. Na obrázek z ACS se bohužel nedostaneme
+(paywall); pokud můžete poslat schéma ze SI nebo PDF, rádi to porovnáme.
+
+K Vašim bodům:
+
+1. Rozlišení "opravdu jiných" cest — vyřešeno, a Váš nápad funguje.
+   Standardní řešení je tree edit distance (Genheden et al., J. Cheminform.
+   2021), open-source balík `route_distances`, který používá i AiZynthFinder.
+   Implementovali jsme ho i Váš návrh (Tanimoto přes intermediáty) — shodují se
+   se Spearmanovým ρ = 0,82. Obojí spolehlivě slučuje triviální varianty:
+   z našich 63 cest je 16 párů lišících se jen výchozím regioizomerem a oba
+   postupy je sloučí (u Vaší metriky mají vzdálenost přesně 0,000 oproti mediánu
+   0,472). Prakticky: 63 cest → zhruba 13–26 skutečně odlišných, podle zvolené
+   hranice. Detaily i tabulka prahů jsou v přiloženém dokumentu.
+
+2. Ranking — ano, máme, a je open-source. AiZynthFinder obsahuje framework
+   s ~20 skórovacími funkcemi; sedm z nich jsme na Vaše cesty pustili (délka
+   cesty, počet a dostupnost prekurzorů, podíl stromu koupitelný ze skladu,
+   state score, Badowského route cost). Zajímavé je, že se neshodují: dělí se na
+   dvě skupiny — "délka/cena" a "dostupnost" — a mezi nimi je Spearmanovo
+   ρ jen −0,27. Tedy nejkratší cesty nejsou ty z nejlépe dostupných látek; to je
+   reálný kompromis, ne chyba. Proto Vám chceme dát sloupce, ne jedno číslo.
+   Dvě upozornění: jde o heuristiky nevalidované proti úsudku chemika, a skórer
+   měřící literární precedens (avg_template_occurrence) nám kvůli chybě na naší
+   straně vrací nuly — opravujeme. Vlastnímu skóre našeho modelu nedůvěřujeme
+   (u 38 z 63 cest je nejslabší krok 0,003) a nemáme reakční podmínky ani
+   spočítané bariéry.
+
+3. Další software — AiZynthFinder hotový, ReactionT5 právě běží na clusteru,
+   ASKCOS nainstalovaný nemáme a nebudeme tvrdit výsledek, který jsme nespustili.
+
+A dvě otázky, kde nám pět minut Vašeho času ušetří většinu šumu:
+
+   (a) Ze kterého brom-furopyridinu ve skutečnosti vycházíte? Naše cesty se dělí
+       22 : 20 mezi dva izomery a volba určuje celé pořadí couplingů (viz
+       přiložený obrázek).
+   (b) Stavěl byste piperazin až na molekule? 36 z 63 cest ho skládá z
+       bis(2-chlorethyl)aminu a anilinu místo koupě hotového
+       4-bromfenylpiperazinu. Tipujeme, že byste to zamítl, ale raději se ptáme.
+
+Odpověď na (a) sloučí 16 párů, odpověď na (b) vyřadí víc než polovinu cest.
+
+S pozdravem,
+Václav Šmídl

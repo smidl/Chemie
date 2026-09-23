@@ -1,0 +1,9 @@
+# LaTeX build artefacts — the .tex is the source, the .pdf is regenerable
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.fls
+*.fdb_latexmk

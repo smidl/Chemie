@@ -1,0 +1,15 @@
+Dobrý den,
+
+Claude čte pravděpobně moje procedury z publikace. Smysl to dává, ale nevím jestli to něčemu pomohlo.
+
+Můžete mi to poslat a já se na to podívám. To čeho se asi chceme vyhnout je, že každá minimální změna (změna reagentu) bude definována jako nová syntetická cesta. Respektive by bylo fajn kdybych jako uživatel dokázal jednoduše vyfiltrovat nebo rozeznat které syntetické cesty jsou výrazně odlišné. Nevím jak to řeší ty současné applikace (Claude možná bude vědět pro ty open source).
+
+Jedna z možností co mě napadá je použít Tanimoto koeficient pro všechny intermediáty a nějak to zprůměrovat, což by mohlo nastínit odlišnost syntetických cest.
+
+Máte už nějaký systém pro ranking těch cest?
+
+Můžete mi poslat tu stejnou retro-syntetickou analýzu z dalších 2-3 softwaru? Třeba aizynthfinder, Askos ...
+
+S pozdravem,
+
+Vašek
