@@ -1903,3 +1903,201 @@ errors. The ρ = 0 conclusion now follows from measurement rather than assumptio
 their own dependency stacks (DGL pins; a lightning stack). Deprioritised rather than blocked — with two
 maximally different architectures already agreeing to 0.1 pp, a third template-ish and a second seq2seq
 model would add little. Full record: `retro-pfn/path-correlation/README.md` (`ced0604`).
+
+## OPEN PROBLEM 2026-09-06 — single-step accuracy does not buy search progress; proposals must SHRINK the target
+
+**Status: open, and it is the sharpest mechanistic lead we have on the proposer side.**
+Measured while running the Němec MU1700 demo (`Nemec/report/`, RCI
+`/mnt/data/resynthesis/NemecChallenge/`). Recorded here because it is cross-cutting:
+it constrains `retro-generation`'s generative track, `retro-planning`'s search side, and
+any future decision to swap a proposer into the K-P-V harness.
+
+### The measurement
+
+`size_ratio = (largest precursor heavy atoms) / (target heavy atoms)`, over 24 targets
+(the Němec five plus benchmark targets), 10 proposals each:
+
+| proposer | n | median | mean | **proposals that GROW the molecule** |
+|---|---|---|---|---|
+| **ReactionT5v2**-retrosynthesis-USPTO_50k | 180 | 1.11 | 1.34 | **74 %** |
+| **AiZynthFinder** uspto template policy | 166 | 1.00 | 0.99 | **36 %** |
+
+On MU1700 specifically (31 heavy atoms): AZF's median precursor is **20** heavy atoms,
+ReactionT5's is **39** — *larger than the target*. Its top proposal is MU1700 plus a Boc
+group plus an iodine: a sensible reaction step, and a retrosynthetic move in the wrong
+direction. Script: `scripts/size_ratio.py`.
+
+### Why it matters
+
+ReactionT5 is **not a weak model** — rektomar reproduced its forward direction at 92.60
+top-1 against 92.8 reported, and the retro checkpoint reports ~71 % top-1 on USPTO-50k.
+Yet in search it explored **806 k nodes to yield 26 routes**, where AiZynthFinder yielded
+**867**. The proposals are chemically good (its Boc protection is better practice than the
+ethyl carbamate AZF chose); they simply do not reduce the problem, so the search cannot
+converge.
+
+This is a **concrete mechanism for a documented phenomenon**: `hassen2022_retrosynthesis-gap`
+and `torrenperaire2024_models-matter` established that single-step top-k does not predict
+multi-step solvability, without explaining it. Here is one reason on real targets — a 71 %
+single-step model proposes steps that grow the molecule 74 % of the time. It sits alongside
+this tree's own (C) result (proposer error is per-reaction, not per-route): both say
+**single-step metrics measure the wrong thing for planning**.
+
+Note also the asymmetry in inductive bias: the template stack ships a dedicated
+**`ringbreaker`** policy precisely because ring-construction disconnections are
+under-proposed. A seq2seq proposer has no equivalent correction, and correspondingly almost
+never proposes building a ring system (measured: 0–1 ring-forming proposals per 25 beams on
+MU1700 and its intermediates, versus rank 3 / prior 0.045 for AZF's ringbreaker).
+
+### What is open
+
+1. **Does `size_ratio` predict solvability?** We have shown the distributions differ; we have
+   *not* correlated it with solve outcomes. That needs searches over a target set with
+   recorded solve/no-solve, and it is the experiment that turns this from an observation into
+   a usable filter.
+2. **Acceptance filter, generation control, or search prior? — partly answered 2026-09-14.**
+   Rejecting growing proposals outright is crude: protection steps are legitimately
+   size-increasing. Of the three places the signal could live, a `/lit` survey
+   ([[sota/control-tokens-in-reaction-generation]]) settles two of them:
+   - **Generation-side conditioning is crowded prior art.** `thakkar2023_disconnection-prompts`
+     prompts the single-step model with the disconnection *site* (+39 % accuracy, 2× class
+     diversity); `westerlund2025_human-guided-prompting` puts bond constraints into
+     AiZynthFinder via a broken-bonds score and multi-objective MCTS (75.57 % vs 54.80 % on
+     PaRoutes); `sathyanarayana2026_protect-steerable-retrosynthesis` constrains generation
+     symbolically by protecting group. Two of the three are by the groups whose tools we run.
+   - **The value function / cost-to-go is untouched by all of them.** None puts disconnection
+     information into a learned `h`. That is the opening, if there is one.
+
+   **Why `h` is the better organ than generation.** `size_ratio` is a *progress* measure — did
+   this step move toward purchasable material — which is definitionally what a cost-to-go
+   estimates. Using it as a generation filter mistakes the organ. This also routes the idea to
+   **`retro-planning`** (which owns `h`; `retro-pfn` owns ξ_f edge costs), not to
+   `retro-generation`, and lands on retro-planning's own binding constraint: the 190-hard wall is
+   search guidance, every rejection `ERROR_TYPE_5_INCOMPLETE`, zero feasibility-driven.
+
+   **The gate that must pass first, and it could kill this outright.** The incumbent `h` is
+   **SAScore**, which is already complexity- and size-flavoured. If our signal merely re-derives
+   it, the feature buys nothing — correlate the disconnection/size features against SAScore before
+   any training. The argument that it is *not* redundant: SAScore scores a **molecule** (how hard
+   to make), ours scores a **step** (did this reduce the problem). Two nodes of identical SAScore,
+   one reached by a reducing step and one by a growing step, are indistinguishable to SAScore and
+   different in trajectory. Untested.
+
+   **Status: hypothesis, not a bet.** Recorded so the survey result is not re-derived; not
+   resourced, and it should not become a method bet before the SAScore gate runs.
+3. **Would it fix a generative proposer?** If yes, it is a cheap correction to bolt onto
+   `retro-generation`'s models. If it merely reflects that templates are extracted from real
+   reactions and inherently reducing, then the gap is architectural and not filterable.
+4. **Caveats before anyone quotes this.** 24 targets; the proxy uses only the largest
+   precursor; our ReactionT5 wrapper is homemade (no official syntheseus integration) and its
+   mass/echo filter rejects ~40 % of beams, so part of the gap may be our harness rather than
+   the model.
+
+## PRIOR ART WE WERE HALF-USING (2026-09-07) — Badowski 2019 already solved diverse route selection
+
+Němec sent us `badowski2019_cost-effective-diverse-pathways` (Chem. Sci. 2019, 10(17),
+4640–4651, DOI 10.1039/C8SC05611K, CC-BY-NC; now pooled in `~/agents/library/`). Checking
+our awareness of it produced an uncomfortable answer worth recording.
+
+**We were using half of it without knowing.** AiZynthFinder's `RouteCostScorer` docstring
+reads verbatim *"From Badowski et al. Chem Sci. 2019, 10, 4640"* — so every `route_cost`
+number in the MU1700 work comes from this paper, and the name "Badowski-style cost" entered
+our notes from the code rather than from the paper.
+
+**The half we did not have is the half we were working on.** Its second contribution is
+diverse route selection by **penalising, during extraction, every reaction sharing the same
+product and non-trivial (≥4 C) substrates as the pathway just returned** — then
+recomputing costs by modified Dijkstra and taking the next-cheapest path. Their motivating
+example is our chemist's complaint verbatim: *"changing an aryl bromide to an iodide"* gives
+formally different pathways that are equivalent to a chemist. 2019. Not in AiZynthFinder
+(no "diversity"/"penalty" anywhere in `aizynthfinder.context.scoring`), and not in this
+pool until today.
+
+**Architectural difference, and theirs is better for the purpose.** We enumerate all routes
+then cluster (TED, intermediate-Tanimoto, our disconnection descriptor); they never surface
+near-duplicates, because the penalty is inside the objective the extraction optimises. Their
+cost: ~0.5 s for 100 pathways on a 12 k-node solution graph.
+
+**Consequences.**
+1. **Do not present penalty-based diverse selection as novel.** Our route-diversity metrics
+   answer a different question — how far apart two *given* routes are — which is what
+   located route 368 against the chemist's published route, and that use stands.
+2. The untried and obvious thing: add a Badowski-style penalty to our own extraction so
+   routes come out pre-diversified rather than clustered afterwards.
+3. **Lesson beyond this paper:** we adopted a scorer from a docstring without reading its
+   source. Worth checking what else in the 20 AZF scorers we are using citation-blind.
+
+## PULLED FROM retro-generation 2026-09-15 — STAGE 1 KILLS M2, AND IT REVERSES THE 08-26 "BLOCKER REMOVED" CALL
+
+`outbox.md` 2026-09-11 + `inbox.md` 2026-09-13 (rektomar's stage-1 completion measurement, answered).
+Full numbers in `retro-generation/src/rxn_balance/README.md` and
+`results/rxn_balance/metrics_stage1.json`. This is the M0 data-assessment result the miniproject
+(`MINIPROJECT-conditioning.md` §7) said would gate M2, and it closes M2 with a measured "no."
+
+### The measurement
+
+On the matched USPTO_50k / USPTO_50k_B pair (50,016 records, same reactions, same split — only
+the added species differ), classifying what completion actually adds:
+
+| | USPTO_50k_B |
+|---|---|
+| records where `_u` already covers the product's heavy atoms (spectators/byproducts only) | 48,846 |
+| records where completion **fills a genuine LHS deficit** | **0** |
+| records where completion edits an original `_u` molecule | 0 |
+| LHS additions, by element | O, I, N, F — **no carbon, ever** |
+| RHS additions, by element | C, O, Cl, Br, B, I, F, N, S, Si, Mg, Sn, P, Zn, Cu |
+
+**Completion never supplies a missing building block and never touches an original molecule, in
+any of 50,016 records.** What looks like added chemistry on the RHS (carbon, halides, boron) is the
+leaving/protecting-group fragment of a reactant already present in `_u` (Cbz removal → the LHS
+already had the carbamate; ester hydrolysis → the LHS already had the ester) — SynRBL is completing
+the *product side of an equation whose reactants already contain the answer*, not discovering a
+missing reagent. The LHS gains only water, protons, iodide and (620 records) atomic oxygen — bookkeeping,
+not chemistry. Purchasability follow-through, on the full precursor set: **zero records, pre- or
+post-gating, transition from not-fully-purchasable to purchasable** — there is no `N->Y` cell in
+either table, so "saves a route" is literally 0/50,016. 94 records (pre-gating) transition the other
+way, purchasable → **not** purchasable, i.e. completion made the precursor set worse; all 94 sit
+inside the 6,270 radical-contaminated records and vanish once those are gated — so even that harm is
+a SynRBL-artefact effect, not a real one. `saves_a_route_examples` is an empty list, pre and post.
+
+### The decision — M2 does not run
+
+Per `MINIPROJECT-conditioning.md` §7 ("a well-argued no closes M2"): rektomar recommended stopping,
+Chemie approved (`inbox.md` 2026-09-13) — 0 `deficit_filled` records means completion cannot change
+*which building blocks a route needs*, so it cannot save a route, full stop. Two open stage-1 items
+(coherent-class characterisation, hand-judging) are now moot: the (b)/(c) case sets are empty, so
+there is nothing left to characterise. Separately settled: ion-spelling in `_b` merges to the neutral
+molecule (option 2 — `[H+].[Cl-]` → `Cl`, only for ions SynRBL itself added), and the 07-27 DOI
+(`…22045145`) is corrected to the manifest's `10.5281/zenodo.17297258`.
+
+### This reverses, not confirms, the 2026-08-26 "COMPLETION LAYER... blocker removed" call
+
+`synthesis.md:1506` ("COMPLETION LAYER: MEASURED, AND IT IS AN ADOPT — NOT A BUILD") measured SynRBL
+lifting **balance rate** 1.75 % → 80.8 % and concluded from that alone: "rektomar's blocker is
+removed... these two facts have sat in separate documents in this tree for a month." That equated
+*balances* with *supplies what a corpus of complete reactions needs*, and stage 1 shows those are
+different measurements — a record can go from unbalanced to balanced by adding a proton and a water
+molecule, which is arithmetic, not the missing reagent a training corpus or a route needs. The 08-26
+entry should be read as **superseded on this point**, not merely extended: there was no
+missing-building-block blocker for SynRBL to remove, because SynRBL doesn't add building blocks.
+
+**This also reopens the "one component, two/three consumers" convergence claim**
+(`synthesis.md:834`, `:940`) rather than settling it. rektomar's own read (`inbox.md` 2026-09-13):
+*"rebalanced corpora are not a source of balanced overall reactions for the physics track either —
+the balance is water, protons and atomic H, not recovered chemistry."* If that holds, the completion
+layer solves neither consumer's real need — M2 needed real precursor sets, the physics track needs a
+real elementary step for a TS build, and generic atom-count balancing supplies neither. **FlowER's
+elementary steps remain the only real source of balanced complete reactions**, which is consistent
+with — and now doubly confirms — the 2026-09-04 finding above (FlowER 250,782 reactions
+→ 1,445,189 balanced steps). Whoever owns the numerics/completion handover (still nominally unowned,
+see `:948`) should be told directly: stop treating SynRBL-class rebalancing as a path to trainable
+complete-reaction data for **either** consumer.
+
+### What's still open on the miniproject
+
+M0's other half (prior-art novelty check) already passed in the 09-04 outbox entries (no corpus
+carries both `c` and atom balance; SynBridge/T5Chem are the nearest single-model precedents). With
+M2 killed and M0 otherwise clear, the live question is **M1** — the cost-of-generality probe on the
+corpus *as it stands* (no completion), at the multi-rung capacity sweep the miniproject's §5 Q1
+note demands. No stage-1/M1 result has landed yet for that; nothing in `results/` or `runs/` beyond
+the balance-completion measurement above post-dates this pull.

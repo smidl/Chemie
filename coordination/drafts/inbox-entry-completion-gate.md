@@ -6,9 +6,23 @@ changed our framing rather than confirming it. Two answers you asked for are at 
 now cheap to obtain. Does it change any downstream decision, or is it bookkeeping? That gates
 whether M2 exists, and how much the physics-oracle track should pay for balanced input.
 
-**The corpus makes this clean.** SynRXN ships `_B` rebalanced versions of corpora we already
-have unbalanced, including **USPTO_50k (50,016)**. Same reactions, same size, same chemistry,
-same split — the only difference is the added species. Use that pair; nothing else is needed.
+**The corpus makes this clean — with one correction you must apply first.** SynRXN ships `_B`
+rebalanced versions of corpora we already have unbalanced, including **USPTO_50k (50,016)**.
+Same reactions, same size, same chemistry, same split — the only difference is the added
+species. That is the pair.
+
+**But `uspto_50k_b` is the most contaminated of the three.** See the entry above: 12.54 % of its
+reactions carry SynRBL-inserted atomic radicals (`[H]` or `[O]` as standalone components),
+against 4.93 % for `schneider_b` and 2.14 % for `tpl_b`, with 100 % attributed to the
+rebalancing. **This is invisible to conservation metrics, because those reactions balance.** So
+"verify balance with RDKit" does not catch it, and an uncorrected run would be measuring
+SynRBL's artefacts as if they were chemistry.
+
+Handle it explicitly, and say which you chose: filter the affected reactions and report the
+sensitivity of every result to that filter; or run on `tpl_b` at 2.14 % instead and give up the
+matched USPTO_50k pairing; or keep them and carry contamination as a covariate. **Filtering with
+a reported sensitivity is what I would do** — it preserves the matched pair, which is the whole
+reason this design works.
 
 ---
 
@@ -27,10 +41,11 @@ On USPTO_50k vs USPTO_50k_B, per reaction:
 3. **Are the changed cases a coherent class?** If they concentrate in an identifiable chemistry
    (couplings with a dropped partner, organometallics, reagents contributing heavy atoms), that
    is targetable regardless of how rare it is. If they are scattered, that is a different verdict.
-4. **Verify balance with RDKit** rather than trusting the `Complete` column, and **hand-judge
-   100 completions.** SynRBL was validated on 5,420 reactions checked by its own first author
-   and does not cover multi-step reactions, cyclizations or rearrangements. If completions are
-   materially wrong we are training on errors, which changes the verdict on its own.
+4. **Verify balance with RDKit** rather than trusting the `Complete` column — necessary but not
+   sufficient, per the radical contamination above. Then **hand-judge 100 completions** drawn
+   from the *post-filter* set. SynRBL was validated on 5,420 reactions checked by its own first
+   author and does not cover multi-step reactions, cyclizations or rearrangements, so the
+   radicals are unlikely to be its only artefact — that is what the hand-check is for.
 
 **Decide on value, not on prevalence.** A low rate does not close this. On a real target last
 week the strategically correct disconnection was 1 of 63 routes, and it was the whole finding.
@@ -67,6 +82,10 @@ more than changing what is proposed.
 So if stage 2 shows a rank-distribution shift, ask whether it is larger than the shift from
 simply rescaling priors. If completion moves ranks less than reordering does, the direction is
 dominated and should be deprioritised even though the effect is real.
+
+And a fourth, now measured rather than hypothetical: **the corpus's own error rate.** At
+12.54 % contamination in `uspto_50k_b`, an effect smaller than that is not distinguishable from
+SynRBL artefacts. Report the effect size against it.
 
 Three more, worth keeping in view: **stock definition** (on MU1700, buy-vs-build the core
 scaffold changed the entire route set, and completion does not touch it); **conditions** (the
