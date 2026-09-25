@@ -2138,3 +2138,18 @@ candidates, checkpoints and reconstruction code; `retro-physics-validation` runs
 (task via its inbox). Not Milan's folder (his paper, our question), not a new node (retro-pfn's
 promotion rule covers that case if the tether to ξ_f is lost). Next: retro-pfn ADR reactivating
 `flow-ts/`, then the experiment brief (which states get energies is the design decision).
+
+**Same day, later — stage 1 built and run to the oracle step.** retro-pfn `flow-ts/BRIEF-stage1.md`
++ `stage1/`. Candidates for both checkpoints (433 held-out RMechDB steps, 100 chains, ~1–3 min
+CPU), 4,559 unique components embedded, every step routes to `aimnet2-nse` (general AIMNet2 is
+closed-shell: 25.5 kcal/mol on BH9's open-shell classes vs 3.9 for NSE, Jindřich's August probe).
+Oracle run and a 200-component ωB97M-V calibration (route vs wrong-candidate pools) delivered to
+`retro-physics-validation`'s inbox; the 2.2 MB handover tarball is local, not yet transferred.
+**Methodological finding, before any energy exists:** with random component energies the
+worst-intermediate profile ranks the chemist's route first in **54 %** of informative steps —
+the chemist's route is usually the shortest and a max over fewer states is smaller. Chance is
+33 %, the model's own frequency ranking 70 %. So stage 1 passes only above 54 %, and matters only
+against 70 %. On fine-tuning AIMNet2 to the AFM subset: nothing to fine-tune on (RMechDB has no
+energies); if DFT labels are computed for calibration they are the better oracle for these
+10-heavy-atom molecules anyway, and the MLIP earns its place on FlowER-size molecules and on
+stage 2's label volume.
