@@ -62,6 +62,15 @@ orchestrator layer was dissolved on 2026-06-15 (coord flatten). Protocol:
   See "Peer trees" below — `~/AIC/Planning` is *not* a child of Chemie and must not be
   managed as one.
 
+- `Milan/` — **Arrow Flow Matching (AFM) collaborator track** (enrolled 2026-09-25, owners
+  `[vsmidl]`). Measurement and strengthening of Milan Papež's mechanism generator; we do not take
+  the paper over. Declares its own boundary (his Overleaf, `flow: in`) and external (his code
+  repo, GitHub **`mlnpapez/MechReact`**, formerly `ArrowFlowMatching`; kind `collaborator`,
+  owner `mlnpapez`). Those two checkouts are his and never written into; every note and script
+  in the folder is ours and tracked. Results, RMechDB-derived data (CC-BY-NC-ND) and the venv
+  stay ignored. Plain subfolder, not a submodule. The AIMNet2-vs-AFM energy-ranking study is
+  placed in `retro-pfn/flow-ts/`, not here (see `coordination/synthesis.md`, 2026-09-25).
+
 ## External & boundary (declared here — Chemie is the single inventory owner)
 - `retro-generation/` — **external** student **reaction-generation** repo (owner rektomar,
   `aicenter/retro-generation`); handoff of the generative-reaction line from MolGPT (2026-07-24).

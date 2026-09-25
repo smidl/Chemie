@@ -19,8 +19,14 @@ datasets.tar.gz
 *.log
 ~$*
 
-# large working folders — results live on RCI / in the pool, not here
-Milan/
+# Milan/ — enrolled leaf (2026-09-25). Milan's two checkouts, the venv, results, licensed data
+# and the backup stay out; our notes and scripts are tracked.
+Milan/ArrowFlowMatching/
+Milan/6aaa41c163a3372f92488d74/
+Milan/_backup_20260921/
+Milan/**/.venv/
+Milan/**/results/
+Milan/**/data/
 
 # PDFs already deposited in ~/agents/library (do not duplicate them here)
 Ayman/email/
@@ -51,3 +57,7 @@ Ayman/retro-activelearning/
 # NOTE: retro-pfn/ and briefing/ are git SUBMODULES (added explicitly).
 # MolGPT/ is a tracked folder (no own git); its nested repos are ignored above.
 Ayman/.venv-docx/
+Milan/experiments/draw_arrows/out*/
+# RMechDB-derived target sets (CC-BY-NC-ND) — regenerate locally, never commit
+Milan/experiments/human_plausibility/targets*.json
+Milan/experiments/human_plausibility/multistep.json

@@ -2101,3 +2101,40 @@ M2 killed and M0 otherwise clear, the live question is **M1** — the cost-of-ge
 corpus *as it stands* (no completion), at the multi-rung capacity sweep the miniproject's §5 Q1
 note demands. No stage-1/M1 result has landed yet for that; nothing in `results/` or `runs/` beyond
 the balance-completion measurement above post-dates this pull.
+
+## MILAN ENROLLED, AND THE ENERGY QUESTION GETS A HOME (2026-09-25)
+
+**Enrolment.** `Milan/` is now an owner-operated leaf (ADR 0001 there). The folder had been wholly
+gitignored and absent from the inventory: plan, RESULTS, four handovers, two problem framings and
+~40 analysis/experiment scripts were unversioned. Split: his code checkout and his Overleaf are a
+`collaborator` external and a `paper, flow: in` boundary, never written into; everything else is
+ours and tracked. **His GitHub repo was renamed `mlnpapez/MechReact`** (old URL redirects); it is
+two commits ahead of our checkout, one "corrected radical moves" (2026-09-24) that touches the
+chemistry and the AFM model and is likely his answer to our `bug_radical_moves.md`. Pull and diff
+against our `fix/radical-moves` before any new AFM run.
+
+**The energy question, placed.** Discussion of "generate the reaction together with its energy":
+the prerequisite is a representation on which energy is a function of what the generator emits.
+ΔE is a state function and telescopes over intermediates and routes; a barrier is not and needs a
+transition object or a learned transformation-level model. Energy is defined only at Sector states
+(step boundaries), not per arrow — Milan's stability check already showed book-keeping states
+minimise *lower* than real molecules. AIMNet2 needs coordinates, so it is an oracle we call after
+embedding, not a representation for AFM; the AFM-compatible object is a per-state head distilled
+from it. Prior art: RMG (enumerate on 2D, price by group additivity + rate rules) is the direct,
+never-generative precedent; CGR/Chemprop barrier models, TS generators (OA-ReactDiff, React-OT,
+TSDiff) and YARP/Chemoton are the pieces; nobody trains a mechanism generator that carries a
+per-intermediate energy. Ladder for *ranking*: distilled 2D ΔE/barrier heads (ms, 2–5 kcal/mol,
+in-family) → MLIP ΔE after embedding (s, ~2) → MLIP/generated-TS barrier (min) → DFT NEB (our
+measured rung, Spearman 0.90) → ωB97M-V/DLPNO. Route-level ranking needs kinetics near the top
+rung on the rate-limiting step (perturbation table, ρ≈0); reaction-level ranking inside AFM's
+admissible sets is reachable at the cheap rungs.
+
+**Home: `retro-pfn/flow-ts/`, reactivated by its own falsification probe** — the charter reads
+"TS geometry + path + energy profile, FlowER-style + energy-aware; reactivate via falsification
+probe", and retro-pfn's placement rule already says an MLIP is a tool we call (ADR 0002) and a
+scalar feasibility output goes to `xif/`. The probe: on AFM's admissible candidate sets, is the
+recorded mechanism the lowest-energy path under AIMNet2 at Sector states? `Milan/` supplies
+candidates, checkpoints and reconstruction code; `retro-physics-validation` runs the MLIP rung
+(task via its inbox). Not Milan's folder (his paper, our question), not a new node (retro-pfn's
+promotion rule covers that case if the tether to ξ_f is lost). Next: retro-pfn ADR reactivating
+`flow-ts/`, then the experiment brief (which states get energies is the design decision).
