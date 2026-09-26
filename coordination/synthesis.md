@@ -2153,3 +2153,36 @@ against 70 %. On fine-tuning AIMNet2 to the AFM subset: nothing to fine-tune on 
 energies); if DFT labels are computed for calibration they are the better oracle for these
 10-heavy-atom molecules anyway, and the MLIP earns its place on FlowER-size molecules and on
 stage 2's label volume.
+
+## FLOW-TS STAGE 1 ANSWERED, AND IT REFRAMES ITS OWN STAGE 2 (2026-09-26)
+
+Oracle complete (RCI job 11707572, 4,369 components, 0 failures). Numbers and caveats in
+`retro-pfn/flow-ts/BRIEF-stage1.md`; headline, with random tie-breaking against a matched
+noise baseline on the same steps:
+
+| ranking | fine-tuned AFM (236 steps) | released AFM (273 steps) |
+|---|---|---|
+| summed ΔE, endpoints only | **57.6%** (noise 47.5%) | **69.1%** (noise 36.4%) |
+| worst intermediate | 52.6% (noise 48.1%) | 35.7% (noise 33.3%) |
+| the model's own log-probability | 70.3% | 18.7% |
+
+**The finding that matters is not the pass.** The profile that reads the intermediates is the one
+that fails; the profile that ignores them wins. Summed ΔE is E(emitted) − E(reactant), so what is
+measured is **product stability, not energy along a mechanism**. ADR 0003 designed stage 2 as a
+per-state energy head over the trajectory — this result gives that design no support, and a
+product-stability head would reproduce everything seen here. The mechanism-level framing of the
+whole line therefore needs re-examination before stage 2 is built, not after. It also sits
+consistently with Milan's measurement that AFM's book-keeping intermediates minimise to *lower*
+force-field energies than real molecules: those states are notation, not chemistry, and an energy
+read there is reading notation.
+
+**What survives and is worth having:** energy is complementary to the generator rather than
+redundant. It is right on 32.1% of the steps the fine-tuned model ranks wrong and on 63.4% of those
+the released model ranks wrong, which would take the fine-tuned model from 70.3% to roughly 80%
+under a perfect combiner. Breaking the model's ties with ΔE gains nothing, so the combiner has to be
+learned — that, not the per-state head, is the defensible stage 2.
+
+**Unverified, and it bounds everything above:** the oracle's scatter on our own species. The
+ωB97M-V calibration sits in `retro-physics-validation`'s inbox and has not run, and the AIMNet2
+ensemble guardrail turned out not to exist in the installed release, so no per-state flag marks
+where the potential is extrapolating.
