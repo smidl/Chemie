@@ -2227,3 +2227,43 @@ that is the bounded DFT campaign.
 **Supersedes** ADR 0003's stage 2. The energy head is a function of λ and the bond-change signature,
 conditioned on family, with bond additivity as a prior rather than a parameterisation — r = 0.64
 leaves about 60 % of the family intercept unexplained, so it must be learned, not imposed.
+
+## THE KILL TEST KILLED IT — the λ-flow's energy claim is refuted (2026-09-27)
+
+`retro-pfn/flow-ts/gate/RESULT-headtohead.md`. 225 Transition1x reactions, both arms sharing base,
+restraint, relaxation budget and energy model, differing only in how a changing bond's length moves
+along the path.
+
+| arm | bias-corrected MAE | Spearman | maximum mid-path |
+|---|---|---|---|
+| geometric, length linear | **25.96** | **0.577** | **98 %** |
+| Pauling, length from ln of bond order | 88.20 | 0.311 | 10 % |
+
+**The decisive number is the last column.** The Pauling path puts its energy maximum at an endpoint
+in nine cases out of ten. It has no saddle, so it is not measuring a barrier at all; for these
+endothermic reactions an endpoint maximum is the reaction energy. It also beats the geometric path on
+only 46 % of individual reactions, which is a coin toss.
+
+So the claim that made the construction more than a reparametrisation — that the barrier falls out as
+the maximum along the λ diagonal — is refuted on data we already owned, in a controlled comparison,
+at a cost of about an hour of cluster time.
+
+**What was not tested, stated so nobody claims more than this.** The run stretched every changing
+bond *independently*. Johnston and Parr's actual constraint pairs the breaking and forming bond at the
+transferred atom (n₁ + n₂ = 1). For a two-bond-break step this run drove four bonds to half-order
+simultaneously and built an over-coordinated structure, which plausibly explains both the +53.9 bias
+and the missing saddle. Implementing paired conservation for arbitrary multi-bond steps is much
+larger work and would forfeit the cheapness that was the point.
+
+**What survives.** The λ manifold is untouched: it conserves at every point, the randomness lives in
+arrow progress rather than matrix entries, and Milan's Theorem 1 still does not apply. That is a
+usable generative parametrisation. And Gate A's two-term barrier form still holds — family-constant
+driving-force coefficient of 0.50, intrinsic term tracking broken-bond strength at r ≈ 0.64. But the
+energy is now a **separately regressed head**, which is what the field already does, not a by-product
+of the generator.
+
+**Sequence worth remembering.** Three protocols were tried before the comparison was fair: plain
+linear interpolation (the documented strawman at MAE 443), Pauling targets imposed on IDPP frames
+without relaxation (measures strain, 531 vs 379), and finally per-image constrained relaxation with
+both arms treated identically. The first two would each have produced a confident wrong answer. For
+this construction the geometry protocol is part of the claim.
