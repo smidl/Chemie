@@ -2267,3 +2267,38 @@ linear interpolation (the documented strawman at MAE 443), Pauling targets impos
 without relaxation (measures strain, 531 vs 379), and finally per-image constrained relaxation with
 both arms treated identically. The first two would each have produced a confident wrong answer. For
 this construction the geometry protocol is part of the claim.
+
+## GATE B — OUR CHEMISTRY IS IN NEITHER BARRIER DATASET, AND GATE A DOES NOT REPLICATE (2026-09-27)
+
+`retro-pfn/flow-ts/gate/RESULT-gate-B.md`. Transition1x, 10,073 reactions with reference barriers, no
+new quantum chemistry.
+
+**Transition1x has hydrogen transfers where RGD1 had none — 1,984 against 10 — and every single one is
+intramolecular.** Zero bimolecular. They are strained uphill H-migrations inside one molecule (median
+reaction energy +47.5, median barrier +83.4 kcal/mol), not the bimolecular radical abstractions that
+are 99 % of our corpus. Two datasets, two different reasons, the same outcome: the chemistry we need
+is absent by construction of the generator in each case.
+
+**And where the nearest analogue exists, Gate A's central claim fails.**
+
+| set | n | Evans–Polanyi slope | R² |
+|---|---|---|---|
+| all intramolecular H-transfers | 1,984 | +0.315 | 0.198 |
+| the single C–H → C–H family | 580 | **+0.003** | **0.000** |
+
+Gate A reported the driving-force coefficient as a **within-family quasi-constant at 0.50**. Here the
+within-family slope is zero and the apparent 0.315 is **between**-family variation. So Gate A's
+constants are a property of RGD1's two-bond chemistry, not a law that carries.
+
+**Consequence for the programme.** The barrier form was the bridge from our cheap thermodynamic ranker
+to *feasibility*, and feasibility is what ξ_f and the planner need. That bridge is now unsupported for
+our chemistry, and testing it properly needs transition-state searches on our own steps — the expense
+the whole line existed to avoid, and which the head-to-head already showed cannot be shortcut
+(bias-corrected MAE 26 against a 4.8 ceiling).
+
+**Recommendation, and it is a park.** Ship the cheap ΔE ranker as a free complementary component to
+the generator; its advantage over the 3D oracle on the job that matters is unresolved (+1.3 points,
+interval −7.9 to +10.4), which is itself a useful efficiency finding. Do not build the combiner and do
+not commission a transition-state campaign on the strength of Gate A. Re-open if a corpus of
+**bimolecular** radical abstractions with computed barriers appears, or on an explicit decision to
+fund the searches.
