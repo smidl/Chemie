@@ -752,7 +752,7 @@ one of them would survive a referee alone.
 | Negative | Why it is not yet a true negative |
 |---|---|
 | σ ⊥ \|error\| (retro-pfn) | **Already flipped once on setup choice** (regression-σ/Morgan-GP/AUC → classifier-entropy/DRFP/F1). Setup-sensitive, and measured on **yield**-HTE, not on the route task we actually claim. |
-| epistemic ≈ random | **2 seeds**; MC-dropout only, a weak epistemic estimator; the source paper's claim rests on a BNN we never ran. |
+| ~~epistemic ≈ random~~ **RESOLVED 2026-10-02** | Was: 2 seeds, MC-dropout only, the paper's claim rests on a BNN we never ran. **Now settled and it is neither horn**: at the released 30-epoch budget the number is an undertraining artifact (2/10 seeds collapse to the constant all-positive predictor); with a trained model epistemic is worth −0.001 against random — nothing, but not harmful. See the 2026-10-02 section. The *new* fragile claim in its place is "the acquisition advantage shrinks with training budget" (t = 1.37, underpowered). |
 | epistemic-MCTS negative | One **crude implementation** (σ bonus into leaf value), not the hypothesis (σ in *selection*, UCB). The leaf itself re-elevated it as H2 — so the negative is scope-limited and we have been reading it as general. |
 | MolPFN variance floor | Checkpoint selected on **train** loss; temperature fixed at 1.0; **`ctx_len`=8** (8 points is a poor basis for estimating a spread — a floor is the *expected* outcome); **no conditioning-token arm** (all configs `qry_props: none`); label ablation missing for exactly the two configs where conditioning works. |
 | Mechanism kernel loses at route level | Two confounds already identified (fixed absolute threshold vs differing per-arm score distributions; route-length compounding). Already sent back for a calibration-matched rerun. |
@@ -2302,3 +2302,90 @@ interval −7.9 to +10.4), which is itself a useful efficiency finding. Do not b
 not commission a transition-state campaign on the strength of Gate A. Re-open if a corpus of
 **bimolecular** radical abstractions with computed barriers appears, or on an explicit decision to
 fund the searches.
+
+## THE 06-18 REVERSAL WAS MEASURED AGAINST AN UNDERTRAINED BASELINE (2026-10-02, from `retro-activelearning`)
+
+First contribution from the new student node (`aymen/bnn-comparison` on retro-pfn,
+`xif/results/aymen_bnn/`). He reconstructed the 06-18 acquisition protocol — **the loop itself
+was never committed**, only its outputs — and added the one control that section did not vary:
+the **training budget**. Numbers below are re-verified here, not taken from his write-up.
+
+### What it resolves
+The fragile negative "epistemic ≈ random" is **neither horn** of the dichotomy the 09-23 note put
+to him. At Zhong's released 30-epoch default the epistemic result is an **artifact**:
+
+| config | random | predictive | aleatoric | epistemic | collapses |
+|---|---|---|---|---|---|
+| 30 ep (released) | 0.767 ± .007 | 0.810 ± .012 | 0.810 ± .010 | **0.668 ± .144** | **2/10** |
+| 100 ep | 0.807 ± .014 | 0.837 ± .005 | 0.836 ± .005 | **0.806 ± .021** | 0/24 |
+| 200 ep | 0.824 ± .002 | pending | pending | pending | 0/2 |
+
+The collapsing seeds land at **0.3957**, which is *exactly* the F1-macro of a constant all-positive
+predictor at this split's 0.655 positive rate (computed independently: 0.39577). Mechanism is a
+class-imbalance runaway (`labelled_pos` 0.72→0.92 while `batch_pos` runs 0.94–1.00). The competing
+explanation — `disentangle_uncertainty`'s 3-decimal rounding degenerating the ranking — was
+**eliminated** by measuring ties at the k-th score (1.03–1.71× batch). Within-seed clincher: **seed 7
+scores 0.3957 at 30 ep and 0.8333 at 100 ep**, the best seed in the set.
+
+### What it costs us — this is the part that routes up
+The 06-18 REVERSAL *revived* the active-acquisition premise on a **+0.043** gap. That gap is measured
+where the baseline is most handicapped: **random alone gains +0.040 going 30 → 100 epochs**, as much
+as acquisition buys, and at 200 epochs random is 0.824 and **still climbing**. With a trained model
+the acquisition advantage is +0.031 (predictive) / +0.029 (aleatoric).
+
+**Caveat, and it is ours not his:** the shrink from +0.043 to +0.031 is **not significant** at his seed
+counts — difference 0.012, SE 0.0087, t = 1.37 (n = 5–6). The direction and the mechanism are
+credible; the claim is not yet established. The 200-epoch cell is n=2, one policy.
+
+### The reducible/irreducible trace — the first real one in this tree
+Zhong's `disentangle_uncertainty` *is* the aleatoric/epistemic split operationalised, so this is the
+thesis question, not an adjacent one. With a converged model the result is **backwards from theory**:
+
+- **irreducible (aleatoric) acquisition: +0.029** — carries essentially the whole benefit
+- **reducible (epistemic) acquisition: −0.001** — worth exactly nothing
+- predictive (their sum) +0.031 ≈ the aleatoric contribution alone
+
+Theory says the opposite: a label buys you something only where uncertainty is *reducible*. Two
+readings, and they are not yet separated:
+
+1. **The estimator is degenerate.** MCDropout's epistemic signal is sparse — measured here from his
+   logged diagnostics, at 100 ep `score_zero_frac` is **0.110 mean / 0.443 max** for epistemic
+   against **0.001 / 0.022** for aleatoric. It assigns *literally zero* to a large, swinging share of
+   the pool, so it cannot rank there. This is what BNN-NUTS is for.
+2. **The decomposition is decorative on a classification task.** High aleatoric entropy on a binary
+   task means proximity to p = 0.5, i.e. the decision boundary — so "aleatoric wins" may just be
+   "margin sampling wins", with the reducible/irreducible label carrying none of the explanatory
+   weight. If so, **this testbed cannot pose the thesis question at all**, which we would want to
+   know before spending NUTS sampling on it.
+
+Reading 2 is cheap to kill: add a **pure margin policy** (select |p − 0.5| smallest, no uncertainty
+machinery) as a fifth arm in his existing loop, same seeds and budget. If margin ≈ aleatoric the
+decomposition is doing no work here; if margin < aleatoric the aleatoric term carries something
+beyond boundary proximity. **Run this before BNN-NUTS** — it is ~20 lines and it tests whether the
+question is askable in this testbed, which NUTS presupposes.
+
+### Structural consequence for the student's scope
+Per `Ayman/WORKING-reducible-noise.md` §7b, the wet-lab HTE label is the *only* genuinely aleatoric
+thing in this programme; everything computational is epistemic. Zhong's Suzuki set is therefore the
+**aleatoric floor** — and note it has **no reduction axis at all**: no ladder, no escalation, no
+cheap-vs-expensive rung. The epistemic term is the only reducible quantity in play and it measures
+zero. So this testbed characterises the floor; it cannot carry the reducible half of the thesis. That
+half needs the oracle ladder (§3 of the same document).
+
+### Also found — a seeding bug of the class that already burned this tree once
+`BNN_NUTS.__init__` hardcodes `random.PRNGKey(666)`, so `--seed` has no effect and **every seed
+returns the identical posterior**. Any earlier multi-seed BNN-NUTS result on the unpatched class is
+degenerate. Same family as the initial-design pseudo-replication trap imported from DecisionBO.
+
+### Open / ours to action
+- The 06-18 loop exists on RCI at `/mnt/data/resynthesis/zhong-reactivity/` (`zhong_al.py`,
+  `run_al.sbatch`, plus four `results/al_*.json` from 06-18). **He never found it** — the 09-23
+  onboarding note sent him to `retro-pfn/.venv` and never mentioned it, so he reconstructed from
+  prose. Independent reconstruction landing within 0.02 on three of four policies is arguably
+  stronger evidence than a re-run, but the directions need correcting and his numbers cross-checking
+  against those curves.
+- Environment drift: he ran torch 2.7.1 / pyro-ppl 1.9.1 / drfp 0.3.7; `zhong-reactivity` pins torch
+  1.13.1+cu117 / pyro_ppl 1.8.4 / **jax 0.4.8 / numpyro 0.11.0** / drfp 0.3.2. Tolerable for
+  torch-only MCDropout, a real gap for the jax/numpyro NUTS path.
+- His decision request sits in the branch README, **not** in `coordination/outbox.md`, so a status
+  sweep grepping `DECISION NEEDED:` will not see it.
