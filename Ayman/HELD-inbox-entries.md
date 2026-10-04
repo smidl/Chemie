@@ -166,3 +166,131 @@ commit it as a dated entry in `retro-activelearning/coordination/inbox.md`.
 Full numbers and caveats: `WORKING-reducible-noise.md` §3 in this folder. Raw output and the
 script stay on the cluster at `/mnt/data/resynthesis/admissibility/bh9_xtb/`; nothing about
 this measurement lives in the student's repository until release.
+
+---
+
+## HELD-03 — review of the MCDropout baseline; margin before NUTS — RELEASED 2026-10-04
+
+Pasted into `retro-activelearning/coordination/inbox.md` and committed there, in full (both
+judgment calls kept: the closing direction paragraph and the correction about the bad
+directions). Kept below for provenance only.
+
+**Also needs doing separately (not part of this message):** `retro-pfn`'s own
+`docs/mechanistic/tvoi_surrogate_results.md` still reports the 06-18 REVERSAL without the
+undertraining caveat and still names "run their BNN" as the definitive test. Both are now
+superseded.
+
+> ### 2026-10-04 — review: the budget control lands, and it changes what to run next
+>
+> This is good work, and the part that makes it good is not the headline. It is that you logged
+> per-round diagnostics *before* you needed them, so when epistemic behaved oddly you could
+> diagnose it instead of speculating; that you killed the competing explanation (the 3-decimal
+> rounding) by measuring ties at the k-th score rather than arguing about it; and that seed 7
+> collapsing at 30 epochs and being your *best* seed at 100 is a within-seed demonstration, which
+> is worth more than any between-condition mean. Committing the baseline for review before
+> spending NUTS time was also the right call.
+>
+> I re-derived your collapse number independently: a constant all-positive predictor at this
+> split's 0.655 positive rate scores F1-macro 0.39577, against the 0.39573 you observe. That
+> diagnosis is confirmed, not merely plausible.
+>
+> **Your decision request: yes, run at the 100-epoch-equivalent setting, not the released 30.**
+> Your own evidence makes 30 epochs indefensible as a comparison point. But do not run BNN-NUTS
+> next — see below.
+>
+> #### Run a margin baseline first, and mind one detail that decides whether it is worth running
+>
+> Your result is that with a trained model the *irreducible* component carries the whole benefit
+> (aleatoric +0.029) while the *reducible* one is worth nothing (epistemic −0.001). That is
+> backwards from theory, which says a label only buys you something where uncertainty is
+> reducible. There are two explanations and they are not yet separated:
+>
+> 1. **MCDropout's epistemic estimator is degenerate.** Your own diagnostics support this: at 100
+>    epochs its `score_zero_frac` averages 0.110 and peaks at 0.443, against 0.001 for aleatoric.
+>    It assigns literally zero to a large and swinging share of the pool, so it cannot rank there.
+> 2. **The decomposition is decorative on a binary task.** High aleatoric entropy on a binary
+>    problem just means proximity to p = 0.5 — the decision boundary. If so, "aleatoric wins" is
+>    really "margin sampling wins" and the reducible/irreducible labels explain nothing.
+>
+> Explanation 2 threatens the whole question and costs almost nothing to test, whereas NUTS is
+> expensive and *presupposes* the decomposition is meaningful. So: add a margin policy to your
+> existing loop, same seeds and budget.
+>
+> **The detail that matters:** for binary classification, predictive entropy H(p̄) is a strictly
+> monotone function of |p̄ − 0.5|. So margin computed on your MC-averaged prediction is the
+> *identical ranking* to predictive-entropy acquisition and would test nothing. The baseline has
+> to be a **single deterministic forward pass with dropout off**. That version isolates the real
+> question: does averaging 100 stochastic passes and decomposing them buy anything over a plain
+> softmax?
+>
+> If deterministic margin lands near +0.031, the honest conclusion is that none of the Bayesian
+> machinery earns its cost *for acquisition* on this task. That is a stronger result than
+> "epistemic fails," because it goes at the paper's headline rather than one of its arms. It
+> would not say anything about their other uses of uncertainty (OOD detection, robustness
+> scoring) — keep that scope limit explicit when you write it up.
+>
+> Worth knowing: **Zhong has no such baseline.** Their AL experiment is four arms — random,
+> predictive, epistemic, aleatoric — and random is the only non-uncertainty comparator. Also note
+> their reported ordering is *inverted* relative to yours: the paper says predictive and
+> epistemic "significantly outperform the method based on aleatoric uncertainty," where you
+> measure predictive ≈ aleatoric ≫ epistemic ≈ random. Their figure is on their wetlab stratified
+> splits and yours is Suzuki `k_fold_0`, so this is not yet a contradiction — but it is the
+> sharpest open discrepancy you have, and worth stating plainly in the README.
+>
+> #### Two corrections to what I sent you on 09-23 — my error, not yours
+>
+> 1. **The 06-18 loop does exist on RCI**, at `/mnt/data/resynthesis/zhong-reactivity/` —
+>    `zhong_al.py`, `run_al.sbatch`, `run_al_aleatoric.sbatch`, its own `.venv`, and four curves
+>    in `results/al_{random,predictive,aleatoric,epistemic}.json` from 06-18. My note sent you to
+>    `retro-pfn/.venv` and never mentioned it, which is why you reconstructed from prose. Your
+>    reconstruction landing within 0.02 on three of four policies is arguably *better* evidence
+>    than a re-run would have been, so this costs you nothing scientifically — but please
+>    cross-check your curves against those four JSONs now that you know they are there.
+> 2. **The venv and requirements I pointed you at were the wrong ones**, and my claim that
+>    BNN-NUTS "will need packages MCDropout never needed" was wrong: `numpyro 0.11.0` and
+>    `pyro_ppl 1.8.4` are already pinned in `zhong-reactivity/requirements.txt`.
+>
+> #### Environment — read before the NUTS run
+>
+> You ran Python 3.12 / torch 2.7.1 / pyro-ppl 1.9.1 / drfp 0.3.7. The original pins are torch
+> 1.13.1+cu117, pyro_ppl 1.8.4, **jax 0.4.8, jaxlib 0.4.7+cuda11.cudnn82, numpyro 0.11.0**, drfp
+> 0.3.2, numpy 1.23.4, sklearn 1.1.3.
+>
+> - For torch-only MCDropout the drift is probably tolerable, but it belongs in your write-up as
+>   a caveat on the comparison rather than going unmentioned.
+> - **One candidate for your residual deltas:** you regenerated the DRFP features with drfp 0.3.7
+>   and the original used 0.3.2. Different fingerprints would shift every arm slightly, which is
+>   the right shape for the −0.007 / −0.019 / −0.014 you see. Cheap to check by regenerating under
+>   the pinned version.
+> - For the jax/numpyro path, do not fight the version gap — jax 0.4.8 is old enough that the API
+>   has moved substantially. Use the pinned environment in `zhong-reactivity/` rather than
+>   porting their sampler forward.
+>
+> #### Two places the write-up outruns the data
+>
+> 1. Your bold headline says the acquisition advantage "shrinks as the baseline is trained
+>    properly." I ran it: +0.043 against +0.031 is a difference of 0.012 with SE 0.0087, t = 1.37
+>    at n = 5–6. Not established. Your *Open* section states this correctly, so the two sections
+>    disagree with each other — demote the headline or add seeds, but do not leave both standing.
+> 2. "Random is still improving at 200 epochs" rests on n = 2 of a single policy, and it carries
+>    real weight in your argument. Flag it as provisional or fill the cell.
+>
+> Neither is a criticism of the finding. The epistemic result is solid and I would defend it; it
+> is the *second* claim, the one about the advantage shrinking, that is currently the fragile one
+> — and it happens to be the more consequential of the two for this programme, which is exactly
+> why it needs the seeds.
+>
+> #### Process
+>
+> Your decision request was in the branch README. Status sweeps grep `coordination/outbox.md` for
+> `DECISION NEEDED:` on its own line, so as written it was invisible to the mechanism — I found it
+> by reading your branch. Put future ones in the outbox; the README is the right place for the
+> science, the outbox is the channel for anything you need an answer on.
+>
+> #### One thing to be aware of, not to act on yet
+>
+> Your finding has a structural consequence worth naming: this dataset has no *reduction* axis at
+> all — no ladder, no escalation, nothing that makes error go away by paying more. The epistemic
+> term is the only reducible quantity in play and it measures zero. That is informative rather
+> than disappointing, but it bears on where the thesis goes after this baseline closes. Let us
+> talk it through rather than settle it over the inbox.
