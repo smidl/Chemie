@@ -2364,6 +2364,11 @@ decomposition is doing no work here; if margin < aleatoric the aleatoric term ca
 beyond boundary proximity. **Run this before BNN-NUTS** — it is ~20 lines and it tests whether the
 question is askable in this testbed, which NUTS presupposes.
 
+> **ANSWERED 2026-10-12 — reading 2, decisively.** Deterministic margin 0.8388 against predictive
+> 0.8394 on 8 paired seeds; difference −0.0006, t = −0.26. The decomposition does no work on this
+> task and the testbed cannot pose the question as a classifier. See the 2026-10-12 entry; the
+> "two readings" above are resolved and should not be quoted as open.
+
 ### Structural consequence for the student's scope
 Per `Ayman/WORKING-reducible-noise.md` §7b, the wet-lab HTE label is the *only* genuinely aleatoric
 thing in this programme; everything computational is epistemic. Zhong's Suzuki set is therefore the
@@ -2389,3 +2394,115 @@ degenerate. Same family as the initial-design pseudo-replication trap imported f
   torch-only MCDropout, a real gap for the jax/numpyro NUTS path.
 - His decision request sits in the branch README, **not** in `coordination/outbox.md`, so a status
   sweep grepping `DECISION NEEDED:` will not see it.
+
+## THE DECOMPOSITION IS DECORATIVE, AND THE REGRESSION PORT FINDS NOTHING EITHER (2026-10-12)
+
+Closes the open action from the 2026-10-02 entry and supersedes its "two readings". Source:
+`aymen/bnn-comparison`, `xif/results/aymen_bnn/`. Numbers re-verified here against his raw
+per-seed curves, not taken from his tables.
+
+### Reading 2 was right: a plain softmax margin matches the whole Bayesian pipeline
+A deterministic single forward pass with dropout **off**, ranked by |p − 0.5|, against 100
+stochastic passes plus the Depeweg decomposition, on the same 8 paired seeds:
+
+| policy | final F1 | gap vs random | forward passes/round |
+|---|---|---|---|
+| random | 0.8071 | — | 0 |
+| **margin (deterministic)** | **0.8388** | **+0.032** | **1** |
+| predictive | 0.8394 | +0.032 | 100 |
+| aleatoric | 0.8370 | +0.030 | 100 + decomp |
+| epistemic | 0.8056 | −0.001 | 100 + decomp |
+
+Paired margin − predictive = **−0.0006**, t = −0.26, 95% CI [−0.0061, +0.0049]. The design
+control that makes this mean anything: test F1 is computed identically for every arm, so only
+the *acquisition* differs. **On this task the entire acquisition advantage is proximity to the
+decision boundary, at 1/100 of the cost, and none of the Bayesian machinery contributes to it.**
+Zhong never ran this baseline — their AL comparison has four arms and random is the only
+non-uncertainty comparator.
+
+### The structural result, and it is the first genuinely novel thing this project has produced
+Under a **constant-σ² likelihood** the decomposition degenerates, before any data is touched:
+- `aleatoric(x) = σ²` is constant in x → ranking by it is a uniform draw → it **is** random sampling
+- `predictive(x) = epistemic(x) + σ²`, a constant shift → **identical ordering** to epistemic
+
+Verified arithmetically, not statistically: across every compared curve point of his homoscedastic
+predictive and epistemic runs, **max |difference| = exactly 0**. So *a paper comparing predictive,
+epistemic and aleatoric under a constant-variance likelihood is reporting one method, one constant
+shift of it, and random sampling, under three names.* Checkable in anyone's released code, and a
+candidate explanation for part of the inconsistency this literature shows. This should lead the
+thesis.
+
+### The regression port: still nothing beats random
+Continuous `Conversion`, never thresholded; Suzuki `k_fold_0`; six policies × two likelihoods.
+**190 paired comparisons (5 policies × 2 likelihoods × 19 budgets): zero significantly better than
+random, 159 significantly worse.** The cleanest thesis test in it is the aleatoric arm against
+*itself* under the two likelihoods, nothing else changed — constant σ ties random (it is a uniform
+draw, above); input-dependent σ(x) buys batches 39% noisier than the pool, never below +21% in any
+round of any seed, and loses −0.506 AULC (t = −5.25, p = 0.001, 0 of 8 seeds). That is H2 of his
+original proposal, measured.
+
+### His inverted U is substantially an artefact — tested here, not argued
+He reported model error humped in *predicted* conversion (both tails predicted well, uncertainty
+mid-range), corroborated by replicate disagreement also peaking mid-range, and used it to diagnose
+the σ head. Three probes run at this node (`/mnt/data/resynthesis/hump_probe/`, job 11787250), with
+an independently fitted model — HistGradientBoosting, oof R² **0.834** against his 0.832, so a
+replication across model classes:
+
+```
+A. real, by PREDICTED decile:   4.73  4.88  5.69  7.76 10.91 12.26 11.29 10.72  8.59  5.47   (reproduces)
+B. real, by TRUE decile:       11.26  6.24  5.13  6.06  7.92  8.80  9.02 10.05  9.48  8.35   (hump GONE)
+null σ=10, by PREDICTED:        8.16  8.86 10.33 11.51 14.02 14.74 13.88 14.46 12.07  9.42   (hump ANYWAY)
+null σ=20, by PREDICTED:       12.34 14.60 15.48 17.10 19.39 20.08 20.09 20.24 18.37 14.53   (hump ANYWAY)
+```
+
+The null changes exactly one thing: noise **constant by construction**, added to the real
+conversions and clipped to [0,100]. Hump amplitude 6.58 / 7.90 against 7.53 real — comparable, from
+noise with no structure at all. Zero-inflation is not the cause (dropping exact zeros leaves A
+unchanged). **Mechanism is shrinkage**: extreme predictions are made only where features determine
+the answer and are usually right; middling predictions are made where features are ambiguous and are
+often wrong. Any shrinking regression produces error-largest-in-the-middle when binned on its own
+output.
+
+Consequence: the inverted U does not show where uncertainty lives. It does **not** refute the
+hypothesis that mid-conversion is intrinsically noisier — chemically plausible, since at partial
+conversion competing rates are comparable — it removes the evidence for it. Settling it needs
+replicates, and **Suzuki has none**, so it is a wetlab question. Note also the corroborating
+replicate evidence is contaminated by the same mechanical coupling he caught elsewhere: on a bounded
+bimodal readout a pair's mean and spread are coupled ({0,100} forces mean 50, spread 70.7), so
+disagreeing pairs land mid-range by arithmetic.
+
+### The aleatoric floor is now measured — objective 2 of his proposal, first time in this programme
+Wetlab replicates: 11,669 rows over 11,151 conditions; 505 repeated, 26 giving a different product
+(dropped), **468 clean pairs**. 36.5% agree exactly, median |difference| 3.07, 13.2% disagree by
+more than 50 points, **ICC 0.637**, target zero-inflated at **61%** against 4.8% on Suzuki. The
+i.i.d.-Gaussian-constant assumption fails on all three counts, from measurement rather than argument.
+
+### Why the σ head may fail, and it is not what he thought
+`unc_models.py` trains the variance head on **plain Gaussian NLL** after an MSE warm-up over the
+first third of epochs. Two things survive the warm-up:
+1. **Gradient coupling.** ∂NLL/∂μ = −(y−μ)/σ², so points currently believed noisy have their μ
+   gradient down-weighted; σ² large → μ unfitted there → residual stays large → σ² stays large.
+   Self-reinforcing; the β-NLL variants exist to break it.
+2. **Architecture.** One shared 16-unit hidden layer, with μ and log σ² as two *linear* readouts of
+   it — and the warm-up spends a third of training orienting that representation solely at μ. log σ²
+   is then near-forced to be an affine functional of a μ-oriented code, which is exactly the
+   "monotone in μ" behaviour he observed. So the head may be failing for want of anything to build a
+   non-monotone shape *from*, not because a variance head cannot express one.
+
+**A distinction the programme should adopt:** σ tracking *measurement noise* and σ tracking *model
+error* are different targets that differ by exactly the shrinkage artefact above. The Gaussian
+likelihood is written for the first; an acquisition policy wants the second. His setup can separate
+them — replicates measure noise with no model, residuals measure error — which requires both and is
+rare.
+
+### Open / caveats on quoting any of this
+- **Positive control has not run.** `oracle_error` (acquire by true |μ̂ − y|, the ceiling any policy
+  could reach) is implemented but was not in the default strategy set. Until it does, "no policy
+  beats random" and "this budget cannot resolve acquisition quality" are the same observation.
+- **Reproducibility gap:** his tables report 8 seeds and use t(7), but every committed result file
+  carries `seeds: [0,1,2]` in all twelve arm × likelihood cells. Presumed a missing `git add`;
+  requested. Until resolved the committed artifacts support n = 3.
+- He self-reported and corrected an error in his own published 10-05 interval (1.96·se where
+  t(7) = 2.3646 was needed, 17% too narrow; conclusion unchanged, still a null spanning zero). This
+  node's 10-06 verification used the correct multiplier and did not flag the discrepancy — our miss,
+  not only his.
