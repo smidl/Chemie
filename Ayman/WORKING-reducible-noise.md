@@ -217,3 +217,89 @@ existing, working harness by the two/three model classes it's missing, not build
    anyone else.
 4. **Whether check 3 of §6 runs first.** It can kill the coupling without touching the
    thesis, which is an argument for running it regardless.
+
+## 9. Convergence (2026-10-19) — the Zhong line is one end of this plan, not a replacement
+
+**The plan above is not superseded.** §1–§7 still describe where this thesis is going: an
+escalation policy over a reducible-error ladder. What happened since 2026-09 is that the
+problem was approached from the *other* end — the wet-lab aleatoric floor — and the two are
+meant to meet. §7b states why they are the same question. This section records what the
+detour actually bought, so the junction can be made deliberately rather than by drift.
+
+### What the wetlab end established that the ladder end needs
+
+**Portable findings** — these are statements about uncertainty decompositions, not about Zhong:
+
+1. **The homoscedastic degeneracy.** Under a constant-σ² likelihood, predictive and epistemic
+   are the *same ranking* (predictive = epistemic + const), and aleatoric is a constant score
+   that degenerates to a random sampler. Two lines of algebra, verified at max difference
+   0.0e+00. **Any escalation policy built on this decomposition with a global σ² collapses the
+   same way.** Cheap to have learned before building the ladder version.
+2. **σ carries signal only where noise is real.** Spearman(predictive variance, |residual|)
+   = +0.21 Suzuki against +0.75 wetlab, with wetlab validated model-free against replicate
+   disagreement. Boundary condition for the ladder: deterministic oracles have **no** aleatoric
+   component, so there σ can only be model ignorance — the clean regime §7b predicts, and the
+   one where the epistemic question is actually askable.
+3. **Level correction versus structure.** The one positive wetlab result turned out to be an
+   intercept correction (centred RMSE +2.07 → +0.34 n.s.) that counts only because the
+   intercept is invisible in-sample (+0.10 computable against +13.47 true). This is **§4.2 of
+   this document in other words** — "error structure beats error magnitude; a biased-but-
+   consistent cheap rung may be worth more than a precise scattered one", 8.3 % vs 14.4 % top-1
+   flips. The detour has now given that distinction a measurement procedure.
+
+**Portable apparatus** — this is the larger part of what the detour bought:
+
+- **Fixed-pool control.** Hold the pool literally fixed, vary only what you evaluate against;
+  verify bit-identical reproduction first as the licence. Killed the pool-size confound outright.
+- **Level/structure split.** Raw gap, centred gap, and gap against an oracle-calibrated
+  baseline, reported together. Separates "moved the level" from "learned the shape".
+- **Model-swap baseline.** A plain RF on randomly chosen labels, same budget. In the one cell
+  where acquisition won, the model swap won by more (+3.159 vs +2.848) — which is §6 check 3
+  ("does escalation change a decision?") in another costume, and a control the ladder arm must
+  carry.
+- **Positive control** (`oracle_error`) as a precondition for interpreting any negative.
+- **Registered predictions, scored.** He now does this routinely and gets some wrong in public.
+
+**Terminal to the detour — will not transfer:** the replicate characterisation (no replicates on
+a deterministic oracle), the zero-inflation / hurdle-likelihood thread, and the Suzuki-vs-wetlab
+zero-rate probe. Worth knowing before spending time on them that they close the wetlab chapter
+rather than feeding the ladder one.
+
+### Where the two ends meet
+
+**§6 check 2, still open and now much better equipped.** Measure our own error correlation
+across reaction families on shared geometries at n ≫ 3 — the check that decides whether the
+acquisition rule is *"escalate where the error is large"* or *"escalate where the error is
+uncorrelated"*. RGD1 remains the argument (176,992 reactions shipping transition states,
+barriers, endpoint geometries and atom maps; adopt rather than generate).
+
+That check is exactly the kind of question the detour's apparatus exists to answer without
+self-deception: fixed pool, positive control, level-versus-structure split, model-swap baseline.
+**The wetlab end produced the instruments; §6.2 is where they get pointed at a reducible axis.**
+
+### Sequencing, and the risk
+
+One student, one chapter clock. Running both ends at once is how a student ends up with two
+half-chapters — and this would be his third scope move, after A → B and B → regression.
+Therefore:
+
+1. **Finish the wetlab chapter** on the three on-target runs (C1 then C3 of the noise
+   conditions; RF-with-variance-guided acquisition; the zero-rate probe if the Suzuki/wetlab
+   difference is worth an afternoon). Chapter framing is *what uncertainty estimates measure and
+   when they mislead* — owner's decision, 2026-10-19.
+2. **Open the ladder arm as the next chapter**, with §6.2 as its first experiment, inheriting
+   the controls rather than rediscovering them.
+
+The C1 condition (constant σ, no σ/y relationship) is the natural bridge: it is approximately the
+ladder's own noise regime, so whatever it shows about acquisition under constant noise carries
+over directly.
+
+### What in §1–§7 is now known to be wrong, and should be read with this attached
+
+- **§3's "the ladder has a phantom step"** stands, but note his TASK-01 r93 result (-18.3 error,
+  sign flipped on a *bimolecular* Diels-Alder) is the multi-fragment penalty in §3, not a general
+  statement about GFN2 — id 85, intramolecular, errs by -7.0 with the correct sign.
+- **§7's Phase 0–4 learning ladder has not been followed** and should not be treated as the live
+  plan for him; he went Zhong → classifier → regression → shift. Phase 0 (reproduce two rows
+  himself) was partially served by TASK-01 Part A.
+- **§6 check 1** (GFN2-xTB on BH9) is **done** — released to him as HELD-01 on 2026-10-06.
