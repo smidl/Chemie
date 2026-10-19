@@ -751,7 +751,7 @@ one of them would survive a referee alone.
 ### Fragile — must NOT be quoted as settled
 | Negative | Why it is not yet a true negative |
 |---|---|
-| σ ⊥ \|error\| (retro-pfn) | **Already flipped once on setup choice** (regression-σ/Morgan-GP/AUC → classifier-entropy/DRFP/F1). Setup-sensitive, and measured on **yield**-HTE, not on the route task we actually claim. |
+| ~~σ ⊥ \|error\| (retro-pfn)~~ **REVERSED 2026-10-19** | Was: already flipped once on setup choice, setup-sensitive, measured on yield-HTE. **Now overturned on the data, not the setup**: Spearman(predictive variance, \|residual\|) is +0.21 on Suzuki but **+0.75 on wetlab**, and on wetlab σ is validated model-free against replicate disagreement (+0.52 to +0.59 on 302 replicated rows). σ ⊥ error was a property of Suzuki — which has 4.8% zeros and no replicates — not of the problem. See the 2026-10-19 entry. |
 | ~~epistemic ≈ random~~ **RESOLVED 2026-10-02** | Was: 2 seeds, MC-dropout only, the paper's claim rests on a BNN we never ran. **Now settled and it is neither horn**: at the released 30-epoch budget the number is an undertraining artifact (2/10 seeds collapse to the constant all-positive predictor); with a trained model epistemic is worth −0.001 against random — nothing, but not harmful. See the 2026-10-02 section. The *new* fragile claim in its place is "the acquisition advantage shrinks with training budget" (t = 1.37, underpowered). |
 | epistemic-MCTS negative | One **crude implementation** (σ bonus into leaf value), not the hypothesis (σ in *selection*, UCB). The leaf itself re-elevated it as H2 — so the negative is scope-limited and we have been reading it as general. |
 | MolPFN variance floor | Checkpoint selected on **train** loss; temperature fixed at 1.0; **`ctx_len`=8** (8 points is a poor basis for estimating a spread — a floor is the *expected* outcome); **no conditioning-token arm** (all configs `qry_props: none`); label ablation missing for exactly the two configs where conditioning works. |
@@ -2506,3 +2506,102 @@ rare.
   t(7) = 2.3646 was needed, 17% too narrow; conclusion unchanged, still a null spanning zero). This
   node's 10-06 verification used the correct multiplier and did not flag the discrepancy — our miss,
   not only his.
+
+## σ DOES CARRY SIGNAL — ON WETLAB. A STANDING NEGATIVE REVERSES (2026-10-19)
+
+Source: `aymen/bnn-comparison` (`a26b332`, `8960f2b`), outbox 2026-10-18. Seed counts verified here:
+**all 26 committed result cells now carry 8 seeds** (was 3), and `oracle_error` ran — so
+`PROTOCOLS.md` §4.1 is satisfied and the negatives below are interpretable rather than ambiguous.
+
+### The reversal
+This tree has carried **"σ ⊥ |error|"** as a standing finding since 2026-06-17, re-stated in the
+EVIDENCE AUDIT as fragile but never overturned. It is now **a property of Suzuki, not of the
+problem**:
+
+| | Suzuki | wetlab |
+|---|---|---|
+| Spearman(predictive variance, \|residual\|) | **+0.21** | **+0.75** |
+| exact zeros | 4.8 % | 60.9 % |
+| replicated conditions | **none** | 468 |
+
+And on wetlab σ is validated against a **model-free** comparator: on 302 replicated test rows,
+Spearman(predicted σ, replicate |x − y|) = **+0.52 to +0.59** across seeds. Replicate disagreement
+rises monotonically with conversion (mean |x − y| 10.78 → 34.23, implied σ ≈ 9.5 → 30.3 against a
+total test RMSE near 18.5), so **in the high-conversion region measurement noise alone exceeds the
+model's overall error**, and 60–69 % of the squared error in the top-σ decile is accounted for by
+replicate-estimated noise variance. The uncertainty estimates work. We had concluded otherwise from
+one dataset that happens to lack both the zero-inflation and the replicates.
+
+### The mid-range-noise hypothesis is refuted, not merely unsupported
+The owner's hypothesis (mid-conversion intrinsically noisier) and the inverted-U that appeared to
+support it are both gone. The decoupled replicate probe — one randomly chosen replicate as x-axis,
+the other as y — gives **monotonically rising** noise, Spearman **+0.591**. His constant-noise null
+reproduces **6.40 of the 7.48** hump amplitude, agreeing with this node's independent probe
+(2026-10-12 entry). Both the hump and "noise rises then falls" came from invalid binning.
+
+### The one positive result, and what survives of it
+`Both_Unseen`/het was the only winning cell of the 2×3 (5/6 arms at Bonferroni). It was also the
+smallest pool, narrowest chemistry and highest budget fraction, so "wins under shift" and "wins on a
+small pool" were not separable. Resolved exactly: `Both_Unseen`'s pool is a **perfect subset** of
+`One_Unseen`'s (4960/4960), so the pool was held literally fixed while only the evaluation set
+varied — reproduction bit-identical (0.000e+00). Result:
+
+| evaluation set | label shift | arms beating random |
+|---|---|---|
+| `E_matched` (decile-matched null anchor) | +0.01 | **0 / 6** |
+| `E_BU` (real held-out-reactant split) | +9.05 | **5 / 6** |
+
+Monotone in shift across 11 evaluation sets (Spearman exactly +1.000, zero inversions, four arms).
+**Shift causes it; pool size does not.** But two qualifications, both his:
+- **It is a level correction.** Centred RMSE drops the gap from +2.07 to **+0.34, n.s.**; against
+  oracle-calibrated random, 1 of 36 arm×budget cells is ahead, consistent with chance. It counts as
+  a result only because that intercept is **invisible in-sample**: the computable correction is
+  **+0.10** against a true offset of **+13.47**. Acquisition is an accidental distributional hedge,
+  not a better learner.
+- **A model swap beats it.** Plain random forest, random labels, no uncertainty head: in the only
+  winning cell the AL gain is **+2.848** and the model-swap gain is **+3.159** (RF ties the best arm
+  p = 0.37, beats it under homo p = 2.7e-03). The RF's level error under shift is half the BNN's and
+  its bias² a fifth.
+- **Risk asymmetry ≈ 3× adverse** — potential relative loss roughly triple potential gain.
+
+**One effect has survived every control applied:** `epistemic` restricted to high-conversion rows
+(y > 50), where no intercept can help — centred advantage **+2.684** (p = 3.8e-04) on `E_matched`
+and **+1.769** (p = 4.6e-05) on `E_BU`, the only arm significant on both, and replicated under homo
+(+2.326, +2.080) where predictive ≡ epistemic. Pure model uncertainty learns something about the
+high-conversion tail that recalibration cannot imitate.
+
+### Degeneracy, stated correctly
+Earlier framing ("three arms, two behaviours") was imprecise and he corrected it. Under homoscedastic
+Gaussian there are **two different degeneracies**: `predictive` and `epistemic` are *numerically
+identical* (max diff 0.0e+00 over all 160 seed×budget cells per cell), while `aleatoric` has a
+constant score and falls through to the tie-break RNG — same sampling distribution as random but a
+different stream, so individual curves differ by up to 8.38 and only AULC is indistinguishable
+(p = 0.238 / 0.676 / 0.864). Seven nominal arms are six distinct trajectories. The claim to the
+literature stands and is two lines of algebra: **any comparison of predictive against epistemic
+uncertainty under a homoscedastic Gaussian likelihood compares two identical quantities.**
+
+### Also recorded
+- **rdkit, not drfp, is the reproducibility hazard** and it is unpinned. Released wetlab features
+  reproduce on 11662/11669 rows under rdkit 2025.03.6; under 2026.09.1 exact-row agreement falls to
+  **49 %** while bit agreement stays at 99.3 % — no summary statistic warns you. drfp 0.3.2 vs 0.3.7
+  agree to six decimals. The wetlab recipe is `Acid.Amine.Reagents >> Products`, 2048 bits, **no
+  solvent** — settled by diffing candidate recipes against the released array. (This node had read
+  the `cal_DRFP` docstring and advised the opposite; the verification method is what caught it.)
+- **`Both_Unseen` silently drops 4475 of 11669 rows**, labelled neither train nor test.
+- A real hazard he found and fixed: calling `net.evaluate` without snapshotting the torch RNG state
+  shifts the MC-dropout masks and changes which rows acquisition subsequently buys — "a silently
+  different experiment reported as the same one."
+- This node's σ-head diagnosis (2026-10-12) **partly did not hold**: the NLL gradient pathology is
+  real in a standalone reimplementation but does not bite in `unc_models.py`, which standardises the
+  target on labelled-set statistics and warms up on MSE; and the warm-up is **not** load-bearing
+  (ablation 16.56 vs 16.640, inside one seed's spread). The architecture half — shared 16-unit trunk
+  for μ and log σ² — remains untested.
+- Not yet re-derivable from committed scripts: the 2×3 grid and MDE figures (his own flag).
+  `README_regression.md` still carries the superseded 10-12 hump claim.
+
+### Chapter direction (owner, 2026-10-19)
+Of his two proposed framings — "uncertainty-guided AL pays under high label shift" versus "what
+uncertainty estimates measure and when they mislead" — the owner chose **the second**: analysing the
+space rather than hunting an advantage, on the grounds that it is more useful for further
+development. That makes the RF-with-uncertainty comparison in-scope, and makes **settling why Suzuki
+and wetlab differ** a first-class question rather than a curiosity.
